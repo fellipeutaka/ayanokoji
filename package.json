@@ -1,0 +1,45 @@
+{
+  "name": "ayanokoji",
+  "description": "A CLI to setup some tools for a new project",
+  "packageManager": "pnpm@9.10.0",
+  "type": "module",
+  "private": false,
+  "version": "0.0.0",
+  "author": {
+    "name": "Fellipe Utaka",
+    "email": "fellipeutaka@gmail.com",
+    "url": "https://github.com/fellipeutaka"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fellipeutaka/ayanokoji.git"
+  },
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "bin": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "start": "node .",
+    "type-check": "tsc --noEmit --incremental false",
+    "lint": "biome check",
+    "lint:ci": "biome ci"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@changesets/cli": "^2.27.8",
+    "@types/node": "^22.5.4",
+    "tsup": "^8.2.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.0"
+  }
+}
