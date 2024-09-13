@@ -1,6 +1,7 @@
 {
-  "cSpell.words": ["ayanokoji", "biomejs", "picocolors", "tsup"],
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "biomejs.biome"
+	"cSpell.words": ["ayanokoji", "biomejs", "picocolors", "tsup"],
+	"typescript.preferences.autoImportFileExcludePatterns": ["dist"],
+	"typescript.enablePromptUseWorkspaceTsdk": true,
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "biomejs.biome"
 }
