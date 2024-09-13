@@ -28,7 +28,7 @@ export async function getDatabaseConfig(): Promise<DatabaseConfig> {
       value,
       label: value,
     })),
-    initialValue: "compose.yaml",
+    initialValue: "latest",
   });
 
   const user = await enhancedText({
