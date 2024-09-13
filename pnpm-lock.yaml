@@ -17,6 +17,12 @@ importers:
       picocolors:
         specifier: ^1.1.0
         version: 1.1.0
+      valibot:
+        specifier: ^0.41.0
+        version: 0.41.0(typescript@5.6.2)
+      yaml:
+        specifier: ^2.5.1
+        version: 2.5.1
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.8.3
@@ -29,7 +35,7 @@ importers:
         version: 22.5.4
       tsup:
         specifier: ^8.2.4
-        version: 8.2.4(tsx@4.19.0)(typescript@5.6.2)
+        version: 8.2.4(tsx@4.19.0)(typescript@5.6.2)(yaml@2.5.1)
       tsx:
         specifier: ^4.19.0
         version: 4.19.0
@@ -1052,6 +1058,14 @@ packages:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
 
+  valibot@0.41.0:
+    resolution: {integrity: sha512-igDBb8CTYr8YTQlOKgaN9nSS0Be7z+WRuaeYqGf3Cjz3aKmSnqEmYnkfVjzIuumGqfHpa3fLIvMEAfhrpqN8ng==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
 
@@ -1077,6 +1091,11 @@ packages:
 
   yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
+
+  yaml@2.5.1:
+    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
+    engines: {node: '>= 14'}
+    hasBin: true
 
 snapshots:
 
@@ -1844,11 +1863,12 @@ snapshots:
 
   pirates@4.0.6: {}
 
-  postcss-load-config@6.0.1(tsx@4.19.0):
+  postcss-load-config@6.0.1(tsx@4.19.0)(yaml@2.5.1):
     dependencies:
       lilconfig: 3.1.2
     optionalDependencies:
       tsx: 4.19.0
+      yaml: 2.5.1
 
   prettier@2.8.8: {}
 
@@ -1998,7 +2018,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  tsup@8.2.4(tsx@4.19.0)(typescript@5.6.2):
+  tsup@8.2.4(tsx@4.19.0)(typescript@5.6.2)(yaml@2.5.1):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.1)
       cac: 6.7.14
@@ -2010,7 +2030,7 @@ snapshots:
       globby: 11.1.0
       joycon: 3.1.1
       picocolors: 1.1.0
-      postcss-load-config: 6.0.1(tsx@4.19.0)
+      postcss-load-config: 6.0.1(tsx@4.19.0)(yaml@2.5.1)
       resolve-from: 5.0.0
       rollup: 4.21.2
       source-map: 0.8.0-beta.0
@@ -2036,6 +2056,10 @@ snapshots:
   undici-types@6.19.8: {}
 
   universalify@0.1.2: {}
+
+  valibot@0.41.0(typescript@5.6.2):
+    optionalDependencies:
+      typescript: 5.6.2
 
   webidl-conversions@4.0.2: {}
 
@@ -2066,3 +2090,5 @@ snapshots:
       strip-ansi: 7.1.0
 
   yallist@2.1.2: {}
+
+  yaml@2.5.1: {}

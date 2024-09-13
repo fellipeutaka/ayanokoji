@@ -1,9 +1,11 @@
 import {
   type ConfirmOptions,
+  type TextOptions,
   cancel,
   confirm,
   isCancel,
   select,
+  text,
 } from "@clack/prompts";
 
 export async function enhancedConfirm(
@@ -41,4 +43,19 @@ export async function enhancedSelect<T extends string>(
     process.exit(0);
   }
   return result as T;
+}
+
+export async function enhancedText(
+  opts: TextOptions,
+  cancelMessage = "Operation cancelled."
+) {
+  const result = await text({
+    ...opts,
+    placeholder: opts.placeholder ?? opts.defaultValue,
+  });
+  if (isCancel(result)) {
+    cancel(cancelMessage);
+    process.exit(0);
+  }
+  return result;
 }

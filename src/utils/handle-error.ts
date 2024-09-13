@@ -5,7 +5,7 @@ export function handleError(error: string): never {
     "Something went wrong. Please check the error below for more details."
   );
   logger.error("If the problem persists, please open an issue on GitHub.");
-  logger.error("");
+  logger.break();
 
   logger.error(error);
   logger.break();

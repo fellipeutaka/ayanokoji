@@ -24,7 +24,8 @@
         "noNodejsModules": "off"
       },
       "style": {
-        "noParameterProperties": "off"
+        "noParameterProperties": "off",
+        "useNamingConvention": "off"
       }
     }
   },
