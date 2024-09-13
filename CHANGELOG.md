@@ -1,5 +1,13 @@
 # ayanokoji
 
+## 0.3.0
+
+### Minor Changes
+
+- a7507f7: add support to MySQL database
+  add logs to biome init
+  fix initial value of database version
+
 ## 0.2.0
 
 ### Minor Changes
