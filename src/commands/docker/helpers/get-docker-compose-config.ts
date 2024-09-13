@@ -1,4 +1,5 @@
 import { enhancedSelect } from "~/utils/prompts";
+import { DATABASES } from "../databases";
 import { validDockerComposeFiles } from "./get-existing-docker-compose-file";
 
 export async function getDockerComposeConfig() {
@@ -13,18 +14,14 @@ export async function getDockerComposeConfig() {
 
   const database = await enhancedSelect({
     message: "What database would you like to use?",
-    options: [
-      {
-        label: "Postgres",
-        value: "postgres",
-      },
-    ],
+    options: DATABASES,
     initialValue: "postgres",
   });
 
   return {
     fileName,
-    database,
+    // biome-ignore lint/style/noNonNullAssertion: DATABASES is a constant array
+    database: DATABASES.find((db) => db.value === database)!,
   };
 }
 

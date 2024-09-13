@@ -16,7 +16,7 @@ export async function initDocker(options: InitOptions) {
   }
 
   const config = await getDockerComposeConfig();
-  const dbConfig = await getDatabaseConfig();
+  const dbConfig = await getDatabaseConfig(config.database.value);
 
   const configFile = getDockerComposeConfigFile(config, dbConfig);
 
@@ -28,5 +28,5 @@ export async function initDocker(options: InitOptions) {
     configFile
   );
 
-  return new Ok(null);
+  return new Ok(config);
 }

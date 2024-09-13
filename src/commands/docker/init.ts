@@ -36,6 +36,11 @@ export const init = new Command()
       "You can now run `docker compose up` to start your Docker Compose."
     );
     logger.break();
+    logger.info(
+      "Check out the Docker Image documentation to learn more about how to use it."
+    );
+    logger.info(initResult.value.database.repositoryLink);
+    logger.break();
   });
 
 function parseOptions(options: InitOptions) {
