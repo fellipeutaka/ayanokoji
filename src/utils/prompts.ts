@@ -20,29 +20,35 @@ export async function enhancedConfirm(
   return result;
 }
 
-interface SelectOption<T extends string> {
-  value: T;
-  label: string;
-}
-
-interface SelectOptions<T extends string> {
+type Primitive = Readonly<string | boolean | number>;
+type Option<Value> = Value extends Primitive
+  ? {
+      value: Value;
+      label?: string;
+      hint?: string;
+    }
+  : {
+      value: Value;
+      label: string;
+      hint?: string;
+    };
+interface SelectOptions<Options extends Option<Value>[], Value> {
   message: string;
-  options: SelectOption<T>[];
-  initialValue?: T;
+  options: Options;
+  initialValue?: Options[number]["value"];
+  maxItems?: number;
 }
 
-// TODO: Remove any and improve type inference
-export async function enhancedSelect<T extends string>(
-  opts: SelectOptions<T>,
+export async function enhancedSelect<Options extends Option<Value>[], Value>(
+  opts: SelectOptions<Options, Value>,
   cancelMessage = "Operation cancelled."
-): Promise<T> {
-  // biome-ignore lint/suspicious/noExplicitAny:
-  const result: T | symbol = await select(opts as any);
+): Promise<Options[number]["value"]> {
+  const result = await select(opts);
   if (isCancel(result)) {
     cancel(cancelMessage);
     process.exit(0);
   }
-  return result as T;
+  return result;
 }
 
 export async function enhancedText(
