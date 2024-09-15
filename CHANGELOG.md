@@ -1,5 +1,13 @@
 # ayanokoji
 
+## 0.4.0
+
+### Minor Changes
+
+- 16e781b: feat: add redis support
+  feat: add --with-scripts flag to prisma
+  feat: add support to prisma
+
 ## 0.3.0
 
 ### Minor Changes
