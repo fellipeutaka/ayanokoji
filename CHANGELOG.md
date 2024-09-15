@@ -4,9 +4,9 @@
 
 ### Minor Changes
 
-- 16e781b: feat: add redis support
-  feat: add --with-scripts flag to prisma
-  feat: add support to prisma
+- 2d01036: feat: add redis support
+- 829493b: feat: add --with-scripts flag to prisma
+- 125532e: feat: add support to prisma
 
 ## 0.3.0
 
