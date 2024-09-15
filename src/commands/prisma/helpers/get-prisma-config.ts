@@ -16,10 +16,12 @@ export async function getPrismaConfig(options: InitOptions) {
       initialValue: true,
     }));
 
-  const addScripts = await enhancedConfirm({
-    message: "Would you like to add some useful scripts to package.json?",
-    initialValue: true,
-  });
+  const addScripts =
+    options.withScripts ??
+    (await enhancedConfirm({
+      message: "Would you like to add some useful scripts to package.json?",
+      initialValue: true,
+    }));
 
   return {
     database,

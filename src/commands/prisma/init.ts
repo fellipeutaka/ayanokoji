@@ -7,6 +7,7 @@ import { initPrisma } from "./helpers/init-prisma";
 
 export interface InitOptions {
   withModel?: boolean;
+  withScripts?: boolean;
   cwd: string;
 }
 
@@ -14,6 +15,7 @@ export const init = new Command()
   .name("init")
   .description("Init Prisma ORM")
   .option("--with-model", "Create a schema example.")
+  .option("--with-scripts", "Add useful scripts to package.json.")
   .option(
     "-c, --cwd <cwd>",
     "the working directory. defaults to the current directory.",
