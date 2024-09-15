@@ -21,11 +21,16 @@
     "rules": {
       "all": true,
       "correctness": {
-        "noNodejsModules": "off"
+        "noNodejsModules": "off",
+        "useImportExtensions": "off",
+        "noUndeclaredDependencies": "off"
       },
       "style": {
         "noParameterProperties": "off",
         "useNamingConvention": "off"
+      },
+      "suspicious": {
+        "noConsole": "off"
       }
     }
   },

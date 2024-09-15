@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { description, name, version } from "../package.json";
 import { biome } from "./commands/biome";
 import { docker } from "./commands/docker";
+import { prisma } from "./commands/prisma";
 
 const exitProcess = () => process.exit(0);
 process.on("SIGINT", exitProcess);
@@ -16,5 +17,6 @@ const program = new Command()
 
 program.addCommand(biome);
 program.addCommand(docker);
+program.addCommand(prisma);
 
 program.parse();

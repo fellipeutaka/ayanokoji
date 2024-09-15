@@ -1,12 +1,12 @@
+import fs from "node:fs";
 import { Err, Ok } from "~/utils/result";
 import type { InitOptions } from "../init";
-import { checkIfBiomeFileExists } from "./check-if-biome-file-exists";
 import { getBiomeConfig } from "./get-biome-config";
 import { getBiomeConfigFile } from "./get-biome-config-file";
 import { writeConfigFile } from "./write-config-file";
 
 export async function initBiome(options: InitOptions) {
-  if (checkIfBiomeFileExists(options.cwd)) {
+  if (fs.existsSync(`${options.cwd}/biome.json`)) {
     return new Err("Biome file already exists.");
   }
 

@@ -3,15 +3,17 @@ import { Command } from "commander";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
-import { initBiome } from "./helpers/init-biome";
+import { initPrisma } from "./helpers/init-prisma";
 
 export interface InitOptions {
+  withModel?: boolean;
   cwd: string;
 }
 
 export const init = new Command()
   .name("init")
-  .description("Init Biome")
+  .description("Init Prisma ORM")
+  .option("--with-model", "Create a schema example.")
   .option(
     "-c, --cwd <cwd>",
     "the working directory. defaults to the current directory.",
@@ -24,18 +26,18 @@ export const init = new Command()
       handleError(optionsResult.error);
     }
 
-    const initResult = await initBiome(optionsResult.value);
+    const initResult = await initPrisma(optionsResult.value);
 
     if (initResult.isErr()) {
       handleError(initResult.error);
     }
 
     logger.break();
-    logger.success("Biome file created.");
+    logger.success("Prisma ORM initialized.");
     logger.info(
-      "Check out the Biome documentation to learn more about how to use it."
+      "Check out the Prisma documentation to learn more about how to use it."
     );
-    logger.info("https://biomejs.dev/guides/getting-started/#usage");
+    logger.info("https://www.prisma.io/docs");
     logger.break();
   });
 

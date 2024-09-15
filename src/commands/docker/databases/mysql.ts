@@ -69,8 +69,8 @@ export function mysqlComposeConfig({
   return {
     image: `bitnami/mysql:${version}`,
     environment: {
-      MYSQL_USER: user,
-      MYSQL_PASSWORD: password,
+      MYSQL_ROOT_USER: user,
+      MYSQL_ROOT_PASSWORD: password,
       MYSQL_DATABASE: db,
     },
     ports: [`${port}:3306`],
