@@ -4,10 +4,10 @@ import { getDatabaseConfig } from "./get-database-config";
 import { getDockerComposeConfig } from "./get-docker-compose-config";
 import { getDockerComposeConfigFile } from "./get-docker-compose-config-file";
 import { getExistingDockerComposeFile } from "./get-existing-docker-compose-file";
-import { writeConfigFile } from "./write-config-file";
+import { writeFile } from "~/utils/fs";
 
 export async function initDocker(options: InitOptions) {
-  const dockerComposeFile = getExistingDockerComposeFile(options.cwd);
+  const dockerComposeFile = await getExistingDockerComposeFile(options.cwd);
 
   if (dockerComposeFile) {
     return new Err(
@@ -20,12 +20,10 @@ export async function initDocker(options: InitOptions) {
 
   const configFile = getDockerComposeConfigFile(config, dbConfig);
 
-  await writeConfigFile(
-    {
-      cwd: options.cwd,
-      fileName: config.fileName,
-    },
-    configFile
+  const { stringify } = await import("yaml");
+  await writeFile(
+    `${options.cwd}/${config.fileName}`,
+    stringify(configFile, null, 2)
   );
 
   return new Ok(config);

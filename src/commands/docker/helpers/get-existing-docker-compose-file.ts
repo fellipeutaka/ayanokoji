@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { access } from "~/utils/fs";
 
 export const validDockerComposeFiles = new Set([
   "compose.yaml",
@@ -7,9 +7,9 @@ export const validDockerComposeFiles = new Set([
   "docker-compose.yml",
 ] as const);
 
-export function getExistingDockerComposeFile(cwd: string) {
+export async function getExistingDockerComposeFile(cwd: string) {
   for (const file of validDockerComposeFiles) {
-    if (fs.existsSync(`${cwd}/${file}`)) {
+    if (await access(`${cwd}/${file}`)) {
       return file;
     }
   }

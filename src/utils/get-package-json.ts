@@ -1,13 +1,17 @@
-import fs from "node:fs";
 import { Err, Ok } from "./result";
 import type { PackageJson } from "~/@types/package-json";
+import { readFile } from "./fs";
 
-export function getPackageJson(cwd: string) {
-  try {
-    const file = fs.readFileSync(`${cwd}/package.json`, "utf-8");
+export async function getPackageJson(cwd: string) {
+  const fileResult = await readFile(`${cwd}/package.json`, "utf-8");
 
-    return new Ok(JSON.parse(file) as PackageJson);
-  } catch {
+  if (fileResult.isErr()) {
     return new Err("Could not read package.json file.");
   }
+
+  if (fileResult.value instanceof Buffer) {
+    return new Err("Could not parse package.json file.");
+  }
+
+  return new Ok(JSON.parse(fileResult.value) as PackageJson);
 }

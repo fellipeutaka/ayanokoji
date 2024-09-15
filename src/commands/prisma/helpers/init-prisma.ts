@@ -1,10 +1,7 @@
-import fs from "node:fs";
-import { mkdir } from "node:fs/promises";
 import { installDeps } from "~/utils/install-deps";
 import { Err, Ok } from "~/utils/result";
 import type { InitOptions } from "../init";
 import { getPrismaConfig } from "./get-prisma-config";
-import { writePrismaSchema } from "./write-prisma-schema";
 import { logger } from "~/utils/logger";
 import { getPackageJson } from "~/utils/get-package-json";
 import { createPrismaSchema } from "./create-prisma-schema";
@@ -13,6 +10,7 @@ import { getPrismaPaths } from "./get-prisma-paths";
 import { writeEnv } from "./write-env";
 import { getPrismaDatabaseUrl } from "./get-prisma-database-url";
 import { createPrismaScripts } from "./create-prisma-scripts";
+import { access, mkdir, writeFile } from "~/utils/fs";
 
 function handleAlreadyInitError(error: string): never {
   logger.error(error);
@@ -24,19 +22,19 @@ function handleAlreadyInitError(error: string): never {
 export async function initPrisma(options: InitOptions) {
   const paths = getPrismaPaths(options.cwd);
 
-  if (fs.existsSync(paths.folder)) {
+  if (await access(paths.folder)) {
     handleAlreadyInitError(
       "A folder called prisma already exists in your project."
     );
   }
 
-  if (fs.existsSync(paths.schema)) {
+  if (await access(paths.schema)) {
     handleAlreadyInitError(
       "A file called prisma/schema.prisma already exists in your project."
     );
   }
 
-  const packageJson = getPackageJson(options.cwd);
+  const packageJson = await getPackageJson(options.cwd);
   if (packageJson.isErr()) {
     return new Err(packageJson.error);
   }
@@ -46,13 +44,10 @@ export async function initPrisma(options: InitOptions) {
 
   await mkdir(paths.folder);
 
-  const writeConfigFileResult = await writePrismaSchema(
-    paths.schema,
-    prismaSchema
-  );
+  const writeConfigFileResult = await writeFile(paths.schema, prismaSchema);
   if (writeConfigFileResult.isErr()) {
     logger.break();
-    return new Err(writeConfigFileResult.error);
+    return new Err("Failed to write prisma schema file.");
   }
 
   const databaseUrl = getPrismaDatabaseUrl(config.database);

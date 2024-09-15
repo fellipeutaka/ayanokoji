@@ -1,8 +1,7 @@
-import fs from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { Err, Ok } from "~/utils/result";
 import dotenv from "dotenv";
 import { logger } from "~/utils/logger";
+import { access, appendFile, readFile, writeFile } from "~/utils/fs";
 
 function defaultEnv(
   url = "postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public",
@@ -25,34 +24,40 @@ interface WriteEnvProps {
 }
 
 export async function writeEnv({ envPath, url }: WriteEnvProps) {
-  try {
-    if (!existsSync(envPath)) {
-      await fs.writeFile(envPath, defaultEnv(url));
-
-      return new Ok(null);
+  if (!(await access(envPath))) {
+    const writeFileResult = await writeFile(envPath, defaultEnv(url));
+    if (writeFileResult.isErr()) {
+      return new Err(`The file ${envPath} could not be created.`);
     }
-
-    const envFile = await fs.readFile(envPath, { encoding: "utf8" });
-    const config = dotenv.parse(envFile);
-    const envKeys = Object.keys(config);
-
-    if (envKeys.includes("DATABASE_URL")) {
-      logger.break();
-      logger.warn(
-        "The DATABASE_URL variable is already set in your .env file. Skipping"
-      );
-      logger.break();
-
-      return new Ok(null);
-    }
-
-    await fs.appendFile(
-      envPath,
-      `${envKeys.length > 0 ? "\n\n" : ""}# This was inserted by Ayanokoji:\n${defaultEnv(url)}`
-    );
 
     return new Ok(null);
-  } catch {
-    return new Err(`The file ${envPath} could not be created.`);
   }
+
+  const envFileResult = await readFile(envPath, { encoding: "utf8" });
+  if (envFileResult.isErr()) {
+    return new Err("Could not read the .env file.");
+  }
+
+  const config = dotenv.parse(envFileResult.value);
+  const envKeys = Object.keys(config);
+
+  if (envKeys.includes("DATABASE_URL")) {
+    logger.break();
+    logger.warn(
+      "The DATABASE_URL variable is already set in your .env file. Skipping"
+    );
+    logger.break();
+
+    return new Ok(null);
+  }
+
+  const appendFileResult = await appendFile(
+    envPath,
+    `${envKeys.length > 0 ? "\n\n" : ""}# This was inserted by Ayanokoji:\n${defaultEnv(url)}`
+  );
+  if (appendFileResult.isErr()) {
+    return new Err("Could not append to the .env file.");
+  }
+
+  return new Ok(null);
 }

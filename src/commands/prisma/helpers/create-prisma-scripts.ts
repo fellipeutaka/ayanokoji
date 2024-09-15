@@ -1,5 +1,5 @@
-import fs from "node:fs/promises";
 import type { PackageJson } from "~/@types/package-json";
+import { writeFile } from "~/utils/fs";
 
 const scripts = {
   "db:generate": "prisma generate",
@@ -41,8 +41,5 @@ export async function createPrismaScripts({
 
   packageJson.scripts = newScripts;
 
-  await fs.writeFile(
-    `${cwd}/package.json`,
-    JSON.stringify(packageJson, null, 2)
-  );
+  await writeFile(`${cwd}/package.json`, JSON.stringify(packageJson, null, 2));
 }

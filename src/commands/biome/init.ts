@@ -1,9 +1,8 @@
-import fs from "node:fs";
 import { Command } from "commander";
+import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
-import { initBiome } from "./helpers/init-biome";
 
 export interface InitOptions {
   cwd: string;
@@ -18,12 +17,13 @@ export const init = new Command()
     process.cwd()
   )
   .action(async (options: InitOptions) => {
-    const optionsResult = parseOptions(options);
+    const optionsResult = await parseOptions(options);
 
     if (optionsResult.isErr()) {
       handleError(optionsResult.error);
     }
 
+    const { initBiome } = await import("./helpers/init-biome");
     const initResult = await initBiome(optionsResult.value);
 
     if (initResult.isErr()) {
@@ -39,8 +39,8 @@ export const init = new Command()
     logger.break();
   });
 
-function parseOptions(options: InitOptions) {
-  if (!fs.existsSync(options.cwd)) {
+async function parseOptions(options: InitOptions) {
+  if (!(await access(options.cwd))) {
     return new Err(`The directory ${options.cwd} does not exist.`);
   }
 

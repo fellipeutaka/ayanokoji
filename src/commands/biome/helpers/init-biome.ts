@@ -1,12 +1,11 @@
-import fs from "node:fs";
 import { Err, Ok } from "~/utils/result";
 import type { InitOptions } from "../init";
 import { getBiomeConfig } from "./get-biome-config";
 import { getBiomeConfigFile } from "./get-biome-config-file";
-import { writeConfigFile } from "./write-config-file";
+import { access, writeFile } from "~/utils/fs";
 
 export async function initBiome(options: InitOptions) {
-  if (fs.existsSync(`${options.cwd}/biome.json`)) {
+  if (await access(`${options.cwd}/biome.json`)) {
     return new Err("Biome file already exists.");
   }
 
@@ -14,7 +13,14 @@ export async function initBiome(options: InitOptions) {
 
   const configFile = getBiomeConfigFile(config);
 
-  await writeConfigFile(options.cwd, configFile);
+  const writeFileResult = await writeFile(
+    `${options.cwd}/biome.json`,
+    JSON.stringify(configFile, null, 2)
+  );
+
+  if (writeFileResult.isErr()) {
+    return new Err("Failed to write Biome file.");
+  }
 
   return new Ok(null);
 }
