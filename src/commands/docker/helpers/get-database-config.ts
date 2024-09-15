@@ -3,6 +3,7 @@ import type { Database } from "../databases";
 import { getMySQLConfig } from "../databases/mysql";
 import { getPostgresConfig } from "../databases/postgres";
 import type { DatabaseConfig } from "../interfaces/database-config";
+import { getRedisConfig } from "../databases/redis";
 
 export const portSchema = pipe(
   string(),
@@ -15,6 +16,7 @@ export const portSchema = pipe(
 const retrieveDatabaseConfig = {
   postgres: getPostgresConfig,
   mysql: getMySQLConfig,
+  redis: getRedisConfig,
 } as const satisfies Record<Database, () => Promise<DatabaseConfig>>;
 
 export async function getDatabaseConfig(

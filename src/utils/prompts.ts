@@ -39,7 +39,10 @@ interface SelectOptions<Options extends Option<Value>[], Value> {
   maxItems?: number;
 }
 
-export async function enhancedSelect<Options extends Option<Value>[], Value>(
+export async function enhancedSelect<
+  const Options extends Option<Value>[],
+  const Value,
+>(
   opts: SelectOptions<Options, Value>,
   cancelMessage = "Operation cancelled."
 ): Promise<Options[number]["value"]> {

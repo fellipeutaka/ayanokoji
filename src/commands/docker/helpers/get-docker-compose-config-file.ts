@@ -1,6 +1,7 @@
 import type { Database } from "../databases";
 import { mysqlComposeConfig } from "../databases/mysql";
 import { postgresComposeConfig } from "../databases/postgres";
+import { redisComposeConfig } from "../databases/redis";
 import type { ComposeService } from "../interfaces/compose-service";
 import type { DatabaseConfig } from "../interfaces/database-config";
 import type { DockerComposeConfig } from "./get-docker-compose-config";
@@ -8,6 +9,7 @@ import type { DockerComposeConfig } from "./get-docker-compose-config";
 const databaseConfigs = {
   postgres: postgresComposeConfig,
   mysql: mysqlComposeConfig,
+  redis: redisComposeConfig,
 } as const satisfies Record<
   Database,
   (config: DatabaseConfig) => ComposeService
