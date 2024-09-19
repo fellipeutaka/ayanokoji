@@ -1,10 +1,10 @@
+import { writeFile } from "~/utils/fs";
 import { Err, Ok } from "~/utils/result";
 import type { InitOptions } from "../init";
 import { getDatabaseConfig } from "./get-database-config";
 import { getDockerComposeConfig } from "./get-docker-compose-config";
 import { getDockerComposeConfigFile } from "./get-docker-compose-config-file";
 import { getExistingDockerComposeFile } from "./get-existing-docker-compose-file";
-import { writeFile } from "~/utils/fs";
 
 export async function initDocker(options: InitOptions) {
   const dockerComposeFile = await getExistingDockerComposeFile(options.cwd);

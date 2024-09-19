@@ -1,6 +1,6 @@
-import { Err, Ok } from "./result";
 import type { PackageJson } from "~/@types/package-json";
 import { readFile } from "./fs";
+import { Err, Ok } from "./result";
 
 export async function getPackageJson(cwd: string) {
   const fileResult = await readFile(`${cwd}/package.json`, "utf-8");

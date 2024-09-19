@@ -28,7 +28,8 @@
       },
       "style": {
         "noParameterProperties": "off",
-        "useNamingConvention": "off"
+        "useNamingConvention": "off",
+        "noNonNullAssertion": "off"
       },
       "suspicious": {
         "noConsole": "off"

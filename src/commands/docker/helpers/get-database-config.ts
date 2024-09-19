@@ -2,8 +2,8 @@ import { maxValue, minValue, number, pipe, string, transform } from "valibot";
 import type { Database } from "../databases";
 import { getMySQLConfig } from "../databases/mysql";
 import { getPostgresConfig } from "../databases/postgres";
-import type { DatabaseConfig } from "../interfaces/database-config";
 import { getRedisConfig } from "../databases/redis";
+import type { DatabaseConfig } from "../interfaces/database-config";
 
 export const portSchema = pipe(
   string(),

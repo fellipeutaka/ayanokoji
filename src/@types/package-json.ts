@@ -210,7 +210,6 @@ export type Dependency = Partial<Record<string, string>>;
 	A mapping of conditions and the paths to which they resolve.
 	*/
 type ExportConditions = {
-  // eslint-disable-line @typescript-eslint/consistent-indexed-object-style
   [condition: string]: Exports;
 };
 
@@ -227,11 +226,9 @@ export type Exports =
 	Import map entries of a module, optionally with conditions and subpath imports.
 	*/
 export type Imports = {
-  // eslint-disable-line @typescript-eslint/consistent-indexed-object-style
   [key: `#${string}`]: Exports;
 };
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface NonStandardEntryPoints {
   /**
 		An ECMAScript module ID that is the primary entry point to the program.
@@ -332,7 +329,6 @@ export type JSPMConfiguration = {
 /**
 	Type for [npm's `package.json` file](https://docs.npmjs.com/creating-a-package-json-file). Containing standard npm properties.
 	*/
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface PackageJsonStandard {
   /**
 		The name of the package.

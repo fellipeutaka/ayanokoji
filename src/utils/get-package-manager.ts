@@ -24,7 +24,6 @@ export async function getPackageManager(
     return packageManager ?? "npm";
   }
 
-  // Fallback to user agent if not detected.
   const userAgent = process.env.npm_config_user_agent || "";
 
   if (userAgent.startsWith("yarn")) {

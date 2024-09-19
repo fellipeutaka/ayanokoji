@@ -1,8 +1,8 @@
+import { access, writeFile } from "~/utils/fs";
 import { Err, Ok } from "~/utils/result";
 import type { InitOptions } from "../init";
 import { getBiomeConfig } from "./get-biome-config";
 import { getBiomeConfigFile } from "./get-biome-config-file";
-import { access, writeFile } from "~/utils/fs";
 
 export async function initBiome(options: InitOptions) {
   if (await access(`${options.cwd}/biome.json`)) {

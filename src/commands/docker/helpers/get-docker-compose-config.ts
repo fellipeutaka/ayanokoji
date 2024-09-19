@@ -20,7 +20,6 @@ export async function getDockerComposeConfig() {
 
   return {
     fileName,
-    // biome-ignore lint/style/noNonNullAssertion: DATABASES is a constant array
     database: DATABASES.find((db) => db.value === database)!,
   };
 }

@@ -1,30 +1,27 @@
 import { execa } from "execa";
-import { getPackageManager } from "./get-package-manager";
-import type { DistinctArray } from "~/@types/array";
+import type { PackageManager } from "./get-package-manager";
+import { isDefined } from "./is-defined";
 
-interface InstallDepsProps<
-  Dependencies extends string[],
-  DevDependencies extends string[],
-> {
+interface InstallDepsProps {
+  packageManager: PackageManager;
   cwd: string;
-  dependencies?: DistinctArray<Dependencies>;
-  devDependencies?: DistinctArray<DevDependencies>;
+  dependencies?: Array<string | null>;
+  devDependencies?: Array<string | null>;
 }
 
-export async function installDeps<
-  const Dependencies extends string[],
-  const DevDependencies extends string[],
->({
+export async function installDeps({
+  packageManager,
   cwd,
   dependencies,
   devDependencies,
-}: InstallDepsProps<Dependencies, DevDependencies>) {
-  const packageManager = await getPackageManager(cwd);
-
+}: InstallDepsProps) {
   if (dependencies && dependencies.length > 0) {
     await execa(
       packageManager,
-      [packageManager === "npm" ? "install" : "add", ...dependencies],
+      [
+        packageManager === "npm" ? "install" : "add",
+        ...dependencies.filter(isDefined),
+      ],
       {
         cwd,
       }
@@ -34,7 +31,11 @@ export async function installDeps<
   if (devDependencies && devDependencies.length > 0) {
     await execa(
       packageManager,
-      [packageManager === "npm" ? "install" : "add", ...devDependencies, "-D"],
+      [
+        packageManager === "npm" ? "install" : "add",
+        ...devDependencies.filter(isDefined),
+        "-D",
+      ],
       {
         cwd,
       }
