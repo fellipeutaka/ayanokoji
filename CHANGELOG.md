@@ -1,5 +1,11 @@
 # ayanokoji
 
+## 0.5.0
+
+### Minor Changes
+
+- c4aa8c8: feat: add support to drizzle
+
 ## 0.4.0
 
 ### Minor Changes
