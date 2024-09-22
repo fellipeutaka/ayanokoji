@@ -28,6 +28,9 @@ export function getBiomeConfigFile(config: BiomeConfig) {
         enabled: true,
       },
     }),
+    files: {
+      ignore: ["node_modules"],
+    },
   };
 }
 

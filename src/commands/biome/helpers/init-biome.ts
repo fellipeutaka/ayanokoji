@@ -1,4 +1,7 @@
 import { access, writeFile } from "~/utils/fs";
+import { getPackageJson } from "~/utils/get-package-json";
+import { getPackageManager } from "~/utils/get-package-manager";
+import { installDeps } from "~/utils/install-deps";
 import { Err, Ok } from "~/utils/result";
 import type { InitOptions } from "../init";
 import { getBiomeConfig } from "./get-biome-config";
@@ -10,6 +13,26 @@ export async function initBiome(options: InitOptions) {
   }
 
   const config = await getBiomeConfig();
+
+  if (config.installDeps) {
+    const { spinner } = await import("@clack/prompts");
+    const s = spinner();
+    s.start("Installing dependencies");
+
+    const packageJson = await getPackageJson(options.cwd);
+    if (packageJson.isErr()) {
+      return new Err(packageJson.error);
+    }
+
+    const packageManager = await getPackageManager(options.cwd);
+    await installDeps({
+      cwd: options.cwd,
+      packageManager: packageManager,
+      devDependencies: ["@biomejs/biome"],
+    });
+
+    s.stop("Dependencies installed");
+  }
 
   const configFile = getBiomeConfigFile(config);
 

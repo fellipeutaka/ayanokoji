@@ -14,11 +14,17 @@ export async function getBiomeConfig() {
     initialValue: true,
   });
 
+  const installDeps = await enhancedConfirm({
+    message: "Would you like to install dependencies?",
+    initialValue: true,
+  });
+
   return {
     organizeImports,
     formatter,
     indentStyle,
     linter,
+    installDeps,
   };
 }
 
