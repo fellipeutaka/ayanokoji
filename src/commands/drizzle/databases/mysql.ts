@@ -25,7 +25,7 @@ const client = new Client({
   url: process.env.DATABASE_URL!,
 });
 
-const db = drizzle(client);
+export const db = drizzle(client);
 `,
     migrate: `import { Client } from "@planetscale/database";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
@@ -70,7 +70,7 @@ const pool = mysql.createPool({
   uri: process.env.DATABASE_URL!,
 });
 
-const db = drizzle(pool);
+export const db = drizzle(pool);
 `,
     migrate: `import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from "drizzle-orm/mysql2/migrator";
@@ -113,7 +113,8 @@ main().catch((err) => {
 import { drizzle } from "drizzle-orm/tidb-serverless";
 
 const client = connect({ url: process.env.DATABASE_URL! });
-const db = drizzle(client);
+
+export const db = drizzle(client);
 `,
     migrate: `import { connect } from "@tidbcloud/serverless";
 import { drizzle } from "drizzle-orm/tidb-serverless";

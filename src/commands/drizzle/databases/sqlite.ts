@@ -24,7 +24,7 @@ const client = createClient({
   url: process.env.DATABASE_URL!,
 });
 
-const db = drizzle(client);
+export const db = drizzle(client);
 `,
     migrate: `import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
@@ -74,7 +74,8 @@ main().catch((err) => {
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
 const sqlite = new Database(process.env.DATABASE_URL!);
-const db = drizzle(sqlite);
+
+export const db = drizzle(sqlite);
 `,
     migrate: `import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
@@ -130,7 +131,8 @@ main().catch((err) => {
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
 const sqlite = new Database(process.env.DATABASE_URL!);
-const db = drizzle(sqlite);
+
+export const db = drizzle(sqlite);
 `,
     migrate: `import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";

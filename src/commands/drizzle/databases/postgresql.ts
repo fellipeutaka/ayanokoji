@@ -22,7 +22,8 @@ const DRIZZLE_POSTGRES_ADAPTERS = [
 import { drizzle } from "drizzle-orm/neon-http";
 
 const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
+
+export const db = drizzle(sql);
 `,
     migrate: `import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -60,7 +61,8 @@ main().catch((err) => {
 import { getXataClient } from "./xata"; // Generated client
 
 const xata = getXataClient();
-const db = drizzle(xata);
+
+export const db = drizzle(xata);
 `,
     migrate: `import { drizzle } from "drizzle-orm/xata-http";
 import { migrate } from "drizzle-orm/xata-http/migrator";
@@ -98,7 +100,8 @@ main().catch((err) => {
 import { drizzle } from "drizzle-orm/pglite";
 
 const client = new PGlite();
-const db = drizzle(client);
+
+export const db = drizzle(client);
 `,
     migrate: `import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -136,7 +139,8 @@ main().catch((err) => {
 import postgres from "postgres";
 
 const client = postgres(process.env.DATABASE_URL!);
-const db = drizzle(client);
+
+export const db = drizzle(client);
 `,
     migrate: `import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
@@ -176,7 +180,8 @@ import { Pool } from "pg";
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
 });
-const db = drizzle(pool);
+
+export const db = drizzle(pool);
 `,
     migrate: `import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -216,7 +221,7 @@ main().catch((err) => {
     client: `import { sql } from "@vercel/postgres";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 
-const db = drizzle(sql);
+export const db = drizzle(sql);
 `,
     migrate: `import { sql } from "@vercel/postgres";
 import { drizzle } from "drizzle-orm/vercel-postgres";
@@ -254,7 +259,8 @@ import postgres from "postgres";
 
 // Disable prefetch as it is not supported for "Transaction" pool mode
 const client = postgres(process.env.DATABASE_URL!, { prepare: false });
-const db = drizzle(client);
+
+export const db = drizzle(client);
 `,
     migrate: `import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
@@ -297,7 +303,7 @@ const rdsClient = new RDSDataClient({
   region: "us-east-1",
 });
 
-const db = drizzle(rdsClient, {
+export const db = drizzle(rdsClient, {
   database: process.env["DATABASE"]!,
   secretArn: process.env["SECRET_ARN"]!,
   resourceArn: process.env["RESOURCE_ARN"]!,
