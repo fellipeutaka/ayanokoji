@@ -1,5 +1,12 @@
 # ayanokoji
 
+## 0.5.1
+
+### Patch Changes
+
+- 7cbe754: add support to install biome deps
+- 2020ede: fix missing export drizzle db
+
 ## 0.5.0
 
 ### Minor Changes
