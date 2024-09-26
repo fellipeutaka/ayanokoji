@@ -1,0 +1,41 @@
+{
+  "name": "ayanokoji",
+  "description": "A CLI to setup some tools for a new project",
+  "type": "module",
+  "private": false,
+  "version": "0.5.1",
+  "author": {
+    "name": "Fellipe Utaka",
+    "email": "fellipeutaka@gmail.com",
+    "url": "https://github.com/fellipeutaka"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fellipeutaka/ayanokoji.git",
+    "directory": "packages/cli"
+  },
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "bin": "./dist/index.js",
+  "files": ["dist"],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "start": "node .",
+    "type-check": "tsc --noEmit --incremental false"
+  },
+  "devDependencies": {
+    "tsup": "^8.2.4",
+    "tsx": "^4.19.1"
+  },
+  "dependencies": {
+    "@antfu/ni": "^0.23.0",
+    "@clack/prompts": "^0.7.0",
+    "commander": "^12.1.0",
+    "execa": "^9.3.1",
+    "picocolors": "^1.1.0",
+    "valibot": "^0.41.0",
+    "yaml": "^2.5.1"
+  }
+}
