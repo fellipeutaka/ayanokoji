@@ -1,4 +1,4 @@
-import { execa } from "execa";
+import spawn from "nano-spawn";
 import type { PackageManager } from "./get-package-manager";
 import { isDefined } from "./is-defined";
 
@@ -29,7 +29,7 @@ export async function installDeps({
   devDependencies,
 }: InstallDepsProps) {
   if (dependencies && dependencies.length > 0) {
-    await execa(
+    await spawn(
       packageManager,
       [
         packageManager === "npm" ? "install" : "add",
@@ -42,7 +42,7 @@ export async function installDeps({
   }
 
   if (devDependencies && devDependencies.length > 0) {
-    await execa(
+    await spawn(
       packageManager,
       [
         packageManager === "npm" ? "install" : "add",

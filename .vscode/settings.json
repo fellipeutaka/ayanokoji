@@ -3,6 +3,7 @@
     "antfu",
     "ayanokoji",
     "biomejs",
+    "commitlint",
     "execa",
     "picocolors",
     "tsup",
