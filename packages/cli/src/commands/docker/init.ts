@@ -3,6 +3,7 @@ import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+import { getRepositoryLink } from "./helpers/get-repository-link";
 
 export interface InitOptions {
   cwd: string;
@@ -30,6 +31,9 @@ export const init = new Command()
       handleError(initResult.error);
     }
 
+    const { namespace, repository } = initResult.value;
+    const repositoryLink = getRepositoryLink(namespace, repository);
+
     logger.break();
     logger.success("Docker Compose file created.");
     logger.info(
@@ -39,7 +43,7 @@ export const init = new Command()
     logger.info(
       "Check out the Docker Image documentation to learn more about how to use it."
     );
-    logger.info(initResult.value.database.repositoryLink);
+    logger.info(repositoryLink);
     logger.break();
   });
 

@@ -1,15 +1,20 @@
 import { safeParse } from "valibot";
 import { enhancedSelect, enhancedText } from "~/utils/prompts";
-import { portSchema } from "../helpers/get-database-config";
-import type { ComposeService } from "../interfaces/compose-service";
-import type { DatabaseConfig } from "../interfaces/database-config";
+import type { ComposeService, DatabaseImageConfig } from ".";
+import { portSchema } from "../schemas/port";
 
-const redisVersions = new Set(["latest", "7.4", "7.2", "6.2"] as const);
+const imageConfig: DatabaseImageConfig = {
+  namespace: "bitnami",
+  repository: "redis",
+  defaultPort: 6379,
+};
 
-export async function getRedisConfig(): Promise<DatabaseConfig> {
+const fallbackVersions = new Set(["latest", "7.4", "7.2", "6.2"] as const);
+
+async function createComposeService(): Promise<ComposeService> {
   const version = await enhancedSelect({
     message: "What Redis version would you like to use?",
-    options: Array.from(redisVersions).map((value) => ({
+    options: Array.from(fallbackVersions).map((value) => ({
       value,
       label: value,
     })),
@@ -28,7 +33,7 @@ export async function getRedisConfig(): Promise<DatabaseConfig> {
 
   const port = await enhancedText({
     message: "What is the Redis port?",
-    defaultValue: "6379",
+    defaultValue: String(imageConfig.defaultPort),
     validate(value) {
       const result = safeParse(portSchema, value);
 
@@ -39,26 +44,16 @@ export async function getRedisConfig(): Promise<DatabaseConfig> {
   });
 
   return {
-    version,
-    user: "redis",
-    password,
-    db,
-    port: Number(port),
-  };
-}
-
-export function redisComposeConfig({
-  version,
-  db,
-  password,
-  port,
-}: DatabaseConfig): ComposeService {
-  return {
-    image: `bitnami/redis:${version}`,
+    image: `${imageConfig.namespace}/${imageConfig.repository}:${version}`,
     environment: {
       REDIS_MASTER_PASSWORD: password,
       REDIS_DATABASE: db,
     },
-    ports: [`${port}:6379`],
+    ports: [`${port}:${imageConfig.defaultPort}`],
   };
 }
+
+export const config = {
+  createComposeService,
+  imageConfig,
+};

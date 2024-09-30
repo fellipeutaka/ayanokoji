@@ -1,10 +1,12 @@
 import { writeFile } from "~/utils/fs";
+import { enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
+import { DATABASES } from "../databases";
 import type { InitOptions } from "../init";
-import { getDatabaseConfig } from "./get-database-config";
-import { getDockerComposeConfig } from "./get-docker-compose-config";
-import { getDockerComposeConfigFile } from "./get-docker-compose-config-file";
-import { getExistingDockerComposeFile } from "./get-existing-docker-compose-file";
+import {
+  getExistingDockerComposeFile,
+  validDockerComposeFiles,
+} from "./get-existing-docker-compose-file";
 
 export async function initDocker(options: InitOptions) {
   const dockerComposeFile = await getExistingDockerComposeFile(options.cwd);
@@ -15,16 +17,33 @@ export async function initDocker(options: InitOptions) {
     );
   }
 
-  const config = await getDockerComposeConfig();
-  const dbConfig = await getDatabaseConfig(config.database.value);
+  const fileName = await enhancedSelect({
+    message: "What Docker Compose file name would you like to use?",
+    options: Array.from(validDockerComposeFiles).map((value) => ({
+      value,
+      label: value,
+    })),
+    initialValue: "compose.yaml",
+  });
 
-  const configFile = getDockerComposeConfigFile(config, dbConfig);
+  const database = await enhancedSelect({
+    message: "What database would you like to use?",
+    options: DATABASES.map((db) => ({
+      label: db.label,
+      value: db,
+    })),
+  });
+
+  const { createComposeService, imageConfig } = await database.config();
+
+  const configFile = {
+    services: {
+      [database.value]: await createComposeService(),
+    },
+  };
 
   const { stringify } = await import("yaml");
-  await writeFile(
-    `${options.cwd}/${config.fileName}`,
-    stringify(configFile, null, 2)
-  );
+  await writeFile(`${options.cwd}/${fileName}`, stringify(configFile, null, 2));
 
-  return new Ok(config);
+  return new Ok(imageConfig);
 }

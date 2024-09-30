@@ -5,15 +5,15 @@ import { portSchema } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
   namespace: "bitnami",
-  repository: "postgresql",
+  repository: "mongodb",
   defaultPort: 5432,
 };
 
-const fallbackVersions = new Set(["latest", "16", "15", "14"] as const);
+const fallbackVersions = new Set(["latest", "7.0", "6.0", "5.0"] as const);
 
 async function createComposeService(): Promise<ComposeService> {
   const version = await enhancedSelect({
-    message: "What Postgres version would you like to use?",
+    message: "What MongoDB version would you like to use?",
     options: Array.from(fallbackVersions).map((value) => ({
       value,
       label: value,
@@ -22,22 +22,22 @@ async function createComposeService(): Promise<ComposeService> {
   });
 
   const user = await enhancedText({
-    message: "What is the Postgres user?",
+    message: "What is the MongoDB user?",
     defaultValue: "docker",
   });
 
   const password = await enhancedText({
-    message: "What is the Postgres password?",
+    message: "What is the MongoDB password?",
     defaultValue: "docker",
   });
 
   const db = await enhancedText({
-    message: "What is the Postgres database?",
+    message: "What is the MongoDB database?",
     defaultValue: "docker",
   });
 
   const port = await enhancedText({
-    message: "What is the Postgres port?",
+    message: "What is the MongoDB port?",
     defaultValue: String(imageConfig.defaultPort),
     validate(value) {
       const result = safeParse(portSchema, value);
@@ -51,9 +51,9 @@ async function createComposeService(): Promise<ComposeService> {
   return {
     image: `${imageConfig.namespace}/${imageConfig.repository}:${version}`,
     environment: {
-      POSTGRESQL_USERNAME: user,
-      POSTGRESQL_PASSWORD: password,
-      POSTGRESQL_DATABASE: db,
+      MONGODB_ROOT_USER: user,
+      MONGODB_ROOT_PASSWORD: password,
+      MONGODB_DATABASE: db,
     },
     ports: [`${port}:${imageConfig.defaultPort}`],
   };

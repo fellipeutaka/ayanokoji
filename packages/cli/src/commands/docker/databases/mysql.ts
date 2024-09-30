@@ -1,10 +1,15 @@
 import { safeParse } from "valibot";
 import { enhancedSelect, enhancedText } from "~/utils/prompts";
-import { portSchema } from "../helpers/get-database-config";
-import type { ComposeService } from "../interfaces/compose-service";
-import type { DatabaseConfig } from "../interfaces/database-config";
+import type { ComposeService, DatabaseImageConfig } from ".";
+import { portSchema } from "../schemas/port";
 
-const mysqlVersions = new Set([
+const imageConfig: DatabaseImageConfig = {
+  namespace: "bitnami",
+  repository: "mysql",
+  defaultPort: 3306,
+};
+
+const fallbackVersions = new Set([
   "latest",
   "9.0.1",
   "9.0",
@@ -13,10 +18,10 @@ const mysqlVersions = new Set([
   "8.0",
 ] as const);
 
-export async function getMySQLConfig(): Promise<DatabaseConfig> {
+async function createComposeService(): Promise<ComposeService> {
   const version = await enhancedSelect({
     message: "What MySQL version would you like to use?",
-    options: Array.from(mysqlVersions).map((value) => ({
+    options: Array.from(fallbackVersions).map((value) => ({
       value,
       label: value,
     })),
@@ -40,7 +45,7 @@ export async function getMySQLConfig(): Promise<DatabaseConfig> {
 
   const port = await enhancedText({
     message: "What is the MySQL port?",
-    defaultValue: "3306",
+    defaultValue: String(imageConfig.defaultPort),
     validate(value) {
       const result = safeParse(portSchema, value);
 
@@ -51,28 +56,17 @@ export async function getMySQLConfig(): Promise<DatabaseConfig> {
   });
 
   return {
-    version,
-    user,
-    password,
-    db,
-    port: Number(port),
-  };
-}
-
-export function mysqlComposeConfig({
-  version,
-  user,
-  db,
-  password,
-  port,
-}: DatabaseConfig): ComposeService {
-  return {
-    image: `bitnami/mysql:${version}`,
+    image: `${imageConfig.namespace}/${imageConfig.repository}:${version}`,
     environment: {
       MYSQL_ROOT_USER: user,
       MYSQL_ROOT_PASSWORD: password,
       MYSQL_DATABASE: db,
     },
-    ports: [`${port}:3306`],
+    ports: [`${port}:${imageConfig.defaultPort}`],
   };
 }
+
+export const config = {
+  createComposeService,
+  imageConfig,
+};
