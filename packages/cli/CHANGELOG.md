@@ -1,5 +1,12 @@
 # ayanokoji
 
+## 0.6.0
+
+### Minor Changes
+
+- 0a8079a: add support to mongodb on docker init
+- 631890a: replace `execa` to `nano-spawn`
+
 ## 0.5.1
 
 ### Patch Changes
