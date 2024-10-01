@@ -28,6 +28,19 @@ export async function readFile<File extends string | Buffer>(
   }
 }
 
+export async function rm(
+  file: Parameters<typeof fs.rm>[0],
+  options?: Parameters<typeof fs.rm>[1]
+) {
+  try {
+    await fs.rm(file, options);
+
+    return new Ok(null);
+  } catch {
+    return new Err("Failed to remove file.");
+  }
+}
+
 export async function mkdir(
   path: Parameters<typeof fs.mkdir>[0],
   options?: Parameters<typeof fs.mkdir>[1]
