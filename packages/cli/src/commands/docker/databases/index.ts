@@ -4,7 +4,7 @@ export interface ComposeService {
   ports: string[];
 }
 
-export const DATABASES = [
+export const DOCKER_DATABASES = [
   {
     label: "Postgres",
     value: "postgresql",
@@ -27,7 +27,7 @@ export const DATABASES = [
   },
 ] as const;
 
-export type Database = (typeof DATABASES)[number]["value"];
+export type DockerDatabase = (typeof DOCKER_DATABASES)[number]["value"];
 export interface DatabaseImageConfig {
   namespace: string;
   repository: string;

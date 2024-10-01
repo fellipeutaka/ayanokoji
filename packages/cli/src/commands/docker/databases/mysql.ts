@@ -1,4 +1,5 @@
 import { safeParse } from "valibot";
+import { formatValibotErrors } from "~/utils/format-valibot-errors";
 import { enhancedSelect, enhancedText } from "~/utils/prompts";
 import type { ComposeService, DatabaseImageConfig } from ".";
 import { portSchema } from "../schemas/port";
@@ -50,7 +51,7 @@ async function createComposeService(): Promise<ComposeService> {
       const result = safeParse(portSchema, value);
 
       if (result.issues) {
-        return result.issues.map((issue) => issue.message).join("\n");
+        return formatValibotErrors(result.issues);
       }
     },
   });

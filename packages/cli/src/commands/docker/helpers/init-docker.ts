@@ -1,14 +1,18 @@
 import { writeFile } from "~/utils/fs";
 import { enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
-import { DATABASES } from "../databases";
-import type { InitOptions } from "../init";
+import { DOCKER_DATABASES, type DockerDatabase } from "../databases";
 import {
   getExistingDockerComposeFile,
   validDockerComposeFiles,
 } from "./get-existing-docker-compose-file";
 
-export async function initDocker(options: InitOptions) {
+interface InitDockerProps {
+  cwd: string;
+  database?: DockerDatabase;
+}
+
+export async function initDocker(options: InitDockerProps) {
   const dockerComposeFile = await getExistingDockerComposeFile(options.cwd);
 
   if (dockerComposeFile) {
@@ -26,13 +30,15 @@ export async function initDocker(options: InitOptions) {
     initialValue: "compose.yaml",
   });
 
-  const database = await enhancedSelect({
-    message: "What database would you like to use?",
-    options: DATABASES.map((db) => ({
-      label: db.label,
-      value: db,
-    })),
-  });
+  const database =
+    DOCKER_DATABASES.find((db) => db.value === options.database) ??
+    (await enhancedSelect({
+      message: "What database would you like to use?",
+      options: DOCKER_DATABASES.map((db) => ({
+        label: db.label,
+        value: db,
+      })),
+    }));
 
   const { createComposeService, imageConfig } = await database.config();
 

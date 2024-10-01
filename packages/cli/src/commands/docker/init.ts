@@ -1,17 +1,22 @@
 import { Command } from "commander";
+import { safeParseAsync } from "valibot";
+import { formatValibotErrors } from "~/utils/format-valibot-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
 import { getRepositoryLink } from "./helpers/get-repository-link";
+import { dockerDatabaseSchema } from "./schemas/database";
 
-export interface InitOptions {
+interface InitOptions {
+  database?: string;
   cwd: string;
 }
 
 export const init = new Command()
   .name("init")
   .description("Init a Docker Compose")
+  .option("--database <database>", "the database to use.")
   .option(
     "-c, --cwd <cwd>",
     "the working directory. defaults to the current directory.",
@@ -52,5 +57,14 @@ async function parseOptions(options: InitOptions) {
     return new Err(`The directory ${options.cwd} does not exist.`);
   }
 
-  return new Ok(options);
+  const result = await safeParseAsync(dockerDatabaseSchema, options.database);
+
+  if (result.issues) {
+    return new Err(formatValibotErrors(result.issues));
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+    database: result.output,
+  });
 }
