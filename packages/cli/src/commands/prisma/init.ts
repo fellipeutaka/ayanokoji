@@ -17,7 +17,7 @@ export const init = new Command()
   .option("--with-scripts", "Add useful scripts to package.json.")
   .option(
     "-c, --cwd <cwd>",
-    "the working directory. defaults to the current directory.",
+    "The working directory. Defaults to the current directory.",
     process.cwd()
   )
   .action(async (options: InitOptions) => {

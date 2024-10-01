@@ -5,7 +5,7 @@ import { getPackageManager } from "~/utils/get-package-manager";
 import { installDeps } from "~/utils/install-deps";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
-import type { InitOptions } from "../init";
+import type { ParsedInitOptions } from "../init";
 import { createDrizzleConfigFile } from "./create-drizzle-config-file";
 import { createDrizzleScripts } from "./create-drizzle-scripts";
 import { getDrizzleConfig } from "./get-drizzle-config";
@@ -19,7 +19,7 @@ function handleAlreadyInitError(error: string): never {
   process.exit(1);
 }
 
-export async function initDrizzle(options: InitOptions) {
+export async function initDrizzle(options: ParsedInitOptions) {
   const paths = getDrizzlePaths(options.cwd);
 
   if (await access(paths.config)) {

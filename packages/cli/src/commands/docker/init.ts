@@ -16,10 +16,10 @@ interface InitOptions {
 export const init = new Command()
   .name("init")
   .description("Init a Docker Compose")
-  .option("--database <database>", "the database to use.")
+  .option("--database <database>", "The database to use.")
   .option(
     "-c, --cwd <cwd>",
-    "the working directory. defaults to the current directory.",
+    "The working directory. Defaults to the current directory.",
     process.cwd()
   )
   .action(async (options: InitOptions) => {

@@ -1,24 +1,34 @@
 import { Command } from "commander";
+import { safeParseAsync } from "valibot";
+import { formatValibotErrors } from "~/utils/format-valibot-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+import type { DrizzleDatabase } from "./databases";
 import { getAdapterDocs } from "./helpers/get-adapter-docs";
+import { drizzleDatabaseSchema } from "./schemas/database";
 
-export interface InitOptions {
+interface InitOptions {
+  cwd: string;
+  database?: string;
   withModel?: boolean;
   withScripts?: boolean;
-  cwd: string;
 }
+
+export type ParsedInitOptions = Omit<InitOptions, "database"> & {
+  database?: DrizzleDatabase;
+};
 
 export const init = new Command()
   .name("init")
   .description("Init Drizzle ORM")
+  .option("--database <database>", "The database to use.")
   .option("--with-model", "Create a schema example.")
   .option("--with-scripts", "Add useful scripts to package.json.")
   .option(
     "-c, --cwd <cwd>",
-    "the working directory. defaults to the current directory.",
+    "The working directory. Defaults to the current directory.",
     process.cwd()
   )
   .action(async (options: InitOptions) => {
@@ -57,5 +67,16 @@ async function parseOptions(options: InitOptions) {
     return new Err(`The directory ${options.cwd} does not exist.`);
   }
 
-  return new Ok(options);
+  const result = await safeParseAsync(drizzleDatabaseSchema, options.database);
+
+  if (result.issues) {
+    return new Err(formatValibotErrors(result.issues));
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+    database: result.output,
+    withModel: options.withModel,
+    withScripts: options.withScripts,
+  });
 }
