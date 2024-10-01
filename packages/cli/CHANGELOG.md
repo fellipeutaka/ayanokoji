@@ -1,5 +1,14 @@
 # ayanokoji
 
+## 0.7.0
+
+### Minor Changes
+
+- 7ba2cc0: add support to `--database` flag on docker init
+- 923524f: add support to `--database` flag on drizzle init
+- 3451ba3: add remove biome command
+- 1a20386: add support to `--database` flag on prisma init
+
 ## 0.6.0
 
 ### Minor Changes
