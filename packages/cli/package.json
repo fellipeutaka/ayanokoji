@@ -3,7 +3,7 @@
   "description": "A CLI to setup some tools for a new project",
   "type": "module",
   "private": false,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": {
     "name": "Fellipe Utaka",
     "email": "fellipeutaka@gmail.com",

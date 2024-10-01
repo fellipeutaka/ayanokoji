@@ -1,5 +1,11 @@
 # ayanokoji
 
+## 0.7.0
+
+### Minor Changes
+
+- 7ba2cc0: add support to `--database` flag on docker init
+
 ## 0.6.0
 
 ### Minor Changes
