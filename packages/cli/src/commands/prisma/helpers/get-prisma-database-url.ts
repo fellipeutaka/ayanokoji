@@ -1,7 +1,7 @@
 import type { PrismaDatabase } from "../databases";
 
 const defaultDatabaseUrl = {
-  postgres: "postgresql://johndoe:password@localhost:5432/mydb?schema=public",
+  postgresql: "postgresql://johndoe:password@localhost:5432/mydb?schema=public",
   cockroachdb:
     "postgresql://johndoe:password@localhost:26257/mydb?schema=public",
   mysql: "mysql://johndoe:password@localhost:3306/mydb",

@@ -6,9 +6,9 @@ export interface ComposeService {
 
 export const DOCKER_DATABASES = [
   {
-    label: "Postgres",
+    label: "PostgreSQL",
     value: "postgresql",
-    config: () => import("./postgres").then((m) => m.config),
+    config: () => import("./postgresql").then((m) => m.config),
   },
   {
     label: "MySQL",

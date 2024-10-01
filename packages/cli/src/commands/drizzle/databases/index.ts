@@ -9,7 +9,7 @@ export interface DrizzleAdapter {
 
 export const DRIZZLE_DATABASES = [
   {
-    label: "Postgres",
+    label: "PostgreSQL",
     value: "postgresql",
     data: () => import("./postgresql").then((m) => m.data),
   },

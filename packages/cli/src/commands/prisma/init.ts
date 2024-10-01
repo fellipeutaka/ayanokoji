@@ -1,18 +1,28 @@
 import { Command } from "commander";
+import { safeParseAsync } from "valibot";
+import { formatValibotErrors } from "~/utils/format-valibot-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+import type { PrismaDatabase } from "./databases";
+import { prismaDatabaseSchema } from "./schemas/database";
 
-export interface InitOptions {
+interface InitOptions {
+  cwd: string;
+  database?: string;
   withModel?: boolean;
   withScripts?: boolean;
-  cwd: string;
 }
+
+export type ParsedInitOptions = Omit<InitOptions, "database"> & {
+  database?: PrismaDatabase;
+};
 
 export const init = new Command()
   .name("init")
   .description("Init Prisma ORM")
+  .option("--database <database>", "The database to use.")
   .option("--with-model", "Create a schema example.")
   .option("--with-scripts", "Add useful scripts to package.json.")
   .option(
@@ -48,5 +58,16 @@ async function parseOptions(options: InitOptions) {
     return new Err(`The directory ${options.cwd} does not exist.`);
   }
 
-  return new Ok(options);
+  const result = await safeParseAsync(prismaDatabaseSchema, options.database);
+
+  if (result.issues) {
+    return new Err(formatValibotErrors(result.issues));
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+    database: result.output,
+    withModel: options.withModel,
+    withScripts: options.withScripts,
+  });
 }

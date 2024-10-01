@@ -1,13 +1,14 @@
 import { enhancedConfirm, enhancedSelect } from "~/utils/prompts";
 import { PRISMA_DATABASES } from "../databases";
-import type { InitOptions } from "../init";
+import type { ParsedInitOptions } from "../init";
 
-export async function getPrismaConfig(options: InitOptions) {
-  const database = await enhancedSelect({
-    message: "What database would you like to use?",
-    options: PRISMA_DATABASES,
-    initialValue: "postgres",
-  });
+export async function getPrismaConfig(options: ParsedInitOptions) {
+  const database =
+    PRISMA_DATABASES.find((db) => db.value === options.database)?.value ??
+    (await enhancedSelect({
+      message: "What database would you like to use?",
+      options: PRISMA_DATABASES,
+    }));
 
   const withModel =
     options.withModel ??

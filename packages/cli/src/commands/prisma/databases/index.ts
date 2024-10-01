@@ -1,7 +1,7 @@
 export const PRISMA_DATABASES = [
   {
-    label: "Postgres",
-    value: "postgres",
+    label: "PostgreSQL",
+    value: "postgresql",
   },
   {
     label: "MySQL",

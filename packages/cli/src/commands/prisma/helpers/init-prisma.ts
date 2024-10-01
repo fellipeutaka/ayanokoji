@@ -5,7 +5,7 @@ import { getPackageManager } from "~/utils/get-package-manager";
 import { installDeps } from "~/utils/install-deps";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
-import type { InitOptions } from "../init";
+import type { ParsedInitOptions } from "../init";
 import { createPrismaSchema } from "./create-prisma-schema";
 import { createPrismaScripts } from "./create-prisma-scripts";
 import { getPrismaConfig } from "./get-prisma-config";
@@ -20,7 +20,7 @@ function handleAlreadyInitError(error: string): never {
   process.exit(1);
 }
 
-export async function initPrisma(options: InitOptions) {
+export async function initPrisma(options: ParsedInitOptions) {
   const paths = getPrismaPaths(options.cwd);
 
   if (await access(paths.folder)) {
