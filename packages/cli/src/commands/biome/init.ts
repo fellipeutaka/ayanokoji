@@ -13,7 +13,7 @@ export const init = new Command()
   .description("Init Biome")
   .option(
     "-c, --cwd <cwd>",
-    "the working directory. defaults to the current directory.",
+    "The working directory. Defaults to the current directory.",
     process.cwd()
   )
   .action(async (options: InitOptions) => {

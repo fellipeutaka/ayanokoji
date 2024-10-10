@@ -14,7 +14,7 @@ process.on("SIGTERM", exitProcess);
 const program = new Command()
   .name(name)
   .description(description)
-  .version(version, "-v, --version", "display the version number");
+  .version(version, "-v, --version", "Display the version number.");
 
 program.addCommand(biome);
 program.addCommand(docker);

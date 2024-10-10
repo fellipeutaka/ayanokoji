@@ -10,8 +10,7 @@
   "javascript": {
     "formatter": {
       "trailingCommas": "es5"
-    },
-    "globals": ["BufferEncoding"]
+    }
   },
   "formatter": {
     "enabled": true,

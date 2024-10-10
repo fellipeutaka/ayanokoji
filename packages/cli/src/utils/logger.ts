@@ -1,22 +1,21 @@
 import picocolors from "picocolors";
 
+const c = console;
+
 export const logger = {
   error(input: string) {
-    console.error(picocolors.red(input));
+    c.error(picocolors.red(input));
   },
   warn(input: string) {
-    console.warn(picocolors.yellow(input));
+    c.warn(picocolors.yellow(input));
   },
   info(input: string) {
-    console.info(picocolors.cyan(input));
+    c.info(picocolors.cyan(input));
   },
   success(input: string) {
-    console.info(picocolors.green(input));
-  },
-  log(input: string) {
-    console.info(input);
+    c.info(picocolors.green(input));
   },
   break() {
-    console.info("");
+    c.info("");
   },
 };
