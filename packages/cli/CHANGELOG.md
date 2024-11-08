@@ -1,5 +1,11 @@
 # ayanokoji
 
+## 0.8.0
+
+### Minor Changes
+
+- 43dcfd2: add `gitignore init` command
+
 ## 0.7.0
 
 ### Minor Changes
