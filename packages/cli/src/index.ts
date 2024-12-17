@@ -8,9 +8,8 @@ import { drizzle } from "./commands/drizzle";
 import { gitIgnore } from "./commands/gitignore";
 import { prisma } from "./commands/prisma";
 
-const exitProcess = () => process.exit(0);
-process.on("SIGINT", exitProcess);
-process.on("SIGTERM", exitProcess);
+process.on("SIGINT", () => process.exit(0));
+process.on("SIGTERM", () => process.exit(0));
 
 const program = new Command()
   .name(name)
