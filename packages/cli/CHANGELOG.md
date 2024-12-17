@@ -1,5 +1,12 @@
 # ayanokoji
 
+## 0.8.1
+
+### Patch Changes
+
+- 3e8e27b: sla 2
+- 20f2687: sla
+
 ## 0.8.0
 
 ### Minor Changes
