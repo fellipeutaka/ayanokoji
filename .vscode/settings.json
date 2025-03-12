@@ -5,6 +5,7 @@
     "biomejs",
     "commitlint",
     "execa",
+    "fumadocs",
     "picocolors",
     "tsup",
     "valibot"
