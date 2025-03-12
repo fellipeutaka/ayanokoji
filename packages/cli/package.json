@@ -12,15 +12,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fellipeutaka/ayanokoji.git",
+    "url": "git+https://github.com/fellipeutaka/ayanokoji.git",
     "directory": "packages/cli"
   },
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
+  "module": "./dist/index.js",
   "bin": "./dist/index.js",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
+  "sideEffects": false,
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",

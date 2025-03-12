@@ -7,6 +7,7 @@ import { docker } from "./commands/docker";
 import { drizzle } from "./commands/drizzle";
 import { gitIgnore } from "./commands/gitignore";
 import { prisma } from "./commands/prisma";
+import { secret } from "./commands/secret";
 
 const exitProcess = () => process.exit(0);
 process.on("SIGINT", exitProcess);
@@ -22,5 +23,6 @@ program.addCommand(docker);
 program.addCommand(drizzle);
 program.addCommand(gitIgnore);
 program.addCommand(prisma);
+program.addCommand(secret);
 
 program.parse();
