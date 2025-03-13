@@ -3,3 +3,8 @@
 @import "fumadocs-ui/css/preset.css";
 
 @source "../../node_modules/fumadocs-ui/dist/**/*.js";
+
+[data-active="true"] :where(g, path, circle) {
+  fill: var(--fill-rich, none);
+  stroke: var(--stroke-rich, none);
+}

@@ -13,7 +13,7 @@ export const baseOptions: BaseLayoutProps = {
   nav: {
     title: (
       <>
-        <Icons.Logo className="size-5" />
+        <Icons.Logo data-active="true" className="size-5" />
         Ayanokoji
       </>
     ),

@@ -4,14 +4,15 @@
   "private": true,
   "packageManager": "pnpm@9.12.1",
   "scripts": {
-    "dev": "turbo run dev --parallel --",
-    "build": "turbo run build --",
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
     "clean": "rimraf {apps,config,packages}/**/{.next,.turbo,node_modules,dist,out} -g",
     "lint": "biome check",
     "lint:ci": "biome ci",
     "prepare": "husky",
-    "type-check": "turbo run type-check --",
-    "cli": "pnpm --filter \"ayanokoji\" --"
+    "type-check": "turbo run type-check",
+    "cli": "pnpm --filter \"ayanokoji\"",
+    "docs": "pnpm --filter \"docs\""
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
