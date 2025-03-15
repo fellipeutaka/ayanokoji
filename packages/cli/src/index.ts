@@ -8,6 +8,7 @@ import { drizzle } from "./commands/drizzle";
 import { gitIgnore } from "./commands/gitignore";
 import { prisma } from "./commands/prisma";
 import { secret } from "./commands/secret";
+import { typescript } from "./commands/typescript";
 
 const exitProcess = () => process.exit(0);
 process.on("SIGINT", exitProcess);
@@ -24,5 +25,6 @@ program.addCommand(drizzle);
 program.addCommand(gitIgnore);
 program.addCommand(prisma);
 program.addCommand(secret);
+program.addCommand(typescript);
 
 program.parse();

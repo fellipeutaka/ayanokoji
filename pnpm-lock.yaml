@@ -122,6 +122,12 @@ importers:
         specifier: ^4.19.1
         version: 4.19.1
 
+  packages/cli/test:
+    devDependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+
 packages:
 
   '@alloc/quick-lru@5.2.0':

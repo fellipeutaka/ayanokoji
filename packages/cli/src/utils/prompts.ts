@@ -4,6 +4,7 @@ import {
   cancel,
   confirm,
   isCancel,
+  multiselect,
   select,
   text,
 } from "@clack/prompts";
@@ -47,6 +48,26 @@ export async function enhancedSelect<
   cancelMessage = "Operation cancelled."
 ): Promise<Options[number]["value"]> {
   const result = await select(opts);
+  if (isCancel(result)) {
+    cancel(cancelMessage);
+    process.exit(0);
+  }
+  return result;
+}
+
+interface MultiSelectOptions<Value> {
+  message: string;
+  options: Option<Value>[];
+  initialValues?: Value[];
+  required?: boolean;
+  cursorAt?: Value;
+}
+
+export async function enhancedMultiselect<const Value>(
+  opts: MultiSelectOptions<Value>,
+  cancelMessage = "Operation cancelled."
+): Promise<Value[]> {
+  const result = await multiselect(opts);
   if (isCancel(result)) {
     cancel(cancelMessage);
     process.exit(0);
