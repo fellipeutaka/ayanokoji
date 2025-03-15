@@ -3,7 +3,7 @@
   "description": "A CLI to setup some tools for a new project",
   "type": "module",
   "private": false,
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": {
     "name": "Fellipe Utaka",
     "email": "fellipeutaka@gmail.com",
@@ -19,7 +19,9 @@
   "exports": "./dist/index.js",
   "module": "./dist/index.js",
   "bin": "./dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "dev": "tsup --watch",

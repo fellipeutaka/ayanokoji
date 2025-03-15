@@ -1,5 +1,11 @@
 # ayanokoji
 
+## 0.9.0
+
+### Minor Changes
+
+- fd4db8f: add `typescript init` command
+
 ## 0.8.0
 
 ### Minor Changes
