@@ -1,6 +1,6 @@
 import { detect } from "@antfu/ni";
 
-export type PackageManager = "yarn" | "pnpm" | "bun" | "npm";
+export type PackageManager = "yarn" | "pnpm" | "bun" | "npm" | "deno";
 
 export async function getPackageManager(
   targetDir: string,
@@ -13,11 +13,17 @@ export async function getPackageManager(
   if (packageManager === "yarn@berry") {
     return "yarn";
   }
+
   if (packageManager === "pnpm@6") {
     return "pnpm";
   }
+
   if (packageManager === "bun") {
     return "bun";
+  }
+
+  if (packageManager === "deno") {
+    return "deno";
   }
 
   if (!withFallback) {
@@ -54,6 +60,10 @@ export async function getPackageRunner(cwd: string) {
 
   if (packageManager === "bun") {
     return "bunx";
+  }
+
+  if (packageManager === "deno") {
+    return "deno";
   }
 
   return "npx";

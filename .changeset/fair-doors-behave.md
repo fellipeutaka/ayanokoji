@@ -1,0 +1,5 @@
+---
+"ayanokoji": patch
+---
+
+bump deps

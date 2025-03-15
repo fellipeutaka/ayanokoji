@@ -51,6 +51,18 @@ const scripts = {
     "db:check": "bun run drizzle check",
     "db:metadata": "bun run drizzle up",
   },
+  deno: {
+    tsx: "tsx --env-file=.env",
+    drizzle: "deno --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
+    "db:generate": "deno run drizzle generate",
+    "db:migrate": "deno run tsx <DATABASE_PATH>/migrate.ts",
+    "db:seed": "deno run tsx <DATABASE_PATH>/seed.ts",
+    "db:pull": "deno run drizzle introspect",
+    "db:push": "deno run drizzle push",
+    "db:studio": "deno run drizzle studio",
+    "db:check": "deno run drizzle check",
+    "db:metadata": "deno run drizzle up",
+  },
 } as const satisfies Record<
   PackageManager,
   NonNullable<PackageJson["scripts"]>

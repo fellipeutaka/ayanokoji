@@ -13,6 +13,7 @@ const removeCommand = {
   yarn: "remove",
   pnpm: "remove",
   bun: "remove",
+  deno: "uninstall",
 } as const satisfies Record<PackageManager, string>;
 
 export async function removeDeps({
