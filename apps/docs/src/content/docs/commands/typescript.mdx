@@ -1,0 +1,106 @@
+---
+title: TypeScript
+icon: TypeScript
+---
+
+TypeScript is a language that builds on JavaScript by adding syntax for type declarations and annotations. It is a superset of JavaScript and is maintained by Microsoft.
+
+[Documentation](https://www.typescriptlang.org/docs/)
+
+## Usage
+
+```package-install
+npx ayanokoji typescript init
+```
+
+This command initializes TypeScript in your project through an interactive process where you can configure:
+
+- Strictness settings (`strict` mode, `noUncheckedIndexedAccess`, `noImplicitOverride`)
+- Transpilation method (`tsc` vs other build tools)
+- Runtime environment (browser DOM vs `Node.js`)
+- Library configuration
+- Monorepo settings
+- Dependencies to install (`TypeScript`, `@types/node`, `@types/bun`, `@cloudflare/workers-types`)
+
+The command creates a `tsconfig.json` with optimized defaults including:
+
+- ES2022 target
+- Module resolution for Node.js/ESM
+- JSON module support
+- Source map generation
+- Strict type checking (optional)
+
+The command will fail if a `tsconfig.json` file already exists in your project.
+
+## TSConfig Options
+
+The generated `tsconfig.json` includes carefully selected options:
+
+### Base Options
+
+- [`target: "es2022"`](https://www.typescriptlang.org/tsconfig/#target) - Compiles to modern JavaScript features
+- [`esModuleInterop: true`](https://www.typescriptlang.org/tsconfig/#esModuleInterop) - Enables cleaner imports from CommonJS modules
+- [`skipLibCheck: true`](https://www.typescriptlang.org/tsconfig/#skipLibCheck) - Skips type-checking of declaration files for better performance
+- [`allowJs: true`](https://www.typescriptlang.org/tsconfig/#allowJs) - Allows JavaScript files to be imported
+- [`resolveJsonModule: true`](https://www.typescriptlang.org/tsconfig/#resolveJsonModule) - Enables importing JSON files
+- [`moduleDetection: "force"`](https://www.typescriptlang.org/tsconfig/#moduleDetection) - Treats each file as a module
+- [`verbatimModuleSyntax: true`](https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax) - Ensures explicit imports/exports
+- [`erasableSyntaxOnly: true`](https://www.typescriptlang.org/tsconfig/#erasableSyntaxOnly) - Limits TypeScript syntax
+  to features that can be easily erased to JavaScript. Disallows `enums`, `namespaces` with runtime code, `parameter properties`
+  in classes, and non-ECMAScript `import/export` assignments.
+  ```ts
+  // ❌ error: An `import ... = require(...)` alias
+  import foo = require("foo");
+  // ❌ error: A namespace with runtime code.
+  namespace container {
+    foo.method();
+    export type Bar = string;
+  }
+  // ❌ error: An `import =` alias
+  import Bar = container.Bar;
+  class Point {
+    // ❌ error: Parameter properties
+    constructor(public x: number, public y: number) {}
+  }
+  // ❌ error: An `export =` assignment.
+  export = Point;
+  // ❌ error: An enum declaration.
+  enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+  }
+  ```
+
+### Strictness Options (Optional)
+
+- [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict) - Enables all strict type checking options.
+- [`noUncheckedIndexedAccess: true`](https://www.typescriptlang.org/tsconfig/#noUncheckedIndexedAccess) - Adds `undefined` to indexed access like `array[0]`.
+- [`noImplicitOverride: true`](https://www.typescriptlang.org/tsconfig/#noImplicitOverride) - Ensures explicit `override` keywords for inherited methods.
+
+### Build Options
+
+When using `tsc`:
+
+- [`moduleResolution: "NodeNext"`](https://www.typescriptlang.org/tsconfig/#moduleResolution) - Modern Node.js module resolution.
+- [`module: "NodeNext"`](https://www.typescriptlang.org/tsconfig/#module) - Uses Node.js module format.
+- [`outDir: "dist"`](https://www.typescriptlang.org/tsconfig/#outDir) - Outputs compiled files to dist folder.
+- [`sourceMap: true`](https://www.typescriptlang.org/tsconfig/#sourceMap) - Generates source maps for debugging.
+
+When using other build tools:
+
+- [`moduleResolution: "Bundler"`](https://www.typescriptlang.org/tsconfig/#moduleResolution) - Modern bundler-style resolution.
+- [`module: "Preserve"`](https://www.typescriptlang.org/tsconfig/#module) - Preserves the original module syntax.
+- [`noEmit: true`](https://www.typescriptlang.org/tsconfig/#noEmit) - Skips generating output files.
+
+### Library Options (Optional)
+
+- [`composite: true`](https://www.typescriptlang.org/tsconfig/#composite) - Tells TypeScript to emit `.tsbuildinfo` files.
+  This tells TypeScript that your project is part of a monorepo,
+  and also helps it to cache builds to run faster.
+- [`declaration: true`](https://www.typescriptlang.org/tsconfig/#declaration) - Tells TypeScript to emit `.d.ts` files.
+  This is needed so that libraries can get autocomplete on the `.js` files you're creating.
+- [`declarationMap: true`](https://www.typescriptlang.org/tsconfig/#declarationMap) - Generates source maps for `.d.ts` files.
+  These are needed so that when consumers of your libraries are debugging, they can jump to the original
+  source code using go-to-definition.

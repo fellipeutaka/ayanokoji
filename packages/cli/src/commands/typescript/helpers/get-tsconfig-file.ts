@@ -8,11 +8,13 @@ export const baseOptions = {
   allowJs: true,
   resolveJsonModule: true,
   moduleDetection: "force",
+  erasableSyntaxOnly: true,
 };
 
 export const strictnessOptions = {
   strict: true,
   noUncheckedIndexedAccess: true,
+  noImplicitOverride: true,
 };
 
 export const tscOptions = {
@@ -24,7 +26,7 @@ export const tscOptions = {
 
 export const nonTscOptions = {
   moduleResolution: "Bundler",
-  module: "ESNext",
+  module: "Preserve",
   noEmit: true,
 };
 

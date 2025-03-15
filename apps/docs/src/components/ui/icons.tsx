@@ -56,6 +56,23 @@ export const Icons = {
       />
     </svg>
   ),
+  ExternalLink: (props) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="presentation"
+      {...props}
+    >
+      <path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+    </svg>
+  ),
   Git: (props) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -158,6 +175,27 @@ export const Icons = {
         strokeLinejoin="round"
         d="M8 .5l6.5 12.05-10 2.95-3-5zm-3.5 15L8 .5"
       />
+    </svg>
+  ),
+  TypeScript: (props) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={32}
+      height={32}
+      viewBox="0 0 16 16"
+      role="presentation"
+      {...props}
+    >
+      <g
+        className="[--stroke-rich:#8aadf4]"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 1.5h8A2.5 2.5 0 0114.5 4v8a2.5 2.5 0 01-2.5 2.5H4A2.5 2.5 0 011.5 12V4A2.5 2.5 0 014 1.5" />
+        <path d="M12.5 8.75c0-.69-.54-1.25-1.2-1.25h-.6c-.66 0-1.2.56-1.2 1.25S10.04 10 10.7 10h.6c.66 0 1.2.56 1.2 1.25s-.54 1.25-1.2 1.25h-.6c-.66 0-1.2-.56-1.2-1.25m-3-3.75v5M5 7.5h3" />
+      </g>
     </svg>
   ),
 } as const satisfies Record<string, Icon>;
