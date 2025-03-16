@@ -1,5 +1,11 @@
 # ayanokoji
 
+## 0.9.1
+
+### Patch Changes
+
+- f0d8ac5: bump deps
+
 ## 0.9.0
 
 ### Minor Changes
