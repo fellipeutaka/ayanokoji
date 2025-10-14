@@ -28,16 +28,16 @@
     "type-check": "tsc --noEmit --incremental false"
   },
   "devDependencies": {
-    "tsup": "^8.4.0",
-    "tsx": "^4.19.3"
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6"
   },
   "dependencies": {
-    "@antfu/ni": "^24.2.0",
-    "@clack/prompts": "^0.10.0",
+    "@antfu/ni": "^24.4.0",
+    "@clack/prompts": "^0.10.1",
     "commander": "^13.1.0",
-    "nano-spawn": "^0.2.0",
+    "nano-spawn": "^0.2.1",
     "picocolors": "^1.1.1",
-    "valibot": "^1.0.0-rc.4",
-    "yaml": "^2.7.0"
+    "valibot": "^1.1.0",
+    "yaml": "^2.8.1"
   }
 }

@@ -2,36 +2,31 @@
   "name": "root",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@9.12.1",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
-    "clean": "rimraf {apps,config,packages}/**/{.next,.turbo,node_modules,dist,out} -g",
+    "clean": "rimraf --glob \"{apps,packages}/*/{node_modules,dist}\" \"node_modules\" \".turbo\"",
     "lint": "biome check",
     "lint:ci": "biome ci",
-    "prepare": "husky",
     "type-check": "turbo run type-check",
     "cli": "pnpm --filter \"ayanokoji\"",
-    "docs": "pnpm --filter \"docs\""
+    "docs": "pnpm --filter \"docs\"",
+    "commit": "git-cz"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@changesets/cli": "^2.28.1",
-    "@commitlint/cli": "^19.8.0",
-    "@commitlint/config-conventional": "^19.8.0",
-    "@commitlint/cz-commitlint": "^19.8.0",
-    "@types/node": "^22.13.10",
+    "@changesets/cli": "^2.29.7",
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@commitlint/cz-commitlint": "^20.1.0",
+    "@types/node": "^24.7.2",
     "commitizen": "^4.3.1",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.0",
+    "lefthook": "^1.13.6",
     "rimraf": "^6.0.1",
-    "turbo": "^2.4.4",
-    "typescript": "^5.8.2"
-  },
-  "lint-staged": {
-    "*": [
-      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
-    ]
+    "turbo": "^2.5.8",
+    "typescript": "^5.9.3"
   },
   "config": {
     "commitizen": {
