@@ -1,10 +1,9 @@
-import { docs } from "@/.source";
-import { Icons } from "@/components/ui/icons";
-import { loader } from "fumadocs-core/source";
+import { docs } from "fumadocs-mdx:collections/server";
+import { type InferPageType, loader } from "fumadocs-core/source";
 import { createElement } from "react";
+import { Icons } from "@/components/ui/icons";
 
-// `loader()` also assign a URL to your pages
-// See https://fumadocs.vercel.app/docs/headless/source-api for more info
+// See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: "/docs",
   source: docs.toFumadocsSource(),
@@ -18,3 +17,22 @@ export const source = loader({
     }
   },
 });
+
+export type SourcePage = InferPageType<typeof source>;
+
+export function getPageImage(page: SourcePage) {
+  const segments = [...page.slugs, "image.png"];
+
+  return {
+    segments,
+    url: `/og/docs/${segments.join("/")}`,
+  };
+}
+
+export async function getLLMText(page: SourcePage) {
+  const processed = await page.data.getText("processed");
+
+  return `# ${page.data.title}
+
+${processed}`;
+}

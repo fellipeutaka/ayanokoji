@@ -1,0 +1,11 @@
+{
+  "$schema": "https://denji-docs.vercel.app/configuration_schema.json",
+  "output": "./src/components/ui/icons.tsx",
+  "framework": "react",
+  "typescript": true,
+  "a11y": "hidden",
+  "trackSource": false,
+  "hooks": {
+    "postAdd": ["bun run lint:fix ./src/components/ui/icons.tsx"]
+  }
+}

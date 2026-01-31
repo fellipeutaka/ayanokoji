@@ -1,6 +1,6 @@
+import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { Icons } from "@/components/ui/icons";
 import { siteConfig } from "@/config/site";
-import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
 /**
  * Shared layout configurations
@@ -13,7 +13,7 @@ export const baseOptions: BaseLayoutProps = {
   nav: {
     title: (
       <>
-        <Icons.Logo data-active="true" className="size-5" />
+        <Icons.Logo className="size-5" data-active="true" />
         Ayanokoji
       </>
     ),

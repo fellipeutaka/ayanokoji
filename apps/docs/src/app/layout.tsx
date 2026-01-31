@@ -1,10 +1,9 @@
 import "@/styles/globals.css";
 
-import { fonts } from "@/config/fonts";
-
-import { siteConfig } from "@/config/site";
-import { RootProvider } from "fumadocs-ui/provider";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata, Viewport } from "next";
+import { fonts } from "@/config/fonts";
+import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: {
@@ -32,14 +31,10 @@ export const viewport: Viewport = {
   ],
 };
 
-interface RootLayoutProps {
-  children: React.ReactNode;
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={fonts.sans.className} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
+    <html className={fonts.sans.className} lang="en" suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col">
         <RootProvider>{children}</RootProvider>
       </body>
     </html>

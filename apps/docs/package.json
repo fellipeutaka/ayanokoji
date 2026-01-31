@@ -7,21 +7,27 @@
     "dev": "next dev",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "type-check": "tsc --noEmit --incremental false"
+    "type-check": "next typegen && fumadocs-mdx && tsc --noEmit",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "lint:doctor": "ultracite doctor"
   },
   "dependencies": {
-    "fumadocs-core": "^15.8.5",
-    "fumadocs-docgen": "^3.0.2",
-    "fumadocs-mdx": "^12.0.3",
-    "fumadocs-ui": "^15.8.5",
-    "next": "^15.5.8",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "cva": "^1.0.0-beta.4",
+    "fumadocs-core": "^16.4.11",
+    "fumadocs-docgen": "^3.0.5",
+    "fumadocs-mdx": "^14.2.6",
+    "fumadocs-ui": "^16.4.11",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/mdx": "^2.0.13",
-    "@types/react": "^19.2.7",
+    "@types/node": "25.1.0",
+    "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18"
