@@ -27,7 +27,7 @@ export async function initBiome(options: InitOptions) {
     const packageManager = await getPackageManager(options.cwd);
     await installDeps({
       cwd: options.cwd,
-      packageManager: packageManager,
+      packageManager,
       devDependencies: ["@biomejs/biome"],
     });
 

@@ -1,4 +1,4 @@
-import type { PackageJson } from "~/@types/package-json";
+import type { PackageJson } from "type-fest";
 import { readFile } from "./fs";
 import { Err, Ok } from "./result";
 

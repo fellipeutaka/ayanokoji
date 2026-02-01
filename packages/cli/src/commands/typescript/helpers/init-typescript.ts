@@ -32,7 +32,7 @@ export async function initTypeScript(options: InitOptions) {
     const packageManager = await getPackageManager(options.cwd);
     await installDeps({
       cwd: options.cwd,
-      packageManager: packageManager,
+      packageManager,
       devDependencies: config.depsToInstall,
     });
 

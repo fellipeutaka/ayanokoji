@@ -1,4 +1,4 @@
-import type { PackageJson } from "~/@types/package-json";
+import type { PackageJson } from "type-fest";
 import { writeFile } from "~/utils/fs";
 
 const script = {
@@ -27,7 +27,8 @@ export async function createTypecheckScript({
 
   const newScripts = scriptsToAdd.reduce(
     (acc, { scriptName, scriptCommand }) => {
-      return Object.assign({}, acc, { [scriptName]: scriptCommand });
+      acc[scriptName] = scriptCommand;
+      return acc;
     },
     packageJson.scripts ?? {}
   );

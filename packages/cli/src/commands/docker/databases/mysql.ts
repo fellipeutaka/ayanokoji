@@ -1,8 +1,8 @@
 import { safeParse } from "valibot";
 import { formatValibotErrors } from "~/utils/format-valibot-errors";
 import { enhancedSelect, enhancedText } from "~/utils/prompts";
-import type { ComposeService, DatabaseImageConfig } from ".";
 import { portSchema } from "../schemas/port";
+import type { ComposeService, DatabaseImageConfig } from ".";
 
 const imageConfig: DatabaseImageConfig = {
   namespace: "bitnami",

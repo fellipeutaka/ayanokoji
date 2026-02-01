@@ -5,5 +5,5 @@ export const portSchema = pipe(
   transform(Number),
   number("Port must be a number"),
   minValue(0, "Port must be greater than 0"),
-  maxValue(65535, "Port must be less than 65536")
+  maxValue(65_535, "Port must be less than 65536")
 );

@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { PackageJson } from "~/@types/package-json";
+import type { PackageJson } from "type-fest";
 import { writeFile } from "~/utils/fs";
 import type { PackageManager } from "~/utils/get-package-manager";
 
@@ -97,7 +97,8 @@ export async function createDrizzleScripts({
 
   const newScripts = scriptsToAdd.reduce(
     (acc, { scriptName, scriptCommand }) => {
-      return Object.assign({}, acc, { [scriptName]: scriptCommand });
+      acc[scriptName] = scriptCommand;
+      return acc;
     },
     packageJson.scripts ?? {}
   );

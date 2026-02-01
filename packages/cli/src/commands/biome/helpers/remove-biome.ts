@@ -33,7 +33,7 @@ export async function removeBiome(options: RemoveOptions) {
 
     await removeDeps({
       cwd: options.cwd,
-      packageManager: packageManager,
+      packageManager,
       dependencies: ["@biomejs/biome"],
     });
 
