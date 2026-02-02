@@ -65,6 +65,14 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
         volumes: [`${serviceName}_data:/var/lib/mysql`],
       }),
     },
+    connectionConfig: {
+      type: "mysql" as const,
+      user: "root",
+      password: rootPassword,
+      host: "localhost",
+      port,
+      database: db,
+    },
   };
 }
 

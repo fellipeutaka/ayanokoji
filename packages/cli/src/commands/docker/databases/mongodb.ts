@@ -65,6 +65,13 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
         volumes: [`${serviceName}_data:/data/db`],
       }),
     },
+    connectionConfig: {
+      type: "mongodb" as const,
+      user,
+      password,
+      host: "localhost",
+      port,
+    },
   };
 }
 

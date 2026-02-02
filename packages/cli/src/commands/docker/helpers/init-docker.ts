@@ -6,6 +6,7 @@ import {
   type DatabaseImageConfig,
   DOCKER_DATABASES,
 } from "../databases";
+import type { ConnectionConfig } from "./generate-connection-string";
 import {
   getExistingDockerComposeFile,
   validDockerComposeFiles,
@@ -18,6 +19,11 @@ interface InitDockerProps {
 interface ComposeConfig {
   services: Record<string, ComposeService>;
   volumes?: Record<string, object>;
+}
+
+export interface InitDockerResult {
+  imageConfigs: DatabaseImageConfig[];
+  connectionConfigs: ConnectionConfig[];
 }
 
 export async function initDocker(options: InitDockerProps) {
@@ -76,6 +82,7 @@ export async function initDocker(options: InitDockerProps) {
   );
 
   const imageConfigs: DatabaseImageConfig[] = [];
+  const connectionConfigs: ConnectionConfig[] = [];
   const volumes: Set<string> = new Set();
 
   for (const database of selectedDatabaseEntries) {
@@ -84,6 +91,7 @@ export async function initDocker(options: InitDockerProps) {
 
     config.services[service.name] = service.config;
     imageConfigs.push(imageConfig);
+    connectionConfigs.push(service.connectionConfig);
 
     if (service.config.volumes) {
       for (const volume of service.config.volumes) {
@@ -104,5 +112,5 @@ export async function initDocker(options: InitDockerProps) {
 
   await writeFile(`${options.cwd}/${fileName}`, stringify(config, null, 2));
 
-  return new Ok(imageConfigs);
+  return new Ok({ imageConfigs, connectionConfigs });
 }

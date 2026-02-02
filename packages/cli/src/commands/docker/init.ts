@@ -3,6 +3,7 @@ import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+import { generateConnectionString } from "./helpers/generate-connection-string";
 import { getRepositoryLink } from "./helpers/get-repository-link";
 
 interface InitOptions {
@@ -31,13 +32,21 @@ export const init = new Command()
       handleError(initResult.error);
     }
 
-    const imageConfigs = initResult.value;
+    const { imageConfigs, connectionConfigs } = initResult.value;
 
     logger.break();
     logger.success("Docker Compose file created.");
     logger.info(
       "You can now run `docker compose up` to start your Docker Compose."
     );
+    logger.break();
+
+    logger.info("Connection strings:");
+    for (const config of connectionConfigs) {
+      const connectionString = generateConnectionString(config);
+      logger.info(`- ${config.type.toUpperCase()}_URL=${connectionString}`);
+    }
+
     logger.break();
     logger.info(
       "Check out the Docker Image documentation to learn more about how to use it."

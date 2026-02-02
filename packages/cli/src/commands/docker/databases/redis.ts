@@ -57,6 +57,12 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
         volumes: [`${serviceName}_data:/data`],
       }),
     },
+    connectionConfig: {
+      type: "redis" as const,
+      password,
+      host: "localhost",
+      port,
+    },
   };
 }
 

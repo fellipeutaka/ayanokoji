@@ -1,3 +1,5 @@
+import type { ConnectionConfig } from "../helpers/generate-connection-string";
+
 export interface ComposeService {
   image: string;
   environment?: Record<string, string>;
@@ -9,6 +11,7 @@ export interface ComposeService {
 export interface CreateComposeServiceResult {
   name: string;
   config: ComposeService;
+  connectionConfig: ConnectionConfig;
 }
 
 export const DOCKER_DATABASES = [

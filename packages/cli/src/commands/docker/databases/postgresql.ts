@@ -71,6 +71,14 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
         volumes: [`${serviceName}_data:/var/lib/postgresql/data`],
       }),
     },
+    connectionConfig: {
+      type: "postgresql" as const,
+      user,
+      password,
+      host: "localhost",
+      port,
+      database: db,
+    },
   };
 }
 
