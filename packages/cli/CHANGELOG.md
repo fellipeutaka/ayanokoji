@@ -1,5 +1,15 @@
 # ayanokoji
 
+## 0.11.0
+
+### Minor Changes
+
+- 58b1090: feat(docker): add connection string generation after service setup
+- 7893734: feat(docker): add environment file support with conflict handling
+- 488c4b6: feat(docker): add health checks to compose services
+- 4fc0e56: feat(docker): add MariaDB, Valkey, RabbitMQ, MinIO, and Mailpit services
+- dbdd40f: feat(docker): add remove command to delete services from compose
+
 ## 0.10.0
 
 ### Minor Changes
