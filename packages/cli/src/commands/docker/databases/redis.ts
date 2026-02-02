@@ -1,18 +1,21 @@
-import { safeParse } from "valibot";
-import { formatValibotErrors } from "~/utils/format-valibot-errors";
-import { enhancedSelect, enhancedText } from "~/utils/prompts";
-import { portSchema } from "../schemas/port";
-import type { ComposeService, DatabaseImageConfig } from ".";
+import { formatZodErrors } from "~/utils/format-zod-errors";
+import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
+import { getPortSchema } from "../schemas/port";
+import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
 
 const imageConfig: DatabaseImageConfig = {
-  namespace: "bitnami",
   repository: "redis",
   defaultPort: 6379,
 };
 
 const fallbackVersions = new Set(["latest", "7.4", "7.2", "6.2"] as const);
 
-async function createComposeService(): Promise<ComposeService> {
+async function createComposeService(): Promise<CreateComposeServiceResult> {
+  const serviceName = await enhancedText({
+    message: "What is the service name?",
+    defaultValue: "redis",
+  });
+
   const version = await enhancedSelect({
     message: "What Redis version would you like to use?",
     options: Array.from(fallbackVersions).map((value) => ({
@@ -27,30 +30,33 @@ async function createComposeService(): Promise<ComposeService> {
     defaultValue: "docker",
   });
 
-  const db = await enhancedText({
-    message: "What is the Redis database?",
-    defaultValue: "redis",
-  });
-
   const port = await enhancedText({
     message: "What is the Redis port?",
     defaultValue: String(imageConfig.defaultPort),
     validate(value) {
-      const result = safeParse(portSchema, value);
+      const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
 
-      if (result.issues) {
-        return formatValibotErrors(result.issues);
+      if (!result.success) {
+        return formatZodErrors(result.error);
       }
     },
   });
 
+  const useVolume = await enhancedConfirm({
+    message: "Do you want to persist data with a volume?",
+    initialValue: true,
+  });
+
   return {
-    image: `${imageConfig.namespace}/${imageConfig.repository}:${version}`,
-    environment: {
-      REDIS_MASTER_PASSWORD: password,
-      REDIS_DATABASE: db,
+    name: serviceName,
+    config: {
+      image: `${imageConfig.repository}:${version}`,
+      command: ["redis-server", "--requirepass", password],
+      ports: [`${port}:${imageConfig.defaultPort}`],
+      ...(useVolume && {
+        volumes: [`${serviceName}_data:/data`],
+      }),
     },
-    ports: [`${port}:${imageConfig.defaultPort}`],
   };
 }
 

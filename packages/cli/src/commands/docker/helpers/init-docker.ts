@@ -1,7 +1,11 @@
-import { writeFile } from "~/utils/fs";
-import { enhancedSelect } from "~/utils/prompts";
+import { readFile, writeFile } from "~/utils/fs";
+import { enhancedMultiselect, enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
-import { DOCKER_DATABASES, type DockerDatabase } from "../databases";
+import {
+  type ComposeService,
+  type DatabaseImageConfig,
+  DOCKER_DATABASES,
+} from "../databases";
 import {
   getExistingDockerComposeFile,
   validDockerComposeFiles,
@@ -9,47 +13,96 @@ import {
 
 interface InitDockerProps {
   cwd: string;
-  database?: DockerDatabase;
+}
+
+interface ComposeConfig {
+  services: Record<string, ComposeService>;
+  volumes?: Record<string, object>;
 }
 
 export async function initDocker(options: InitDockerProps) {
-  const dockerComposeFile = await getExistingDockerComposeFile(options.cwd);
+  const existingFile = await getExistingDockerComposeFile(options.cwd);
+  const { parse, stringify } = await import("yaml");
 
-  if (dockerComposeFile) {
-    return new Err(
-      `A Docker Compose file already exists: ${dockerComposeFile}`
+  let config: ComposeConfig = { services: {} };
+  let fileName: string;
+
+  if (existingFile) {
+    fileName = existingFile;
+    const fileResult = await readFile<string>(
+      `${options.cwd}/${existingFile}`,
+      "utf-8"
     );
+
+    if (fileResult.isErr()) {
+      return new Err(
+        `Failed to read existing Docker Compose file: ${existingFile}`
+      );
+    }
+
+    config = parse(fileResult.value) || { services: {} };
+    config.services = config.services || {};
+  } else {
+    fileName = await enhancedSelect({
+      message: "What Docker Compose file name would you like to use?",
+      options: Array.from(validDockerComposeFiles).map((value) => ({
+        value,
+        label: value,
+      })),
+      initialValue: "compose.yaml",
+    });
   }
 
-  const fileName = await enhancedSelect({
-    message: "What Docker Compose file name would you like to use?",
-    options: Array.from(validDockerComposeFiles).map((value) => ({
-      value,
-      label: value,
+  const existingServices = Object.keys(config.services);
+  const availableDatabases = DOCKER_DATABASES.filter(
+    (db) => !existingServices.includes(db.value)
+  );
+
+  if (availableDatabases.length === 0) {
+    return new Err("All supported databases are already in the compose file.");
+  }
+
+  const selectedDatabases = await enhancedMultiselect({
+    message: "Select databases to add",
+    options: availableDatabases.map((db) => ({
+      label: db.label,
+      value: db.value,
     })),
-    initialValue: "compose.yaml",
+    required: true,
   });
 
-  const database =
-    DOCKER_DATABASES.find((db) => db.value === options.database) ??
-    (await enhancedSelect({
-      message: "What database would you like to use?",
-      options: DOCKER_DATABASES.map((db) => ({
-        label: db.label,
-        value: db,
-      })),
-    }));
+  const selectedDatabaseEntries = availableDatabases.filter((db) =>
+    selectedDatabases.includes(db.value)
+  );
 
-  const { createComposeService, imageConfig } = await database.config();
+  const imageConfigs: DatabaseImageConfig[] = [];
+  const volumes: Set<string> = new Set();
 
-  const configFile = {
-    services: {
-      [database.value]: await createComposeService(),
-    },
-  };
+  for (const database of selectedDatabaseEntries) {
+    const { createComposeService, imageConfig } = await database.config();
+    const service = await createComposeService();
 
-  const { stringify } = await import("yaml");
-  await writeFile(`${options.cwd}/${fileName}`, stringify(configFile, null, 2));
+    config.services[service.name] = service.config;
+    imageConfigs.push(imageConfig);
 
-  return new Ok(imageConfig);
+    if (service.config.volumes) {
+      for (const volume of service.config.volumes) {
+        const volumeName = volume.split(":")[0];
+        if (volumeName) {
+          volumes.add(volumeName);
+        }
+      }
+    }
+  }
+
+  if (volumes.size > 0) {
+    config.volumes = config.volumes || {};
+    for (const volumeName of volumes) {
+      config.volumes[volumeName] = {};
+    }
+  }
+
+  await writeFile(`${options.cwd}/${fileName}`, stringify(config, null, 2));
+
+  return new Ok(imageConfigs);
 }

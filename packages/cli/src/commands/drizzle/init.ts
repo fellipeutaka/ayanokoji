@@ -1,6 +1,5 @@
 import { Command } from "commander";
-import { safeParseAsync } from "valibot";
-import { formatValibotErrors } from "~/utils/format-valibot-errors";
+import { formatZodErrors } from "~/utils/format-zod-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
@@ -67,15 +66,15 @@ async function parseOptions(options: InitOptions) {
     return new Err(`The directory ${options.cwd} does not exist.`);
   }
 
-  const result = await safeParseAsync(drizzleDatabaseSchema, options.database);
+  const result = drizzleDatabaseSchema.safeParse(options.database);
 
-  if (result.issues) {
-    return new Err(formatValibotErrors(result.issues));
+  if (!result.success) {
+    return new Err(formatZodErrors(result.error));
   }
 
   return new Ok({
     cwd: options.cwd,
-    database: result.output,
+    database: result.data as DrizzleDatabase | undefined,
     withModel: options.withModel,
     withScripts: options.withScripts,
   });

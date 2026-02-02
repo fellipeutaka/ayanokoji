@@ -8,6 +8,9 @@
       },
       "complexity": {
         "noExcessiveCognitiveComplexity": "off"
+      },
+      "performance": {
+        "noNamespaceImport": "off"
       }
     }
   },

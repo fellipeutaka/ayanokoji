@@ -67,7 +67,7 @@ export async function enhancedMultiselect<const Value>(
   opts: MultiSelectOptions<Value>,
   cancelMessage = "Operation cancelled."
 ): Promise<Value[]> {
-  const result = await multiselect(opts);
+  const result = await multiselect<Value>(opts);
   if (isCancel(result)) {
     cancel(cancelMessage);
     process.exit(0);

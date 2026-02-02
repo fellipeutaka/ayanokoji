@@ -1,22 +1,17 @@
 import { Command } from "commander";
-import { safeParseAsync } from "valibot";
-import { formatValibotErrors } from "~/utils/format-valibot-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
 import { getRepositoryLink } from "./helpers/get-repository-link";
-import { dockerDatabaseSchema } from "./schemas/database";
 
 interface InitOptions {
-  database?: string;
   cwd: string;
 }
 
 export const init = new Command()
   .name("init")
   .description("Init a Docker Compose")
-  .option("--database <database>", "The database to use.")
   .option(
     "-c, --cwd <cwd>",
     "The working directory. Defaults to the current directory.",
@@ -36,8 +31,7 @@ export const init = new Command()
       handleError(initResult.error);
     }
 
-    const { namespace, repository } = initResult.value;
-    const repositoryLink = getRepositoryLink(namespace, repository);
+    const imageConfigs = initResult.value;
 
     logger.break();
     logger.success("Docker Compose file created.");
@@ -48,7 +42,12 @@ export const init = new Command()
     logger.info(
       "Check out the Docker Image documentation to learn more about how to use it."
     );
-    logger.info(repositoryLink);
+
+    for (const { repository, namespace } of imageConfigs) {
+      const repositoryLink = getRepositoryLink(repository, namespace);
+      logger.info(`- ${repository}: ${repositoryLink}`);
+    }
+
     logger.break();
   });
 
@@ -57,14 +56,7 @@ async function parseOptions(options: InitOptions) {
     return new Err(`The directory ${options.cwd} does not exist.`);
   }
 
-  const result = await safeParseAsync(dockerDatabaseSchema, options.database);
-
-  if (result.issues) {
-    return new Err(formatValibotErrors(result.issues));
-  }
-
   return new Ok({
     cwd: options.cwd,
-    database: result.output,
   });
 }

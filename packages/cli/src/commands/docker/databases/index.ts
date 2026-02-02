@@ -1,7 +1,14 @@
 export interface ComposeService {
   image: string;
-  environment: Record<string, string>;
+  environment?: Record<string, string>;
+  command?: string[];
   ports: string[];
+  volumes?: string[];
+}
+
+export interface CreateComposeServiceResult {
+  name: string;
+  config: ComposeService;
 }
 
 export const DOCKER_DATABASES = [
@@ -29,7 +36,7 @@ export const DOCKER_DATABASES = [
 
 export type DockerDatabase = (typeof DOCKER_DATABASES)[number]["value"];
 export interface DatabaseImageConfig {
-  namespace: string;
+  namespace?: string;
   repository: string;
   defaultPort: number;
 }
