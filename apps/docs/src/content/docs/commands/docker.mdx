@@ -7,8 +7,161 @@ Docker is a tool designed to make it easier to create, deploy, and run applicati
 
 [Documentation](https://docs.docker.com/)
 
-## Usage
+## Commands
+
+### Init
+
+Initialize a Docker Compose file with database services.
 
 ```package-install
 npx ayanokoji docker init
+```
+
+#### Options
+
+| Option | Description |
+|--------|-------------|
+| `-c, --cwd <cwd>` | Working directory (default: current directory) |
+| `--env-path <path>` | Custom path for `.env` file |
+| `--skip-conflicts` | Skip existing env vars without prompting |
+
+#### Features
+
+- **Interactive service selection** - Choose from multiple database services
+- **Connection strings** - Outputs ready-to-use connection strings after setup
+- **Health checks** - All services include health check configuration
+- **Environment file support** - Optionally write connection strings to `.env`
+- **Conflict handling** - Prompts to override or skip existing env vars
+- **Gitignore integration** - Auto-adds `.env` to `.gitignore`
+
+### Remove
+
+Remove services from an existing Docker Compose file.
+
+```package-install
+npx ayanokoji docker remove
+```
+
+#### Options
+
+| Option | Description |
+|--------|-------------|
+| `-c, --cwd <cwd>` | Working directory (default: current directory) |
+| `--env-path <path>` | Custom path for `.env` file |
+
+#### Features
+
+- **Interactive service selection** - Choose which services to remove
+- **Volume cleanup** - Automatically removes orphaned volumes
+- **Environment cleanup** - Optionally removes related env vars from `.env`
+
+## Supported Services
+
+### Databases
+
+| Service | Image | Default Port | Connection String |
+|---------|-------|--------------|-------------------|
+| PostgreSQL | `postgres` | 5432 | `postgresql://user:pass@localhost:5432/db` |
+| MySQL | `mysql` | 3306 | `mysql://user:pass@localhost:3306/db` |
+| MariaDB | `mariadb` | 3306 | `mysql://user:pass@localhost:3306/db` |
+| MongoDB | `mongo` | 27017 | `mongodb://user:pass@localhost:27017` |
+
+### Caching
+
+| Service | Image | Default Port | Connection String |
+|---------|-------|--------------|-------------------|
+| Redis | `redis` | 6379 | `redis://:pass@localhost:6379` |
+| Valkey | `valkey/valkey` | 6379 | `redis://:pass@localhost:6379` |
+
+### Message Queues
+
+| Service | Image | Ports | Connection String |
+|---------|-------|-------|-------------------|
+| RabbitMQ | `rabbitmq:management` | 5672, 15672 | `amqp://user:pass@localhost:5672` |
+
+### Storage
+
+| Service | Image | Ports | Connection String |
+|---------|-------|-------|-------------------|
+| MinIO | `minio/minio` | 9000, 9001 | `http://localhost:9000` |
+
+### Development Tools
+
+| Service | Image | Ports | Connection String |
+|---------|-------|-------|-------------------|
+| Mailpit | `axllent/mailpit` | 1025, 8025 | `smtp://localhost:1025` |
+
+## Environment Variables
+
+When you choose to write connection strings to `.env`, the following variables are created:
+
+| Service | Variables |
+|---------|-----------|
+| PostgreSQL | `POSTGRESQL_URL` |
+| MySQL | `MYSQL_URL` |
+| MariaDB | `MARIADB_URL` |
+| MongoDB | `MONGODB_URL` |
+| Redis | `REDIS_URL` |
+| Valkey | `VALKEY_URL` |
+| RabbitMQ | `RABBITMQ_URL` |
+| MinIO | `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` |
+| Mailpit | `MAILPIT_URL`, `MAILPIT_UI_URL` |
+
+## Health Checks
+
+All services include Docker health checks for better container orchestration:
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "..."]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+```
+
+This enables using `depends_on` with `condition: service_healthy` in your compose files.
+
+## Example Output
+
+Running `ayanokoji docker init` and selecting PostgreSQL and Redis generates:
+
+```yaml
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: docker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U docker -d docker
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:latest
+    command:
+      - redis-server
+      - "--requirepass"
+      - docker
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - redis-cli -a docker ping | grep PONG
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  postgres_data: {}
+  redis_data: {}
 ```
