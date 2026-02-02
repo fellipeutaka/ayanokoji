@@ -64,6 +64,15 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
       ...(useVolume && {
         volumes: [`${serviceName}_data:/var/lib/mysql`],
       }),
+      healthcheck: {
+        test: [
+          "CMD-SHELL",
+          `mysqladmin ping -h localhost -u root -p${rootPassword}`,
+        ],
+        interval: "10s",
+        timeout: "5s",
+        retries: 5,
+      },
     },
     connectionConfig: {
       type: "mysql" as const,

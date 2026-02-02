@@ -1,11 +1,19 @@
 import type { ConnectionConfig } from "../helpers/generate-connection-string";
 
+export interface HealthCheck {
+  test: string[];
+  interval: string;
+  timeout: string;
+  retries: number;
+}
+
 export interface ComposeService {
   image: string;
   environment?: Record<string, string>;
   command?: string[];
   ports: string[];
   volumes?: string[];
+  healthcheck?: HealthCheck;
 }
 
 export interface CreateComposeServiceResult {

@@ -70,6 +70,12 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
       ...(useVolume && {
         volumes: [`${serviceName}_data:/var/lib/postgresql/data`],
       }),
+      healthcheck: {
+        test: ["CMD-SHELL", `pg_isready -U ${user} -d ${db}`],
+        interval: "10s",
+        timeout: "5s",
+        retries: 5,
+      },
     },
     connectionConfig: {
       type: "postgresql" as const,

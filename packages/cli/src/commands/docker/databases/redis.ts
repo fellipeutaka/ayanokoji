@@ -56,6 +56,12 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
       ...(useVolume && {
         volumes: [`${serviceName}_data:/data`],
       }),
+      healthcheck: {
+        test: ["CMD-SHELL", `redis-cli -a ${password} ping | grep PONG`],
+        interval: "10s",
+        timeout: "5s",
+        retries: 5,
+      },
     },
     connectionConfig: {
       type: "redis" as const,

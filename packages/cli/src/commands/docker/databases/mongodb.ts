@@ -64,6 +64,12 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
       ...(useVolume && {
         volumes: [`${serviceName}_data:/data/db`],
       }),
+      healthcheck: {
+        test: ["CMD-SHELL", `mongosh --eval "db.adminCommand('ping')" --quiet`],
+        interval: "10s",
+        timeout: "5s",
+        retries: 5,
+      },
     },
     connectionConfig: {
       type: "mongodb" as const,
