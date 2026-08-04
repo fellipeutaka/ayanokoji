@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "creating-a-changeset": {
+      "source": "fellipeutaka/leon",
+      "sourceType": "github",
+      "skillPath": "skills/creating-a-changeset/SKILL.md",
+      "computedHash": "84ae4850bcf7cc589ea9bd34dfff30fd1c6f32e9f307cf4a9a29982f94c0b7fb"
+    }
+  }
+}

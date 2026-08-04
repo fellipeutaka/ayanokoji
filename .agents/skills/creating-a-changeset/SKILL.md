@@ -1,270 +1,71 @@
-# Creating Changesets (LLM Guide)
+---
+name: creating-a-changeset
+description: "Create and validate Changeset files for user-facing changes in repositories that use Changesets. Use when a feature, bug fix, breaking change, performance improvement, or user-facing documentation change needs a release note and semver bump."
+---
 
-This guide is specifically for LLMs (like Claude Code) to help generate changesets for the Denji project.
+# Create a Changeset
 
-## When to Create a Changeset
+Use this skill after implementation is complete and before committing a release-worthy change.
 
-Create a changeset for user-facing changes:
-- ✅ New features
-- ✅ Bug fixes  
-- ✅ Breaking changes
-- ✅ Performance improvements
-- ✅ User-facing documentation changes
-- ❌ Internal refactoring (no user impact)
-- ❌ Test-only changes
-- ❌ CI/CD configuration
+## Workflow
 
-## How to Create a Changeset (Manual Method)
+### 1. Discover the repository's release rules
 
-Since `bun changeset` is an interactive CLI tool (not suitable for LLMs), create changeset files manually:
+- Read the nearest `AGENTS.md`, `CONTEXT.md`, contributor guide, and release workflow that govern the work.
+- Read `git status --short`, `git diff HEAD --stat`, and every relevant staged, unstaged, and untracked change.
+- Locate `.changeset/config.json`, workspace manifests, package manifests, lockfiles, and the local Changesets CLI.
+- Confirm that the repository uses Changesets. If its configuration or CLI is absent, report the blocker instead of creating a file.
+- Resolve the repository's package manager from `package.json` and its lockfile. Use that manager for validation.
+- Identify publishable package names and the repository's private-package rules. Use exact names from `package.json`.
 
-### File Location
-Create a new file in `.changeset/` directory with a descriptive kebab-case name:
-```
-.changeset/add-forward-ref-option.md
-.changeset/fix-icon-name-collision.md
-.changeset/breaking-change-config-schema.md
-```
+Completion criterion: the Changesets setup, package manager, publishable packages, private-package policy, and complete change scope are known.
 
-### File Format
+### 2. Classify impact and package ownership
+
+- Treat changed user behavior, public API, configuration, CLI, generated output, performance, or user-facing documentation as release-worthy.
+- Treat internal refactoring, tests, CI/CD, and development-only tooling as internal.
+- Map every release-worthy change to each affected publishable package.
+- Include a private package only when the repository's Changesets configuration explicitly versions private packages.
+- If package ownership or user impact is ambiguous, ask for clarification before writing.
+
+If no release-worthy change remains, stop and report that no Changeset is needed. Completion criterion: every changed file is classified and every release-worthy change has an unambiguous package owner.
+
+### 3. Select the semver bump
+
+Choose a bump for each affected package:
+
+- `patch` — bug fixes, performance improvements, and user-facing documentation changes.
+- `minor` — backward-compatible features, options, or commands.
+- `major` — breaking API, configuration, CLI, or runtime changes that require migration.
+
+When a change contains multiple impacts, choose the highest required bump for each package. Completion criterion: every affected package has one bump tied to an observable user impact.
+
+### 4. Write the Changeset
+
+- Check `.changeset/` for existing filenames and choose a unique, descriptive kebab-case slug.
+- Create `.changeset/<slug>.md` manually so the workflow remains non-interactive.
+- Use one quoted frontmatter entry per affected package:
 
 ```markdown
 ---
-"denji": <change-type>
+"package-name": <patch|minor|major>
 ---
-
-<Short summary (one line)>
-
-<Detailed description with examples and migration guides if needed>
 ```
 
-### Change Types (Semantic Versioning)
+- Follow the frontmatter with an imperative, user-facing one-line summary.
+- Explain the observable result in plain language. Add an example when the change affects configuration or API usage.
+- For a `major` change, start the summary with `BREAKING:` and include old usage, new usage, and migration steps.
+- Include `Fixes #123` or `Closes #123` only when an issue number is known.
 
-- **`patch`** - Bug fixes, minor improvements, no API changes
-  - Version bump: `0.2.0` → `0.2.1`
-  - Example: "Fix icon name sanitization for special characters"
+Completion criterion: the new file contains valid entries for every affected package, the selected bumps, a concise summary, and enough context for users to understand the change.
 
-- **`minor`** - New features, backward-compatible additions
-  - Version bump: `0.2.0` → `0.3.0`
-  - Example: "Add forwardRef option for React components"
+### 5. Validate the result
 
-- **`major`** - Breaking changes, API removals/changes
-  - Version bump: `0.2.0` → `1.0.0`
-  - Example: "Remove support for Node.js 14"
+- Run the repository's package-manager equivalent of `changeset status` against the local CLI, such as `bun changeset status`, `pnpm exec changeset status`, `npm exec -- changeset status`, or `yarn changeset status`.
+- Run `git diff --check`.
+- Re-read the new file and confirm that it describes user impact rather than implementation mechanics.
+- Confirm with `git status --short` that only the intended Changeset file was added.
 
-## Changeset Template
+Completion criterion: Changesets status succeeds, formatting is clean, package entries are correct, and the new file passes the repository's release-note rules.
 
-### For Minor Changes (New Features)
-
-```markdown
----
-"denji": minor
----
-
-Add `featureName` option
-
-This release introduces a new `featureName` configuration option that allows users to [describe benefit].
-
-**New Configuration:**
-
-- `config.featureName` - [description] (defaults to `[value]`)
-- CLI flags: `--feature-name` / `--no-feature-name` for `init` command
-
-**Example:**
-
-\`\`\`json
-{
-  "framework": "react",
-  "featureName": true
-}
-\`\`\`
-
-**Usage:**
-
-\`\`\`tsx
-// Example code showing the feature in action
-\`\`\`
-```
-
-### For Patch Changes (Bug Fixes)
-
-```markdown
----
-"denji": patch
----
-
-Fix [specific issue description]
-
-Resolves an issue where [describe the bug]. The [component/feature] now correctly [describe fix].
-
-**Before:**
-\`\`\`tsx
-// Code showing the bug
-\`\`\`
-
-**After:**
-\`\`\`tsx
-// Code showing the fix
-\`\`\`
-
-Fixes #[issue-number] (if applicable)
-```
-
-### For Major Changes (Breaking Changes)
-
-```markdown
----
-"denji": major
----
-
-BREAKING: [Change description]
-
-This is a breaking change that [explain what changed and why].
-
-**Migration Guide:**
-
-**Before:**
-\`\`\`tsx
-// Old API usage
-\`\`\`
-
-**After:**
-\`\`\`tsx
-// New API usage
-\`\`\`
-
-**Breaking Changes:**
-- [List each breaking change]
-- [Explain how to migrate]
-
-**Rationale:**
-[Explain why this breaking change was necessary]
-```
-
-## Real-World Examples
-
-### Example 1: New Feature (forwardRef)
-
-```markdown
----
-"denji": minor
----
-
-Add `forwardRef` option for React icon components
-
-This release adds a new `forwardRef` configuration option for React projects that wraps icon components with `React.forwardRef`, enabling ref forwarding to the underlying SVG element.
-
-**New Configuration Options:**
-
-- `react.forwardRef` - Boolean option to enable forwardRef wrapping (defaults to `false`)
-- CLI flags: `--forward-ref` / `--no-forward-ref` for the `init` command
-
-**Changes:**
-
-- Enhanced config schema with framework-specific options using discriminated unions
-- Added interactive prompt during `denji init` for React projects
-- Updated TypeScript types to reflect `ForwardRefExoticComponent` when enabled
-- Framework-agnostic architecture that supports future framework-specific options
-
-**Example Configuration:**
-
-\`\`\`json
-{
-  "framework": "react",
-  "output": "./src/icons.tsx",
-  "react": {
-    "forwardRef": true
-  }
-}
-\`\`\`
-
-**Usage:**
-
-\`\`\`tsx
-import { useRef } from "react";
-import { Icons } from "./icons";
-
-function App() {
-  const iconRef = useRef<SVGSVGElement>(null);
-  return <Icons.Check ref={iconRef} className="size-4" />;
-}
-\`\`\`
-```
-
-### Example 2: Bug Fix
-
-```markdown
----
-"denji": patch
----
-
-Fix icon name collision when adding icons with same base name
-
-Resolves an issue where adding icons like `lucide:check` and `mdi:check` would overwrite each other. Icon names now include the collection prefix to prevent collisions.
-
-**Before:**
-Both icons would be named `Check`, causing the second to override the first.
-
-**After:**
-Icons are named `LucideCheck` and `MdiCheck` respectively.
-
-Fixes #42
-```
-
-### Example 3: Performance Improvement
-
-```markdown
----
-"denji": patch
----
-
-Improve icon generation performance by 40%
-
-Optimized SVG parsing and template generation to significantly reduce build times for projects with many icons. Large icon sets (100+ icons) now generate ~40% faster.
-
-**Technical Details:**
-- Parallelized icon fetching from Iconify API
-- Cached parsed SVG structures
-- Reduced redundant file system operations
-```
-
-## Best Practices for LLMs
-
-1. **Always analyze git diff** to understand the full scope of changes
-2. **Choose the correct semver type**:
-   - Breaking change? → `major`
-   - New feature? → `minor`
-   - Bug fix or small improvement? → `patch`
-3. **Write user-focused descriptions** (avoid implementation details unless relevant)
-4. **Include code examples** when changes affect API usage
-5. **Use descriptive filenames** that match the change (e.g., `add-forward-ref-option.md`)
-6. **Format code blocks properly** using triple backticks with language hints
-7. **Reference issues/PRs** when applicable using `Fixes #123` or `Closes #456`
-
-## What NOT to Include
-
-- Internal refactoring details (unless user-facing)
-- Test implementation specifics
-- Build system changes
-- Development tooling updates
-- Overly technical jargon
-
-## Publishing
-
-**DO NOT** include `bun changeset publish` commands or instructions. Publishing is automated via GitHub Actions when changes are pushed to main.
-
-The workflow:
-1. LLM creates changeset file → `.changeset/feature-name.md`
-2. User commits and pushes to main
-3. GitHub Actions automatically versions and publishes
-
-## Validation Checklist
-
-Before creating a changeset, verify:
-- [ ] File is in `.changeset/` directory
-- [ ] Filename is descriptive and kebab-case
-- [ ] YAML frontmatter is correct: `"denji": minor`
-- [ ] Summary is clear and user-focused
-- [ ] Code examples are properly formatted
-- [ ] Semver type matches the change scope
-- [ ] No implementation details that don't affect users
+Keep release automation out of the Changeset. Do not run `changeset version` or `changeset publish`; follow the repository's documented release workflow instead.
