@@ -33,6 +33,9 @@ npx ayanokoji docker init
 - **Environment file support** - Optionally write connection strings to `.env`
 - **Conflict handling** - Prompts to override or skip existing env vars
 - **Gitignore integration** - Auto-adds `.env` to `.gitignore`
+- **Preserving existing configuration** - Adds selected services without replacing unrelated Compose data
+- **Atomic service selection** - Rejects a service-name collision without writing a partial selection
+- **Generated volumes** - Adds missing `<service>_data` volume declarations without overwriting existing declarations
 
 ### Remove
 

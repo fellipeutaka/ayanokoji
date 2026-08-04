@@ -61,7 +61,7 @@ These rules describe the current product behavior. Issue state is tracked in Git
 
 - **Issue**: (none yet)
 - **When**: Docker initialization operates on a recognized existing Compose file.
-- **Then**: Services already present must not be offered for selection, selected services must be merged into the existing configuration, and unrelated services must remain unchanged.
+- **Then**: Services already present must not be offered for selection, selected services must be merged into the existing configuration, unrelated services must remain unchanged, and any existing-name or duplicate-name conflict must reject the complete batch without a partial write.
 - **Rationale**: Initialization is additive and should preserve existing Compose setup.
 
 ### BR-009: Docker removal cleans only orphaned resources
