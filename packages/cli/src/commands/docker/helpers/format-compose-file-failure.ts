@@ -16,6 +16,16 @@ export function formatComposeFileFailure(failure: ComposeFileFailure): string {
         failure.field,
         failure.serviceName
       );
+    case "symlinked-document":
+      return `Docker Compose path must not be a symbolic link: ${failure.fileName}`;
+    case "stale-document":
+      return `Docker Compose file changed during the operation; rerun the command: ${failure.fileName}`;
+    case "creation-conflict":
+      return `Docker Compose file was created during the operation: ${failure.fileName}`;
+    case "serialization-failure":
+      return `Failed to serialize Docker Compose file: ${failure.fileName}`;
+    case "write-failure":
+      return `Failed to write Docker Compose file: ${failure.fileName}`;
     default:
       return "Docker Compose file operation failed.";
   }

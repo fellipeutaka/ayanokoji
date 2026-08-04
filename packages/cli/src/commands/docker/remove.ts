@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { access, writeFile } from "~/utils/fs";
+import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import {
@@ -18,6 +18,7 @@ import {
   type ComposeFileName,
   discoverComposeFiles,
   readComposeDocument,
+  writeComposeDocument,
 } from "./helpers/compose-file-adapter";
 import { readEnvFile, writeEnvFile } from "./helpers/env-file";
 import { formatComposeFileFailure } from "./helpers/format-compose-file-failure";
@@ -43,8 +44,6 @@ export const remove = new Command()
     if (optionsResult.isErr()) {
       handleError(optionsResult.error);
     }
-
-    const { stringify } = await import("yaml");
 
     const discoveryResult = await discoverComposeFiles(options.cwd);
 
@@ -83,7 +82,7 @@ export const remove = new Command()
       return;
     }
 
-    const config: ComposeDocument = fileResult.value;
+    const config: ComposeDocument = fileResult.value.document;
     const servicesResult = getRemovableServiceNames(config);
 
     if (servicesResult.isErr()) {
@@ -110,21 +109,14 @@ export const remove = new Command()
       return;
     }
 
-    // Write updated compose file
-    let serializedConfig: string;
-    try {
-      serializedConfig = stringify(mutationResult.value, null, 2);
-    } catch {
-      handleError(`Failed to serialize ${existingFile}`);
-      return;
-    }
-
-    const writeResult = await writeFile(
-      `${options.cwd}/${existingFile}`,
-      serializedConfig
+    const writeResult = await writeComposeDocument(
+      options.cwd,
+      existingFile,
+      mutationResult.value,
+      fileResult.value.revision
     );
     if (writeResult.isErr()) {
-      handleError(`Failed to write ${existingFile}`);
+      handleError(formatComposeFileFailure(writeResult.error));
       return;
     }
 
