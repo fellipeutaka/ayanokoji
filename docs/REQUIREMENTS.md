@@ -33,13 +33,13 @@ These definitions describe the current product behavior. Issue state is tracked 
 
 #### FR-006: Initialize Docker Compose services
 
-- **Issue**: (none yet)
-- **Description**: The CLI must discover and explicitly select among the recognized Docker Compose filenames, then create or update the selected document with PostgreSQL, MySQL, MariaDB, Redis, Valkey, MongoDB, RabbitMQ, MinIO, or Mailpit services, including service configuration, health checks where supported, volumes, and connection strings.
+- **Issue**: #21
+- **Description**: The CLI must discover and explicitly select among the recognized Docker Compose filenames, then create or update the selected document with PostgreSQL, MySQL, MariaDB, Redis, Valkey, MongoDB, RabbitMQ, MinIO, or Mailpit services, including service configuration, health checks where supported, volumes, connection strings, and optional independent environment synchronization.
 
 #### FR-007: Remove Docker Compose services
 
-- **Issue**: (none yet)
-- **Description**: The CLI must discover and explicitly select an existing recognized Docker Compose file, remove user-selected services from its valid single-document configuration, remove orphaned volumes, and optionally remove the related environment variables.
+- **Issue**: #21
+- **Description**: The CLI must discover and explicitly select an existing recognized Docker Compose file, remove user-selected services from its valid single-document configuration, remove orphaned volumes, and optionally remove the related environment variables while reporting environment failures independently from the successful Compose write.
 
 #### FR-008: Generate secure secrets
 
@@ -91,3 +91,8 @@ These definitions describe the current product behavior. Issue state is tracked 
 
 - **Issue**: (none yet)
 - **Description**: Docker commands must reject invalid YAML, multi-document YAML, duplicate mapping keys, invalid Compose roots, and invalid owned collection shapes before mutation, while preserving the original on-disk document and reporting structured failures to command orchestration.
+
+#### NFR-006: Report independent Docker environment failures
+
+- **Issue**: #21
+- **Description**: Docker commands must perform optional environment synchronization only after a successful Compose write; declining synchronization remains successful, while a synchronization failure reports both outcomes, exits nonzero, and does not roll back the Compose file.

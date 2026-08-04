@@ -85,6 +85,20 @@ These rules describe the current product behavior. Issue state is tracked in Git
 - **Then**: The file must contain exactly one YAML document with a mapping root, unique mapping keys, and mapping-shaped `services` and `volumes` collections when present. Invalid YAML, multi-document input, duplicate keys, and unusable owned collections must stop the operation without coercing the input into an empty document; an omitted `services` collection is treated as empty for initialization and reports no available services for removal.
 - **Rationale**: Read validation must preserve user configuration and prevent unsafe input from reaching a mutation or write.
 
+### BR-014: Compose and environment outcomes are independent
+
+- **Issue**: #21
+- **When**: Docker initialization or removal has successfully written the Compose document and the user has opted into the related environment update.
+- **Then**: Environment synchronization runs afterward as a separate operation; declining it keeps the Compose operation successful, while a failure reports both outcomes, exits nonzero, and does not roll back the Compose document.
+- **Rationale**: A failure in one file must not undo a safe, already-committed mutation in another file.
+
+### BR-015: Stale Compose conflicts require an explicit rerun
+
+- **Issue**: #21
+- **When**: A Compose document changes between the command's read and write phases.
+- **Then**: The command must stop with a stale-document failure without rereading or retrying the obsolete operation, and must tell the user to rerun it explicitly.
+- **Rationale**: Only a fresh user invocation can safely reform the requested mutation from current configuration.
+
 ## Security and documentation
 
 ### BR-011: Secrets use random bytes and hexadecimal encoding

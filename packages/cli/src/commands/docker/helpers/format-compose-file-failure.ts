@@ -19,7 +19,7 @@ export function formatComposeFileFailure(failure: ComposeFileFailure): string {
     case "symlinked-document":
       return `Docker Compose path must not be a symbolic link: ${failure.fileName}`;
     case "stale-document":
-      return `Docker Compose file changed during the operation; rerun the command: ${failure.fileName}`;
+      return `Docker Compose file changed during the operation; the operation was not retried. Rerun the command explicitly: ${failure.fileName}`;
     case "creation-conflict":
       return `Docker Compose file was created during the operation: ${failure.fileName}`;
     case "serialization-failure":

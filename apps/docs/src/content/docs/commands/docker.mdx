@@ -33,6 +33,7 @@ npx ayanokoji docker init
 - **Environment file support** - Optionally write connection strings to `.env`
 - **Conflict handling** - Prompts to override or skip existing env vars
 - **Gitignore integration** - Auto-adds `.env` to `.gitignore`
+- **Independent environment synchronization** - Runs only after a successful Compose write; declining it keeps the operation successful, while a failure reports both outcomes without rolling back the Compose file
 - **Preserving existing configuration** - Adds selected services without replacing unrelated Compose data
 - **Atomic service selection** - Rejects a service-name collision without writing a partial selection
 - **Generated volumes** - Adds missing `<service>_data` volume declarations without overwriting existing declarations
@@ -62,6 +63,7 @@ npx ayanokoji docker remove
 - **Configuration preservation** - Keeps shared, external, metadata-bearing, bind-mounted, anonymous, uncertain-ownership, and unrelated Compose resources
 - **Atomic service selection** - Validates the complete removal batch before writing any service changes
 - **Environment cleanup** - Optionally removes related env vars from `.env`
+- **Independent environment cleanup** - Declining cleanup keeps the operation successful; a cleanup failure reports both outcomes without rolling back the Compose file
 - **Recognized files** - Prompts when multiple supported Compose files exist and reports an error when none exists
 - **No-services result** - Treats an omitted or empty `services` collection as no removable services and leaves the document unchanged
 
@@ -70,8 +72,9 @@ npx ayanokoji docker remove
 Both Docker commands apply successful service transformations through the Compose file adapter:
 
 - Existing regular Compose files are replaced atomically, preserving permission mode bits.
-- Symlinked or changed Compose paths are rejected without overwriting the file; rerun the command after a stale-document conflict.
+- Symlinked or changed Compose paths are rejected without overwriting the file; a stale-document conflict is not reread or retried, so rerun the command explicitly.
 - When initialization starts without an existing Compose file, the selected path is created exclusively so a concurrent creation is reported instead of overwritten.
+- Discovery, parsing, validation, mutation, serialization, and Compose write failures are reported as nonzero outcomes without partially writing the Compose document; environment failures explicitly report when the Compose write already succeeded.
 
 ## Supported Services
 
