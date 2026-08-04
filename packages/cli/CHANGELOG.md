@@ -1,5 +1,18 @@
 # ayanokoji
 
+## 0.12.0
+
+### Minor Changes
+
+- 20c8d89: Write Docker Compose updates atomically while preserving permissions and rejecting symlinked, stale, or concurrently created files. Closes #20
+- e36c5d7: Finalize Docker command outcomes with independent environment synchronization, explicit stale-conflict reruns, safe failure reporting, and updated public documentation. Closes #21
+- 6c2393c: Route Docker commands through a non-interactive Compose file adapter that discovers supported filenames, prompts for ambiguous selections, and rejects unsafe YAML or document shapes without rewriting the original file. Closes #19
+- e2a597b: Make `docker remove` validate complete service batches, protect explicit `depends_on` relationships, and conservatively clean only generated Compose volumes. Closes #18
+
+### Patch Changes
+
+- aed3a8d: Preserve existing Compose configuration when `docker init` adds services, reject colliding service batches, and create missing generated volume declarations without overwriting existing ones. Closes #17
+
 ## 0.11.0
 
 ### Minor Changes
