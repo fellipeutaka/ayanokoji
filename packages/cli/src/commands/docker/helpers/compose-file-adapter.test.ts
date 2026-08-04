@@ -1,12 +1,27 @@
 import { expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  link,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  symlink,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   COMPOSE_FILE_NAMES,
   type ComposeFileFailure,
+  type ComposeFileSystem,
   discoverComposeFiles,
   readComposeDocument,
+  writeComposeDocument,
 } from "./compose-file-adapter";
 
 test("discovers every supported Compose candidate without selecting one", async () => {
@@ -91,6 +106,29 @@ test("does not treat a directory with a supported name as a Compose candidate", 
   }
 });
 
+test("reports a recognized symlink during Compose discovery", async () => {
+  const cwd = await createTempDirectory();
+
+  try {
+    await writeFile(join(cwd, "user-compose.yaml"), "services: {}\n");
+    await symlink(join(cwd, "user-compose.yaml"), join(cwd, "compose.yaml"));
+
+    const result = await discoverComposeFiles(cwd);
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      return;
+    }
+
+    expect(result.error).toEqual({
+      kind: "symlinked-document",
+      fileName: "compose.yaml",
+    });
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
 test("reports an inspection failure instead of treating an inaccessible candidate as absent", async () => {
   const inaccessible = Object.assign(new Error("permission denied"), {
     code: "EACCES",
@@ -138,7 +176,7 @@ volumes:
       return;
     }
 
-    expect(result.value).toEqual({
+    expect(result.value.document).toEqual({
       name: "example",
       "x-user-extension": { enabled: true },
       services: {
@@ -174,7 +212,7 @@ test("allows a Compose document to omit services for initialization", async () =
       return;
     }
 
-    expect(result.value).toEqual({
+    expect(result.value.document).toEqual({
       name: "example",
       networks: { internal: { driver: "bridge" } },
     });
@@ -313,6 +351,301 @@ test("reports a non-missing read failure as structured data", async () => {
   });
 });
 
+test("replaces an existing Compose document through the write seam", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+
+  try {
+    await writeFile(composePath, "services:\n  app:\n    image: old/app\n");
+
+    const readResult = await readComposeDocument(cwd, "compose.yaml");
+    expect(readResult.isOk()).toBe(true);
+    if (readResult.isErr()) {
+      return;
+    }
+
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      { services: { app: { image: "new/app" } } },
+      readResult.value.revision
+    );
+
+    expect(writeResult.isOk()).toBe(true);
+    expect((await readFile(composePath, "utf8")).toString()).toContain(
+      "image: new/app"
+    );
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("preserves an existing Compose file's permission mode bits", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+
+  try {
+    await writeFile(composePath, "services:\n  app:\n    image: old/app\n");
+    await chmod(composePath, 0o640);
+
+    const readResult = await readComposeDocument(cwd, "compose.yaml");
+    expect(readResult.isOk()).toBe(true);
+    if (readResult.isErr()) {
+      return;
+    }
+
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      { services: { app: { image: "new/app" } } },
+      readResult.value.revision
+    );
+
+    expect(writeResult.isOk()).toBe(true);
+    expect((await lstat(composePath)).mode % 0o1_0000).toBe(0o640);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("uses normal filesystem defaults when creating a new Compose file", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+  const expectedPath = join(cwd, "expected-mode.txt");
+
+  try {
+    await writeFile(expectedPath, "");
+    const expectedMode = (await lstat(expectedPath)).mode % 0o1000;
+
+    const result = await writeComposeDocument(cwd, "compose.yaml", {
+      services: {},
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect((await lstat(composePath)).mode % 0o1000).toBe(expectedMode);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("rejects a symlinked Compose path without replacing the link", async () => {
+  const cwd = await createTempDirectory();
+  const targetPath = join(cwd, "user-compose.yaml");
+  const composePath = join(cwd, "compose.yaml");
+  const source = "services:\n  app:\n    image: user/app\n";
+
+  try {
+    await writeFile(targetPath, source);
+    await symlink(targetPath, composePath);
+
+    const result = await writeComposeDocument(cwd, "compose.yaml", {
+      services: { app: { image: "new/app" } },
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      return;
+    }
+
+    expect(result.error).toEqual({
+      kind: "symlinked-document",
+      fileName: "compose.yaml",
+    });
+    expect((await lstat(composePath)).isSymbolicLink()).toBe(true);
+    expect((await readFile(targetPath, "utf8")).toString()).toBe(source);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("rejects a stale revision without overwriting newer Compose content", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+  const newerSource = "services:\n  app:\n    image: newer/app\n";
+
+  try {
+    await writeFile(composePath, "services:\n  app:\n    image: old/app\n");
+
+    const readResult = await readComposeDocument(cwd, "compose.yaml");
+    expect(readResult.isOk()).toBe(true);
+    if (readResult.isErr()) {
+      return;
+    }
+
+    await writeFile(composePath, newerSource);
+
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      { services: { app: { image: "generated/app" } } },
+      readResult.value.revision
+    );
+
+    expect(writeResult.isErr()).toBe(true);
+    if (writeResult.isOk()) {
+      return;
+    }
+
+    expect(writeResult.error).toEqual({
+      kind: "stale-document",
+      fileName: "compose.yaml",
+    });
+    expect((await readFile(composePath, "utf8")).toString()).toBe(newerSource);
+    expect(
+      (await readdir(cwd)).filter((name) => name.startsWith(".compose.yaml."))
+    ).toEqual([]);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("reports serialization failures without touching an existing file", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+  const source = "services:\n  app:\n    image: old/app\n";
+
+  try {
+    await writeFile(composePath, source);
+    const readResult = await readComposeDocument(cwd, "compose.yaml");
+    expect(readResult.isOk()).toBe(true);
+    if (readResult.isErr()) {
+      return;
+    }
+
+    const unserializableDocument = {
+      services: {},
+      value: Symbol("unsupported"),
+    };
+
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      unserializableDocument,
+      readResult.value.revision
+    );
+
+    expect(writeResult.isErr()).toBe(true);
+    if (writeResult.isOk()) {
+      return;
+    }
+
+    expect(writeResult.error).toEqual({
+      kind: "serialization-failure",
+      fileName: "compose.yaml",
+    });
+    expect((await readFile(composePath, "utf8")).toString()).toBe(source);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("reports deterministic write failures without replacing the original", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+  const source = "services:\n  app:\n    image: old/app\n";
+
+  try {
+    await writeFile(composePath, source);
+    const readResult = await readComposeDocument(cwd, "compose.yaml");
+    expect(readResult.isOk()).toBe(true);
+    if (readResult.isErr()) {
+      return;
+    }
+
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      { services: { app: { image: "new/app" } } },
+      readResult.value.revision,
+      createFileSystem({
+        writeFile: () => Promise.reject(new Error("disk full")),
+      })
+    );
+
+    expect(writeResult.isErr()).toBe(true);
+    if (writeResult.isOk()) {
+      return;
+    }
+
+    expect(writeResult.error).toEqual({
+      kind: "write-failure",
+      fileName: "compose.yaml",
+    });
+    expect((await readFile(composePath, "utf8")).toString()).toBe(source);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("creates a new Compose file exclusively when another process wins the race", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+  const competitorSource = "services:\n  competitor:\n    image: other/app\n";
+
+  try {
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      { services: { app: { image: "new/app" } } },
+      undefined,
+      createFileSystem({
+        link: async (_temporaryPath, newPath) => {
+          await writeFile(newPath, competitorSource);
+          throw Object.assign(new Error("already exists"), { code: "EEXIST" });
+        },
+      })
+    );
+
+    expect(writeResult.isErr()).toBe(true);
+    if (writeResult.isOk()) {
+      return;
+    }
+
+    expect(writeResult.error).toEqual({
+      kind: "creation-conflict",
+      fileName: "compose.yaml",
+    });
+    expect((await readFile(composePath, "utf8")).toString()).toBe(
+      competitorSource
+    );
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("reports replacement failures without leaving a temporary file", async () => {
+  const cwd = await createTempDirectory();
+  const composePath = join(cwd, "compose.yaml");
+  const source = "services:\n  app:\n    image: old/app\n";
+
+  try {
+    await writeFile(composePath, source);
+    const readResult = await readComposeDocument(cwd, "compose.yaml");
+    expect(readResult.isOk()).toBe(true);
+    if (readResult.isErr()) {
+      return;
+    }
+
+    const writeResult = await writeComposeDocument(
+      cwd,
+      "compose.yaml",
+      { services: { app: { image: "new/app" } } },
+      readResult.value.revision,
+      createFileSystem({
+        rename: () => Promise.reject(new Error("rename failed")),
+      })
+    );
+
+    expect(writeResult.isErr()).toBe(true);
+    expect((await readFile(composePath, "utf8")).toString()).toBe(source);
+    expect(
+      (await readdir(cwd)).filter((name) => name.startsWith(".compose.yaml."))
+    ).toEqual([]);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
 async function readComposeFailure(source: string): Promise<{
   contents: string;
   error: ComposeFileFailure | undefined;
@@ -337,6 +670,23 @@ async function readComposeFailure(source: string): Promise<{
 
 function createTempDirectory(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ayanokoji-compose-adapter-"));
+}
+
+function createFileSystem(
+  overrides: Partial<ComposeFileSystem> = {}
+): ComposeFileSystem {
+  return {
+    chmod,
+    link,
+    readFile: async (path) => (await readFile(path, "utf8")).toString(),
+    rename,
+    stat: lstat,
+    unlink,
+    writeFile: async (path, data, options) => {
+      await writeFile(path, data, options);
+    },
+    ...overrides,
+  };
 }
 
 async function removeTempDirectory(cwd: string): Promise<void> {

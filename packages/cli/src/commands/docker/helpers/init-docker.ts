@@ -1,4 +1,3 @@
-import { writeFile } from "~/utils/fs";
 import { enhancedMultiselect, enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
 import { type DatabaseImageConfig, DOCKER_DATABASES } from "../databases";
@@ -12,8 +11,10 @@ import {
 import {
   COMPOSE_FILE_NAMES,
   type ComposeFileName,
+  type ComposeFileRevision,
   discoverComposeFiles,
   readComposeDocument,
+  writeComposeDocument,
 } from "./compose-file-adapter";
 import { formatComposeFileFailure } from "./format-compose-file-failure";
 import type { ConnectionConfig } from "./generate-connection-string";
@@ -29,10 +30,10 @@ export interface InitDockerResult {
 
 export async function initDocker(options: InitDockerProps) {
   const discoveryResult = await discoverComposeFiles(options.cwd);
-  const { stringify } = await import("yaml");
 
   let config: ComposeDocument = {};
   let fileName: ComposeFileName;
+  let revision: ComposeFileRevision | undefined;
 
   if (discoveryResult.isErr()) {
     return new Err(formatComposeFileFailure(discoveryResult.error));
@@ -71,7 +72,8 @@ export async function initDocker(options: InitDockerProps) {
       return new Err(formatComposeFileFailure(fileResult.error));
     }
 
-    config = fileResult.value;
+    config = fileResult.value.document;
+    revision = fileResult.value.revision;
   }
 
   const existingServices = getServiceNames(config);
@@ -117,19 +119,14 @@ export async function initDocker(options: InitDockerProps) {
     return new Err(formatComposeMutationFailure(mutationResult.error));
   }
 
-  let serializedConfig: string;
-  try {
-    serializedConfig = stringify(mutationResult.value, null, 2);
-  } catch {
-    return new Err(`Failed to serialize Docker Compose file: ${fileName}`);
-  }
-
-  const writeResult = await writeFile(
-    `${options.cwd}/${fileName}`,
-    serializedConfig
+  const writeResult = await writeComposeDocument(
+    options.cwd,
+    fileName,
+    mutationResult.value,
+    revision
   );
   if (writeResult.isErr()) {
-    return new Err(`Failed to write Docker Compose file: ${fileName}`);
+    return new Err(formatComposeFileFailure(writeResult.error));
   }
 
   return new Ok({ imageConfigs, connectionConfigs });

@@ -65,6 +65,14 @@ npx ayanokoji docker remove
 - **Recognized files** - Prompts when multiple supported Compose files exist and reports an error when none exists
 - **No-services result** - Treats an omitted or empty `services` collection as no removable services and leaves the document unchanged
 
+### Compose file safety
+
+Both Docker commands apply successful service transformations through the Compose file adapter:
+
+- Existing regular Compose files are replaced atomically, preserving permission mode bits.
+- Symlinked or changed Compose paths are rejected without overwriting the file; rerun the command after a stale-document conflict.
+- When initialization starts without an existing Compose file, the selected path is created exclusively so a concurrent creation is reported instead of overwritten.
+
 ## Supported Services
 
 ### Databases
