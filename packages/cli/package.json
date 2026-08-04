@@ -27,6 +27,7 @@
     "dev": "tsdown --watch",
     "build": "tsdown",
     "start": "node .",
+    "test": "bun test",
     "type-check": "tsc --noEmit --incremental false",
     "lint": "biome check",
     "lint:fix": "biome check --write",

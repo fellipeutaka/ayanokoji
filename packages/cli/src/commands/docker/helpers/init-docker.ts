@@ -1,11 +1,14 @@
 import { readFile, writeFile } from "~/utils/fs";
 import { enhancedMultiselect, enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
+import { type DatabaseImageConfig, DOCKER_DATABASES } from "../databases";
 import {
-  type ComposeService,
-  type DatabaseImageConfig,
-  DOCKER_DATABASES,
-} from "../databases";
+  addServices,
+  type ComposeDocument,
+  type ComposeMutationFailure,
+  type ComposeServiceEntry,
+  getServiceNames,
+} from "./compose-document";
 import type { ConnectionConfig } from "./generate-connection-string";
 import {
   getExistingDockerComposeFile,
@@ -14,11 +17,6 @@ import {
 
 interface InitDockerProps {
   cwd: string;
-}
-
-interface ComposeConfig {
-  services: Record<string, ComposeService>;
-  volumes?: Record<string, object>;
 }
 
 export interface InitDockerResult {
@@ -30,7 +28,7 @@ export async function initDocker(options: InitDockerProps) {
   const existingFile = await getExistingDockerComposeFile(options.cwd);
   const { parse, stringify } = await import("yaml");
 
-  let config: ComposeConfig = { services: {} };
+  let config: ComposeDocument = {};
   let fileName: string;
 
   if (existingFile) {
@@ -46,8 +44,16 @@ export async function initDocker(options: InitDockerProps) {
       );
     }
 
-    config = parse(fileResult.value) || { services: {} };
-    config.services = config.services || {};
+    let parsedConfig: unknown;
+    try {
+      parsedConfig = parse(fileResult.value);
+    } catch {
+      return new Err(
+        `Failed to parse existing Docker Compose file: ${existingFile}`
+      );
+    }
+
+    config = (parsedConfig ?? {}) as ComposeDocument;
   } else {
     fileName = await enhancedSelect({
       message: "What Docker Compose file name would you like to use?",
@@ -59,7 +65,7 @@ export async function initDocker(options: InitDockerProps) {
     });
   }
 
-  const existingServices = Object.keys(config.services);
+  const existingServices = getServiceNames(config);
   const availableDatabases = DOCKER_DATABASES.filter(
     (db) => !existingServices.includes(db.value)
   );
@@ -83,34 +89,54 @@ export async function initDocker(options: InitDockerProps) {
 
   const imageConfigs: DatabaseImageConfig[] = [];
   const connectionConfigs: ConnectionConfig[] = [];
-  const volumes: Set<string> = new Set();
+  const serviceEntries: ComposeServiceEntry[] = [];
 
   for (const database of selectedDatabaseEntries) {
     const { createComposeService, imageConfig } = await database.config();
     const service = await createComposeService();
 
-    config.services[service.name] = service.config;
+    serviceEntries.push({
+      name: service.name,
+      config: service.config,
+    });
     imageConfigs.push(imageConfig);
     connectionConfigs.push(service.connectionConfig);
-
-    if (service.config.volumes) {
-      for (const volume of service.config.volumes) {
-        const volumeName = volume.split(":")[0];
-        if (volumeName) {
-          volumes.add(volumeName);
-        }
-      }
-    }
   }
 
-  if (volumes.size > 0) {
-    config.volumes = config.volumes || {};
-    for (const volumeName of volumes) {
-      config.volumes[volumeName] = {};
-    }
+  const mutationResult = addServices(config, serviceEntries);
+  if (mutationResult.isErr()) {
+    return new Err(formatComposeMutationFailure(mutationResult.error));
   }
 
-  await writeFile(`${options.cwd}/${fileName}`, stringify(config, null, 2));
+  let serializedConfig: string;
+  try {
+    serializedConfig = stringify(mutationResult.value, null, 2);
+  } catch {
+    return new Err(`Failed to serialize Docker Compose file: ${fileName}`);
+  }
+
+  const writeResult = await writeFile(
+    `${options.cwd}/${fileName}`,
+    serializedConfig
+  );
+  if (writeResult.isErr()) {
+    return new Err(`Failed to write Docker Compose file: ${fileName}`);
+  }
 
   return new Ok({ imageConfigs, connectionConfigs });
+}
+
+function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
+  switch (failure.kind) {
+    case "empty-service-batch":
+      return "No Docker services were selected.";
+    case "invalid-document":
+      return `The Docker Compose document has an invalid ${failure.field} collection.`;
+    case "invalid-service-entry":
+      return `The Docker service entry at position ${failure.index + 1} is invalid.`;
+    case "service-name-conflict":
+      return `The Docker service name "${failure.serviceName}" already exists in the ${failure.scope === "existing-document" ? "Compose document" : "requested batch"}.`;
+    default:
+      return "The Docker service selection could not be applied.";
+  }
 }
