@@ -16,8 +16,12 @@ export const COMPOSE_FILE_NAMES = [
 
 export type ComposeFileName = (typeof COMPOSE_FILE_NAMES)[number];
 
+export interface ComposeFileStats {
+  isFile(): boolean;
+}
+
 export interface ComposeFileSystem {
-  stat(path: string): Promise<unknown>;
+  stat(path: string): Promise<ComposeFileStats>;
   readFile(path: string): Promise<string>;
 }
 
@@ -69,8 +73,10 @@ export async function discoverComposeFiles(
 
   for (const fileName of COMPOSE_FILE_NAMES) {
     try {
-      await fileSystem.stat(join(cwd, fileName));
-      candidates.push(fileName);
+      const stats = await fileSystem.stat(join(cwd, fileName));
+      if (stats.isFile()) {
+        candidates.push(fileName);
+      }
     } catch (error) {
       if (isMissingFileError(error)) {
         continue;

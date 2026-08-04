@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -67,6 +67,25 @@ test("recognizes only the supported Compose filenames", async () => {
       "docker-compose.yaml",
       "docker-compose.yml",
     ]);
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+});
+
+test("does not treat a directory with a supported name as a Compose candidate", async () => {
+  const cwd = await createTempDirectory();
+
+  try {
+    await mkdir(join(cwd, "compose.yaml"));
+
+    const result = await discoverComposeFiles(cwd);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isErr()) {
+      return;
+    }
+
+    expect(result.value).toEqual([]);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -280,7 +299,7 @@ test("reports a non-missing read failure as structured data", async () => {
 
   const result = await readComposeDocument("/project", "compose.yaml", {
     readFile: () => Promise.reject(unreadable),
-    stat: () => Promise.resolve(undefined),
+    stat: () => Promise.resolve({ isFile: () => true }),
   });
 
   expect(result.isErr()).toBe(true);
