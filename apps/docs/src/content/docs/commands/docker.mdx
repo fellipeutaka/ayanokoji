@@ -36,6 +36,8 @@ npx ayanokoji docker init
 - **Preserving existing configuration** - Adds selected services without replacing unrelated Compose data
 - **Atomic service selection** - Rejects a service-name collision without writing a partial selection
 - **Generated volumes** - Adds missing `<service>_data` volume declarations without overwriting existing declarations
+- **Recognized files** - Inspects only `compose.yaml`, `compose.yml`, `docker-compose.yaml`, and `docker-compose.yml`; prompts for a filename when none or multiple are present
+- **Fail-closed reads** - Rejects invalid YAML, multi-document YAML, duplicate keys, and invalid Compose shapes without replacing the original file
 
 ### Remove
 
@@ -60,6 +62,8 @@ npx ayanokoji docker remove
 - **Configuration preservation** - Keeps shared, external, metadata-bearing, bind-mounted, anonymous, uncertain-ownership, and unrelated Compose resources
 - **Atomic service selection** - Validates the complete removal batch before writing any service changes
 - **Environment cleanup** - Optionally removes related env vars from `.env`
+- **Recognized files** - Prompts when multiple supported Compose files exist and reports an error when none exists
+- **No-services result** - Treats an omitted or empty `services` collection as no removable services and leaves the document unchanged
 
 ## Supported Services
 

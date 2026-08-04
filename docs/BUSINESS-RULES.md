@@ -75,8 +75,15 @@ These rules describe the current product behavior. Issue state is tracked in Git
 
 - **Issue**: (none yet)
 - **When**: Docker removal is requested.
-- **Then**: The CLI must inspect `compose.yaml`, `compose.yml`, `docker-compose.yaml`, and `docker-compose.yml`; if none exists, it must stop with an error.
+- **Then**: The CLI must inspect `compose.yaml`, `compose.yml`, `docker-compose.yaml`, and `docker-compose.yml`, return every existing candidate, and require an explicit filename choice when more than one exists; if none exists, initialization must prompt for a supported filename while removal must stop with an error.
 - **Rationale**: The CLI must not guess at arbitrary YAML files.
+
+### BR-013: Docker Compose reads fail closed
+
+- **Issue**: (none yet)
+- **When**: A Docker command reads a recognized Compose file.
+- **Then**: The file must contain exactly one YAML document with a mapping root, unique mapping keys, and mapping-shaped `services` and `volumes` collections when present. Invalid YAML, multi-document input, duplicate keys, and unusable owned collections must stop the operation without coercing the input into an empty document; an omitted `services` collection is treated as empty for initialization and reports no available services for removal.
+- **Rationale**: Read validation must preserve user configuration and prevent unsafe input from reaching a mutation or write.
 
 ## Security and documentation
 

@@ -3,8 +3,20 @@ import {
   addServices,
   type ComposeDocument,
   type ComposeMutationFailure,
+  getRemovableServiceNames,
   removeServices,
 } from "./compose-document";
+
+test("reports a valid document without services as a structured no-services result", () => {
+  const result = getRemovableServiceNames({ name: "example" });
+
+  expect(result.isErr()).toBe(true);
+  if (result.isOk()) {
+    return;
+  }
+
+  expect(result.error).toEqual({ kind: "no-services" });
+});
 
 test("adds a service while preserving unrelated document data", () => {
   const document: ComposeDocument = {

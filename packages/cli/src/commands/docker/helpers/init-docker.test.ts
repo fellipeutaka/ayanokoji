@@ -7,7 +7,10 @@ import { parse } from "yaml";
 const promptMocks = {
   enhancedConfirm: mock(async () => true),
   enhancedMultiselect: mock(async () => ["postgresql"]),
-  enhancedSelect: mock(async () => "latest"),
+  enhancedSelect: mock(
+    async ({ initialValue }: { initialValue?: string }) =>
+      initialValue ?? "latest"
+  ),
   enhancedText: mock(
     async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
   ),
@@ -85,6 +88,51 @@ test("initDocker returns a parse failure without writing the Compose file", asyn
     expect((await readFile(composePath, "utf8")).toString()).toBe(
       invalidDocument
     );
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("initDocker prompts for a candidate when multiple Compose files exist", async () => {
+  const cwd = await createComposeFixture();
+  const alternatePath = join(cwd, "docker-compose.yml");
+  const alternateSource = `name: alternate
+services:
+  app:
+    image: alternate/app
+`;
+  await writeFile(alternatePath, alternateSource);
+  promptMocks.enhancedSelect.mockImplementationOnce(
+    async () => "docker-compose.yml"
+  );
+
+  try {
+    const { initDocker } = await import("./init-docker");
+    const result = await initDocker({ cwd });
+
+    expect(result.isOk()).toBe(true);
+    expect((await readFile(alternatePath, "utf8")).toString()).not.toBe(
+      alternateSource
+    );
+    expect((await readFile(join(cwd, "compose.yaml"), "utf8")).toString()).toBe(
+      "name: example\nservices:\n  app:\n    image: example/app\n    labels:\n      com.example.owner: user\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n"
+    );
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("initDocker prompts for a supported filename when no Compose file exists", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-"));
+
+  try {
+    const { initDocker } = await import("./init-docker");
+    const result = await initDocker({ cwd });
+
+    expect(result.isOk()).toBe(true);
+    expect(
+      (await readFile(join(cwd, "compose.yaml"), "utf8")).toString()
+    ).toContain("services:");
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
