@@ -10,6 +10,7 @@ import {
   readEnvFile,
   writeEnvFile,
 } from "./helpers/env-file";
+import { formatEnvironmentSyncFailure } from "./helpers/format-environment-failure";
 import { generateConnectionString } from "./helpers/generate-connection-string";
 import { getAllEnvVars } from "./helpers/get-env-vars";
 import { getRepositoryLink } from "./helpers/get-repository-link";
@@ -70,11 +71,20 @@ export const init = new Command()
     if (writeToEnv) {
       const envPath = options.envPath ?? `${optionsResult.value.cwd}/.env`;
       const newVars = getAllEnvVars(connectionConfigs);
-      const existingVars = await readEnvFile(envPath);
+      const existingVarsResult = await readEnvFile(envPath);
+      if (existingVarsResult.isErr()) {
+        handleError(formatEnvironmentSyncFailure(existingVarsResult.error));
+      }
+
+      const existingVars = existingVarsResult.value;
 
       if (existingVars === null) {
         // No existing .env, create new one
-        await writeEnvFile(envPath, newVars);
+        const writeResult = await writeEnvFile(envPath, newVars);
+        if (writeResult.isErr()) {
+          handleError(formatEnvironmentSyncFailure(writeResult.error));
+        }
+
         logger.success(`Created ${envPath}`);
         for (const key of Object.keys(newVars)) {
           logger.info(`  + ${key}`);
@@ -111,7 +121,11 @@ export const init = new Command()
         }
 
         if (Object.keys(varsToWrite).length > 0) {
-          await appendEnvFile(envPath, varsToWrite);
+          const appendResult = await appendEnvFile(envPath, varsToWrite);
+          if (appendResult.isErr()) {
+            handleError(formatEnvironmentSyncFailure(appendResult.error));
+          }
+
           logger.success(`Updated ${envPath}`);
           for (const key of Object.keys(varsToWrite)) {
             logger.info(`  + ${key}`);
@@ -127,7 +141,13 @@ export const init = new Command()
       }
 
       // Add .env to .gitignore
-      await addToGitignore(optionsResult.value.cwd, ".env");
+      const gitignoreResult = await addToGitignore(
+        optionsResult.value.cwd,
+        ".env"
+      );
+      if (gitignoreResult.isErr()) {
+        handleError(formatEnvironmentSyncFailure(gitignoreResult.error));
+      }
     }
 
     logger.break();

@@ -1,4 +1,10 @@
 import { access, appendFile, readFile, writeFile } from "~/utils/fs";
+import { Err, Ok } from "~/utils/result";
+
+export type EnvFileFailure =
+  | { kind: "read-failure"; path: string }
+  | { kind: "write-failure"; path: string }
+  | { kind: "append-failure"; path: string };
 
 export function parseEnvFile(content: string): Record<string, string> {
   const vars: Record<string, string> = {};
@@ -39,57 +45,71 @@ export function stringifyEnvVars(vars: Record<string, string>): string {
 
 export async function readEnvFile(
   path: string
-): Promise<Record<string, string> | null> {
+): Promise<
+  | Ok<Record<string, string> | null, EnvFileFailure>
+  | Err<Record<string, string> | null, EnvFileFailure>
+> {
   const exists = await access(path);
   if (!exists) {
-    return null;
+    return new Ok(null);
   }
 
   const result = await readFile<string>(path, "utf-8");
   if (result.isErr()) {
-    return null;
+    return new Err({ kind: "read-failure", path });
   }
 
-  return parseEnvFile(result.value);
+  return new Ok(parseEnvFile(result.value));
 }
 
 export async function writeEnvFile(
   path: string,
   vars: Record<string, string>
-): Promise<void> {
+): Promise<Ok<null, EnvFileFailure> | Err<null, EnvFileFailure>> {
   const content = stringifyEnvVars(vars);
-  await writeFile(path, `${content}\n`);
+  const result = await writeFile(path, `${content}\n`);
+  return result.isErr()
+    ? new Err({ kind: "write-failure", path })
+    : new Ok(null);
 }
 
 export async function appendEnvFile(
   path: string,
   vars: Record<string, string>
-): Promise<void> {
+): Promise<Ok<null, EnvFileFailure> | Err<null, EnvFileFailure>> {
   const content = stringifyEnvVars(vars);
-  await appendFile(path, `\n${content}\n`);
+  const result = await appendFile(path, `\n${content}\n`);
+  return result.isErr()
+    ? new Err({ kind: "append-failure", path })
+    : new Ok(null);
 }
 
 export async function addToGitignore(
   cwd: string,
   entry: string
-): Promise<void> {
+): Promise<Ok<null, EnvFileFailure> | Err<null, EnvFileFailure>> {
   const gitignorePath = `${cwd}/.gitignore`;
   const exists = await access(gitignorePath);
 
   if (!exists) {
-    await writeFile(gitignorePath, `${entry}\n`);
-    return;
+    const result = await writeFile(gitignorePath, `${entry}\n`);
+    return result.isErr()
+      ? new Err({ kind: "write-failure", path: gitignorePath })
+      : new Ok(null);
   }
 
   const result = await readFile<string>(gitignorePath, "utf-8");
   if (result.isErr()) {
-    return;
+    return new Err({ kind: "read-failure", path: gitignorePath });
   }
 
   const lines = result.value.split("\n").map((line) => line.trim());
   if (lines.includes(entry)) {
-    return;
+    return new Ok(null);
   }
 
-  await appendFile(gitignorePath, `\n${entry}\n`);
+  const appendResult = await appendFile(gitignorePath, `\n${entry}\n`);
+  return appendResult.isErr()
+    ? new Err({ kind: "append-failure", path: gitignorePath })
+    : new Ok(null);
 }

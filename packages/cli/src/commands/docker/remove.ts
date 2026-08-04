@@ -22,6 +22,7 @@ import {
 } from "./helpers/compose-file-adapter";
 import { readEnvFile, writeEnvFile } from "./helpers/env-file";
 import { formatComposeFileFailure } from "./helpers/format-compose-file-failure";
+import { formatEnvironmentSyncFailure } from "./helpers/format-environment-failure";
 import { getEnvVarKeysForService } from "./helpers/remove-service";
 
 interface RemoveOptions {
@@ -129,7 +130,12 @@ export const remove = new Command()
 
     // Handle .env cleanup
     const envPath = options.envPath ?? `${options.cwd}/.env`;
-    const existingEnvVars = await readEnvFile(envPath);
+    const existingEnvVarsResult = await readEnvFile(envPath);
+    if (existingEnvVarsResult.isErr()) {
+      handleError(formatEnvironmentSyncFailure(existingEnvVarsResult.error));
+    }
+
+    const existingEnvVars = existingEnvVarsResult.value;
 
     if (existingEnvVars) {
       // Collect env vars to potentially remove
@@ -162,7 +168,11 @@ export const remove = new Command()
             delete newEnvVars[key];
           }
 
-          await writeEnvFile(envPath, newEnvVars);
+          const writeResult = await writeEnvFile(envPath, newEnvVars);
+          if (writeResult.isErr()) {
+            handleError(formatEnvironmentSyncFailure(writeResult.error));
+          }
+
           logger.success(
             `Removed ${envVarsToRemove.length} env var(s) from .env`
           );

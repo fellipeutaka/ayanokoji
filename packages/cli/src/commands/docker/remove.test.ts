@@ -1,5 +1,12 @@
 import { expect, mock, test } from "bun:test";
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse } from "yaml";
@@ -8,13 +15,14 @@ const handleErrorMock = mock((error: string): never => {
   throw new Error(error);
 });
 const enhancedSelectMock = mock(async () => "latest");
+let confirmResult = false;
 
 mock.module("~/utils/handle-error", () => ({
   handleError: handleErrorMock,
 }));
 
 mock.module("~/utils/prompts", () => ({
-  enhancedConfirm: mock(async () => false),
+  enhancedConfirm: mock(async () => confirmResult),
   enhancedMultiselect: mock(async () => ["postgres"]),
   enhancedSelect: enhancedSelectMock,
   enhancedText: mock(
@@ -130,6 +138,71 @@ test("remove prompts for a candidate when multiple Compose files exist", async (
     expect((await readFile(secondPath, "utf8")).toString()).not.toBe(source);
     expect((await readFile(firstPath, "utf8")).toString()).toBe(source);
   } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("remove reports an environment failure after the Compose file is written", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
+  const composePath = join(cwd, "compose.yaml");
+  const envPath = join(cwd, "env-directory");
+  await writeFile(
+    composePath,
+    `services:
+  postgres:
+    image: postgres:17
+`
+  );
+  await mkdir(envPath);
+
+  try {
+    const { remove } = await import("./remove");
+
+    await expect(
+      remove.parseAsync([
+        "node",
+        "ayanokoji",
+        "--cwd",
+        cwd,
+        "--env-path",
+        envPath,
+      ])
+    ).rejects.toThrow(
+      "Docker Compose file was written successfully, but environment synchronization failed"
+    );
+
+    expect((await readFile(composePath, "utf8")).toString()).not.toContain(
+      "postgres:"
+    );
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("remove synchronizes environment cleanup after a successful Compose write", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
+  const composePath = join(cwd, "compose.yaml");
+  const envPath = join(cwd, ".env");
+  await writeFile(
+    composePath,
+    `services:
+  postgres:
+    image: postgres:17
+`
+  );
+  await writeFile(envPath, "POSTGRESQL_URL=postgresql://docker\n");
+  confirmResult = true;
+
+  try {
+    const { remove } = await import("./remove");
+    await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
+
+    expect((await readFile(composePath, "utf8")).toString()).not.toContain(
+      "postgres:"
+    );
+    expect((await readFile(envPath, "utf8")).toString()).toBe("\n");
+  } finally {
+    confirmResult = false;
     await rm(cwd, { recursive: true, force: true });
   }
 });
