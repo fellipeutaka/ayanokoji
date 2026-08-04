@@ -34,12 +34,12 @@ These definitions describe the current product behavior. Issue state is tracked 
 #### FR-006: Initialize Docker Compose services
 
 - **Issue**: (none yet)
-- **Description**: The CLI must create or update a recognized Docker Compose file with selected PostgreSQL, MySQL, MariaDB, Redis, Valkey, MongoDB, RabbitMQ, MinIO, or Mailpit services, including service configuration, health checks where supported, volumes, and connection strings.
+- **Description**: The CLI must discover and explicitly select among the recognized Docker Compose filenames, then create or update the selected document with PostgreSQL, MySQL, MariaDB, Redis, Valkey, MongoDB, RabbitMQ, MinIO, or Mailpit services, including service configuration, health checks where supported, volumes, and connection strings.
 
 #### FR-007: Remove Docker Compose services
 
 - **Issue**: (none yet)
-- **Description**: The CLI must remove user-selected services from an existing recognized Docker Compose file, remove orphaned volumes, and optionally remove the related environment variables.
+- **Description**: The CLI must discover and explicitly select an existing recognized Docker Compose file, remove user-selected services from its valid single-document configuration, remove orphaned volumes, and optionally remove the related environment variables.
 
 #### FR-008: Generate secure secrets
 
@@ -86,3 +86,8 @@ These definitions describe the current product behavior. Issue state is tracked 
 
 - **Issue**: (none yet)
 - **Description**: Generated configuration must use the selected tool and database choices consistently, include the dependencies required by the generated files, and preserve valid existing project configuration that is outside the command's scope.
+
+#### NFR-005: Fail closed on unsafe Compose reads
+
+- **Issue**: (none yet)
+- **Description**: Docker commands must reject invalid YAML, multi-document YAML, duplicate mapping keys, invalid Compose roots, and invalid owned collection shapes before mutation, while preserving the original on-disk document and reporting structured failures to command orchestration.

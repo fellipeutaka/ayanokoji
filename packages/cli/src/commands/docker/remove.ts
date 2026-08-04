@@ -1,17 +1,26 @@
 import { Command } from "commander";
-import { access, readFile, writeFile } from "~/utils/fs";
+import { access, writeFile } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
-import { enhancedConfirm, enhancedMultiselect } from "~/utils/prompts";
+import {
+  enhancedConfirm,
+  enhancedMultiselect,
+  enhancedSelect,
+} from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
 import {
   type ComposeDocument,
   type ComposeMutationFailure,
-  getServiceNames,
+  getRemovableServiceNames,
   removeServices,
 } from "./helpers/compose-document";
+import {
+  type ComposeFileName,
+  discoverComposeFiles,
+  readComposeDocument,
+} from "./helpers/compose-file-adapter";
 import { readEnvFile, writeEnvFile } from "./helpers/env-file";
-import { getExistingDockerComposeFile } from "./helpers/get-existing-docker-compose-file";
+import { formatComposeFileFailure } from "./helpers/format-compose-file-failure";
 import { getEnvVarKeysForService } from "./helpers/remove-service";
 
 interface RemoveOptions {
@@ -35,41 +44,54 @@ export const remove = new Command()
       handleError(optionsResult.error);
     }
 
-    const { parse, stringify } = await import("yaml");
+    const { stringify } = await import("yaml");
 
-    // Find existing compose file
-    const existingFile = await getExistingDockerComposeFile(options.cwd);
+    const discoveryResult = await discoverComposeFiles(options.cwd);
 
-    if (!existingFile) {
-      handleError("No Docker Compose file found.");
+    if (discoveryResult.isErr()) {
+      handleError(formatComposeFileFailure(discoveryResult.error));
       return;
     }
 
-    // Read compose file
-    const fileResult = await readFile<string>(
-      `${options.cwd}/${existingFile}`,
-      "utf-8"
-    );
+    const candidates = discoveryResult.value;
+    const firstCandidate = candidates[0];
+    if (!firstCandidate) {
+      handleError(
+        formatComposeFileFailure({
+          kind: "missing-document",
+          fileName: "compose.yaml",
+        })
+      );
+      return;
+    }
 
+    const existingFile: ComposeFileName =
+      candidates.length === 1
+        ? firstCandidate
+        : await enhancedSelect({
+            message: "Which Docker Compose file would you like to use?",
+            options: candidates.map((value) => ({
+              value,
+              label: value,
+            })),
+            initialValue: firstCandidate,
+          });
+
+    const fileResult = await readComposeDocument(options.cwd, existingFile);
     if (fileResult.isErr()) {
-      handleError(`Failed to read ${existingFile}`);
+      handleError(formatComposeFileFailure(fileResult.error));
       return;
     }
 
-    let config: ComposeDocument;
-    try {
-      config = parse(fileResult.value) as ComposeDocument;
-    } catch {
-      handleError(`Failed to parse ${existingFile}`);
+    const config: ComposeDocument = fileResult.value;
+    const servicesResult = getRemovableServiceNames(config);
+
+    if (servicesResult.isErr()) {
+      handleError(formatComposeMutationFailure(servicesResult.error));
       return;
     }
 
-    const services = getServiceNames(config);
-
-    if (services.length === 0) {
-      handleError("No services found in the compose file.");
-      return;
-    }
+    const services = servicesResult.value;
 
     // Select services to remove
     const servicesToRemove = await enhancedMultiselect({
@@ -173,6 +195,8 @@ function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
   switch (failure.kind) {
     case "empty-service-batch":
       return "No Docker services were selected.";
+    case "no-services":
+      return "No services found in the compose file.";
     case "invalid-document":
       return `The Docker Compose document has an invalid ${failure.field} collection.`;
     case "invalid-service-entry":

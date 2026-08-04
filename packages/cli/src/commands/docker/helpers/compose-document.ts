@@ -24,6 +24,9 @@ export type ComposeMutationFailure =
       kind: "empty-service-batch";
     }
   | {
+      kind: "no-services";
+    }
+  | {
       kind: "invalid-service-entry";
       index: number;
       serviceName?: string;
@@ -50,6 +53,27 @@ export function getServiceNames(document: unknown): string[] {
   }
 
   return Object.keys(document.services);
+}
+
+export function getRemovableServiceNames(
+  document: unknown
+):
+  | Ok<string[], ComposeMutationFailure>
+  | Err<string[], ComposeMutationFailure> {
+  if (!isRecord(document)) {
+    return new Err({ kind: "invalid-document", field: "document" });
+  }
+
+  if (document.services !== undefined && !isRecord(document.services)) {
+    return new Err({ kind: "invalid-document", field: "services" });
+  }
+
+  const serviceNames = Object.keys(document.services ?? {});
+  if (serviceNames.length === 0) {
+    return new Err({ kind: "no-services" });
+  }
+
+  return new Ok(serviceNames);
 }
 
 export function addServices(

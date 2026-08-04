@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "~/utils/fs";
+import { writeFile } from "~/utils/fs";
 import { enhancedMultiselect, enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
 import { type DatabaseImageConfig, DOCKER_DATABASES } from "../databases";
@@ -9,11 +9,14 @@ import {
   type ComposeServiceEntry,
   getServiceNames,
 } from "./compose-document";
-import type { ConnectionConfig } from "./generate-connection-string";
 import {
-  getExistingDockerComposeFile,
-  validDockerComposeFiles,
-} from "./get-existing-docker-compose-file";
+  COMPOSE_FILE_NAMES,
+  type ComposeFileName,
+  discoverComposeFiles,
+  readComposeDocument,
+} from "./compose-file-adapter";
+import { formatComposeFileFailure } from "./format-compose-file-failure";
+import type { ConnectionConfig } from "./generate-connection-string";
 
 interface InitDockerProps {
   cwd: string;
@@ -25,44 +28,50 @@ export interface InitDockerResult {
 }
 
 export async function initDocker(options: InitDockerProps) {
-  const existingFile = await getExistingDockerComposeFile(options.cwd);
-  const { parse, stringify } = await import("yaml");
+  const discoveryResult = await discoverComposeFiles(options.cwd);
+  const { stringify } = await import("yaml");
 
   let config: ComposeDocument = {};
-  let fileName: string;
+  let fileName: ComposeFileName;
 
-  if (existingFile) {
-    fileName = existingFile;
-    const fileResult = await readFile<string>(
-      `${options.cwd}/${existingFile}`,
-      "utf-8"
-    );
+  if (discoveryResult.isErr()) {
+    return new Err(formatComposeFileFailure(discoveryResult.error));
+  }
 
-    if (fileResult.isErr()) {
-      return new Err(
-        `Failed to read existing Docker Compose file: ${existingFile}`
-      );
-    }
-
-    let parsedConfig: unknown;
-    try {
-      parsedConfig = parse(fileResult.value);
-    } catch {
-      return new Err(
-        `Failed to parse existing Docker Compose file: ${existingFile}`
-      );
-    }
-
-    config = (parsedConfig ?? {}) as ComposeDocument;
-  } else {
+  const candidates = discoveryResult.value;
+  if (candidates.length === 0) {
     fileName = await enhancedSelect({
       message: "What Docker Compose file name would you like to use?",
-      options: Array.from(validDockerComposeFiles).map((value) => ({
+      options: COMPOSE_FILE_NAMES.map((value) => ({
         value,
         label: value,
       })),
       initialValue: "compose.yaml",
     });
+  } else {
+    const firstCandidate = candidates[0];
+    if (!firstCandidate) {
+      return new Err("No Docker Compose file found.");
+    }
+
+    fileName =
+      candidates.length === 1
+        ? firstCandidate
+        : await enhancedSelect({
+            message: "Which Docker Compose file would you like to use?",
+            options: candidates.map((value) => ({
+              value,
+              label: value,
+            })),
+            initialValue: firstCandidate,
+          });
+
+    const fileResult = await readComposeDocument(options.cwd, fileName);
+    if (fileResult.isErr()) {
+      return new Err(formatComposeFileFailure(fileResult.error));
+    }
+
+    config = fileResult.value;
   }
 
   const existingServices = getServiceNames(config);
@@ -130,6 +139,8 @@ function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
   switch (failure.kind) {
     case "empty-service-batch":
       return "No Docker services were selected.";
+    case "no-services":
+      return "No services found in the compose file.";
     case "invalid-document":
       return `The Docker Compose document has an invalid ${failure.field} collection.`;
     case "invalid-service-entry":
