@@ -33,10 +33,23 @@ export type ComposeMutationFailure =
       kind: "service-name-conflict";
       serviceName: string;
       scope: "existing-document" | "requested-batch";
+    }
+  | {
+      kind: "service-not-found";
+      serviceName: string;
+    }
+  | {
+      kind: "service-dependency-conflict";
+      serviceName: string;
+      dependencyName: string;
     };
 
-export function getServiceNames(document: ComposeDocument): string[] {
-  return isRecord(document.services) ? Object.keys(document.services) : [];
+export function getServiceNames(document: unknown): string[] {
+  if (!(isRecord(document) && isRecord(document.services))) {
+    return [];
+  }
+
+  return Object.keys(document.services);
 }
 
 export function addServices(
@@ -137,6 +150,159 @@ export function addServices(
   return new Ok(nextDocument);
 }
 
+export function removeServices(
+  document: ComposeDocument,
+  serviceNames: readonly string[]
+):
+  | Ok<ComposeDocument, ComposeMutationFailure>
+  | Err<ComposeDocument, ComposeMutationFailure> {
+  if (!isRecord(document)) {
+    return new Err({ kind: "invalid-document", field: "document" });
+  }
+
+  if (serviceNames.length === 0) {
+    return new Err({ kind: "empty-service-batch" });
+  }
+
+  const existingServices = document.services;
+  if (existingServices !== undefined && !isRecord(existingServices)) {
+    return new Err({ kind: "invalid-document", field: "services" });
+  }
+
+  const existingVolumes = document.volumes;
+  if (existingVolumes !== undefined && !isRecord(existingVolumes)) {
+    return new Err({ kind: "invalid-document", field: "volumes" });
+  }
+
+  const services = existingServices ?? {};
+  const requestedNames = new Set<string>();
+
+  for (const [index, serviceName] of serviceNames.entries()) {
+    if (typeof serviceName !== "string" || serviceName.length === 0) {
+      return new Err({
+        kind: "invalid-service-entry",
+        index,
+        reason: "empty-name",
+        ...(typeof serviceName === "string" && { serviceName }),
+      });
+    }
+
+    if (requestedNames.has(serviceName)) {
+      return new Err({
+        kind: "service-name-conflict",
+        serviceName,
+        scope: "requested-batch",
+      });
+    }
+
+    if (!hasOwn(services, serviceName)) {
+      return new Err({ kind: "service-not-found", serviceName });
+    }
+
+    requestedNames.add(serviceName);
+  }
+
+  for (const [serviceName, service] of Object.entries(services)) {
+    if (requestedNames.has(serviceName)) {
+      continue;
+    }
+
+    const dependencies = getDependencyNames(service);
+    for (const dependencyName of dependencies) {
+      if (requestedNames.has(dependencyName)) {
+        return new Err({
+          kind: "service-dependency-conflict",
+          serviceName,
+          dependencyName,
+        });
+      }
+    }
+  }
+
+  const nextServices: Record<string, ComposeServiceConfig> = {
+    ...services,
+  };
+  const removedGeneratedVolumes = new Set<string>();
+
+  for (const serviceName of serviceNames) {
+    const service = services[serviceName];
+    if (!isRecord(service)) {
+      return new Err({ kind: "invalid-document", field: "services" });
+    }
+
+    for (const volumeName of getGeneratedVolumeNames({
+      name: serviceName,
+      config: service,
+    })) {
+      removedGeneratedVolumes.add(volumeName);
+    }
+    delete nextServices[serviceName];
+  }
+
+  let nextVolumes: Record<string, unknown> | undefined;
+  let volumeChanged = false;
+  if (existingVolumes !== undefined) {
+    nextVolumes = { ...existingVolumes };
+    const remainingVolumeNames = new Set(
+      Object.values(nextServices).flatMap((service) =>
+        getReferencedVolumeNames(service)
+      )
+    );
+
+    for (const volumeName of removedGeneratedVolumes) {
+      if (
+        !remainingVolumeNames.has(volumeName) &&
+        isGeneratedVolumeDeclaration(nextVolumes[volumeName])
+      ) {
+        delete nextVolumes[volumeName];
+        volumeChanged = true;
+      }
+    }
+  }
+
+  const nextDocument: ComposeDocument = {
+    ...(volumeChanged &&
+    nextVolumes !== undefined &&
+    Object.keys(nextVolumes).length === 0
+      ? withoutVolumes(document)
+      : document),
+    services: nextServices,
+    ...(nextVolumes !== undefined &&
+      (!volumeChanged || Object.keys(nextVolumes).length > 0) && {
+        volumes: nextVolumes,
+      }),
+  };
+
+  return new Ok(nextDocument);
+}
+
+function getDependencyNames(service: ComposeServiceConfig): string[] {
+  if (!isRecord(service) || service.depends_on === undefined) {
+    return [];
+  }
+
+  if (Array.isArray(service.depends_on)) {
+    return service.depends_on.filter(
+      (dependency): dependency is string => typeof dependency === "string"
+    );
+  }
+
+  if (isRecord(service.depends_on)) {
+    return Object.keys(service.depends_on);
+  }
+
+  return [];
+}
+
+function isGeneratedVolumeDeclaration(value: unknown): boolean {
+  return isRecord(value) && Object.keys(value).length === 0;
+}
+
+function withoutVolumes(document: ComposeDocument): ComposeDocument {
+  const { volumes: _volumes, ...documentWithoutVolumes } = document;
+  return documentWithoutVolumes;
+}
+
 function getGeneratedVolumeNames(entry: ComposeServiceEntry): string[] {
   const config = isRecord(entry.config) ? entry.config : undefined;
   const volumes = config?.volumes;
@@ -149,6 +315,17 @@ function getGeneratedVolumeNames(entry: ComposeServiceEntry): string[] {
   return volumes.flatMap((mount) => {
     const source = getMountSource(mount);
     return source === generatedVolumeName ? [source] : [];
+  });
+}
+
+function getReferencedVolumeNames(service: ComposeServiceConfig): string[] {
+  if (!(isRecord(service) && Array.isArray(service.volumes))) {
+    return [];
+  }
+
+  return service.volumes.flatMap((mount) => {
+    const source = getMountSource(mount);
+    return source ? [source] : [];
   });
 }
 

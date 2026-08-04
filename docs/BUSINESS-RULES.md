@@ -67,9 +67,9 @@ These rules describe the current product behavior. Issue state is tracked in Git
 ### BR-009: Docker removal cleans only orphaned resources
 
 - **Issue**: (none yet)
-- **When**: Selected Docker services are removed.
-- **Then**: Their services must be deleted, volumes must be removed only when no remaining service uses them, and related environment variables may be removed only after user confirmation.
-- **Rationale**: Shared resources and unrelated configuration must remain intact.
+- **When**: A user selects one or more Docker services for removal.
+- **Then**: The complete batch must be validated before transformation; removal must reject a remaining service's explicit `depends_on` reference to any selected service; and only unreferenced, convention-recognized Generated Compose volume declarations may be removed. Shared, external, metadata-bearing, bind-mounted, anonymous, uncertain-ownership, and unrelated resources must remain intact. Related environment variables may be removed only after user confirmation.
+- **Rationale**: Dependency protection and conservative ownership rules prevent a local cleanup operation from invalidating or deleting user-owned configuration.
 
 ### BR-010: Docker operations require a recognized Compose file
 
