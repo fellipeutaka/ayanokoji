@@ -4,13 +4,15 @@ import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { enhancedConfirm, enhancedMultiselect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
+import {
+  type ComposeDocument,
+  type ComposeMutationFailure,
+  getServiceNames,
+  removeServices,
+} from "./helpers/compose-document";
 import { readEnvFile, writeEnvFile } from "./helpers/env-file";
 import { getExistingDockerComposeFile } from "./helpers/get-existing-docker-compose-file";
-import {
-  getEnvVarKeysForService,
-  getServices,
-  removeServices,
-} from "./helpers/remove-service";
+import { getEnvVarKeysForService } from "./helpers/remove-service";
 
 interface RemoveOptions {
   cwd: string;
@@ -54,8 +56,15 @@ export const remove = new Command()
       return;
     }
 
-    const config = parse(fileResult.value) || { services: {} };
-    const services = getServices(config);
+    let config: ComposeDocument;
+    try {
+      config = parse(fileResult.value) as ComposeDocument;
+    } catch {
+      handleError(`Failed to parse ${existingFile}`);
+      return;
+    }
+
+    const services = getServiceNames(config);
 
     if (services.length === 0) {
       handleError("No services found in the compose file.");
@@ -73,13 +82,29 @@ export const remove = new Command()
     });
 
     // Remove services
-    const newConfig = removeServices(config, servicesToRemove);
+    const mutationResult = removeServices(config, servicesToRemove);
+    if (mutationResult.isErr()) {
+      handleError(formatComposeMutationFailure(mutationResult.error));
+      return;
+    }
 
     // Write updated compose file
-    await writeFile(
+    let serializedConfig: string;
+    try {
+      serializedConfig = stringify(mutationResult.value, null, 2);
+    } catch {
+      handleError(`Failed to serialize ${existingFile}`);
+      return;
+    }
+
+    const writeResult = await writeFile(
       `${options.cwd}/${existingFile}`,
-      stringify(newConfig, null, 2)
+      serializedConfig
     );
+    if (writeResult.isErr()) {
+      handleError(`Failed to write ${existingFile}`);
+      return;
+    }
 
     logger.success(
       `Removed ${servicesToRemove.length} service(s) from ${existingFile}`
@@ -142,4 +167,23 @@ async function parseOptions(options: RemoveOptions) {
   return new Ok({
     cwd: options.cwd,
   });
+}
+
+function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
+  switch (failure.kind) {
+    case "empty-service-batch":
+      return "No Docker services were selected.";
+    case "invalid-document":
+      return `The Docker Compose document has an invalid ${failure.field} collection.`;
+    case "invalid-service-entry":
+      return `The Docker service selection at position ${failure.index + 1} is invalid.`;
+    case "service-name-conflict":
+      return `The Docker service name "${failure.serviceName}" appears more than once in the requested batch.`;
+    case "service-not-found":
+      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
+    case "service-dependency-conflict":
+      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
+    default:
+      return "The Docker service selection could not be applied.";
+  }
 }

@@ -55,7 +55,10 @@ npx ayanokoji docker remove
 #### Features
 
 - **Interactive service selection** - Choose which services to remove
-- **Volume cleanup** - Automatically removes orphaned volumes
+- **Dependency protection** - Rejects a batch that would leave an explicit `depends_on` reference to a removed service
+- **Conservative volume cleanup** - Removes only unreferenced, convention-recognized `<service>_data` declarations created by Ayanokoji
+- **Configuration preservation** - Keeps shared, external, metadata-bearing, bind-mounted, anonymous, uncertain-ownership, and unrelated Compose resources
+- **Atomic service selection** - Validates the complete removal batch before writing any service changes
 - **Environment cleanup** - Optionally removes related env vars from `.env`
 
 ## Supported Services
