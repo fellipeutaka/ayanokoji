@@ -30,6 +30,7 @@
     "type-check": "turbo run type-check",
     "cli": "pnpm --filter ayanokoji",
     "docs": "pnpm --filter docs",
+    "release": "pnpm run build && pnpm exec changeset publish",
     "prepare": "lefthook install"
   },
   "devDependencies": {

@@ -6,6 +6,6 @@
   "a11y": "hidden",
   "trackSource": false,
   "hooks": {
-    "postAdd": ["bun run lint:fix ./src/components/ui/icons.tsx"]
+    "postAdd": ["pnpm run lint:fix ./src/components/ui/icons.tsx"]
   }
 }

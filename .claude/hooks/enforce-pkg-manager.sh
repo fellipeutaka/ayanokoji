@@ -5,13 +5,14 @@ COMMAND=$(printf '%s' "$INPUT" | node -e 'try { process.stdout.write(JSON.parse(
 [ -z "$COMMAND" ] && exit 0
 
 declare -A BLOCKED=(
-  [npm]="bun"
-  [npx]="bunx"
-  [yarn]="bun"
-  [pnpm]="bun"
-  [pnpx]="bunx"
-  [deno]="bun"
-  [vlt]="bun"
+  [npm]="pnpm"
+  [npx]="pnpm dlx"
+  [yarn]="pnpm"
+  [pnpx]="pnpm dlx"
+  [deno]="pnpm"
+  [vlt]="pnpm"
+  [bun]="pnpm"
+  [bunx]="pnpm dlx"
 )
 
 for binary in "${!BLOCKED[@]}"; do
