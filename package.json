@@ -22,9 +22,10 @@
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "clean": "rimraf --glob \"{apps,packages}/*/{node_modules,dist}\" \"node_modules\" \".turbo\"",
-    "lint": "biome check",
-    "lint:fix": "biome check --write",
-    "lint:doctor": "ultracite doctor",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt --check .",
+    "format:fix": "oxfmt --write .",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
     "cli": "pnpm --filter ayanokoji",
@@ -32,15 +33,16 @@
     "prepare": "lefthook install"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.13",
     "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "lefthook": "^2.0.16",
+    "oxfmt": "0.62.0",
+    "oxlint": "1.77.0",
+    "oxlint-tsgolint": "7.0.2001",
     "rimraf": "^6.1.2",
     "turbo": "^2.7.4",
-    "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "ultracite": "7.0.11"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

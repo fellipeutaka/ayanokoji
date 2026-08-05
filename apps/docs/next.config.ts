@@ -10,7 +10,7 @@ const config: NextConfig = {
     ignoreBuildErrors: true,
   },
   devIndicators: false,
-  // biome-ignore lint/suspicious/useAwait: This needs to be async
+  // oxlint-disable-next-line typescript/require-await
   async rewrites() {
     return [
       {
@@ -19,7 +19,7 @@ const config: NextConfig = {
       },
     ];
   },
-  // biome-ignore lint/suspicious/useAwait: This is a Next.js API
+  // oxlint-disable-next-line typescript/require-await
   redirects: async () => {
     return [
       {

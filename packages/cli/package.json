@@ -28,10 +28,11 @@
     "build": "tsdown",
     "start": "node .",
     "test": "vitest run",
-    "type-check": "tsc --noEmit --incremental false",
-    "lint": "biome check",
-    "lint:fix": "biome check --write",
-    "lint:doctor": "ultracite doctor"
+    "type-check": "oxlint . --type-aware --type-check",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt --check .",
+    "format:fix": "oxfmt --write ."
   },
   "devDependencies": {
     "tsdown": "^0.20.1",
