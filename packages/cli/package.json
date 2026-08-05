@@ -27,7 +27,7 @@
     "dev": "tsdown --watch",
     "build": "tsdown",
     "start": "node .",
-    "test": "bun test",
+    "test": "vitest run",
     "type-check": "tsc --noEmit --incremental false",
     "lint": "biome check",
     "lint:fix": "biome check --write",
@@ -35,7 +35,8 @@
   },
   "devDependencies": {
     "tsdown": "^0.20.1",
-    "type-fest": "^5.4.3"
+    "type-fest": "^5.4.3",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@antfu/ni": "^28.2.0",
@@ -43,7 +44,7 @@
     "commander": "^14.0.3",
     "nano-spawn": "^2.0.0",
     "picocolors": "^1.1.1",
-    "zod": "^4.3.6",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.2",
+    "zod": "^4.3.6"
   }
 }

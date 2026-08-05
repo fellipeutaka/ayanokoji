@@ -1,36 +1,40 @@
-import { expect, mock, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { expect, test, vi } from "vitest";
 
-const handleErrorMock = mock((error: string): never => {
-  throw new Error(error);
+const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
+  const confirmResults = [true, true];
+  const handleErrorMock = vi.fn((error: string): never => {
+    throw new Error(error);
+  });
+  const promptMocks = {
+    enhancedConfirm: vi.fn(async () => confirmResults.shift() ?? true),
+    enhancedMultiselect: vi.fn(async () => ["postgresql"]),
+    enhancedSelect: vi.fn(
+      async ({ initialValue }: { initialValue?: string }) =>
+        initialValue ?? "latest"
+    ),
+    enhancedText: vi.fn(
+      async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
+    ),
+  };
+
+  return { confirmResults, handleErrorMock, promptMocks };
 });
 
-let confirmResults = [true, true];
-
-mock.module("~/utils/handle-error", () => ({
+vi.mock("~/utils/handle-error", () => ({
   handleError: handleErrorMock,
 }));
 
-mock.module("~/utils/prompts", () => ({
-  enhancedConfirm: mock(async () => confirmResults.shift() ?? true),
-  enhancedMultiselect: mock(async () => ["postgresql"]),
-  enhancedSelect: mock(
-    async ({ initialValue }: { initialValue?: string }) =>
-      initialValue ?? "latest"
-  ),
-  enhancedText: mock(
-    async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
-  ),
-}));
+vi.mock("~/utils/prompts", () => promptMocks);
 
 test("init reports an environment failure after the Compose file is written", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-docker-init-"));
   const envPath = join(cwd, "env-directory");
   await writeFile(join(cwd, "compose.yaml"), "services: {}\n");
   await mkdir(envPath);
-  confirmResults = [true, true];
+  confirmResults.splice(0, confirmResults.length, true, true);
 
   try {
     const { init } = await import("./init");
@@ -60,7 +64,7 @@ test("init reports an environment failure after the Compose file is written", as
 test("init synchronizes the environment after a successful Compose write", async () => {
   const cwd = await createComposeFixture();
   const envPath = join(cwd, ".env.local");
-  confirmResults = [true, true];
+  confirmResults.splice(0, confirmResults.length, true, true);
 
   try {
     const { init } = await import("./init");
@@ -87,7 +91,7 @@ test("init synchronizes the environment after a successful Compose write", async
 test("init succeeds without environment changes when synchronization is declined", async () => {
   const cwd = await createComposeFixture();
   const envPath = join(cwd, ".env.local");
-  confirmResults = [true, false];
+  confirmResults.splice(0, confirmResults.length, true, false);
 
   try {
     const { init } = await import("./init");
