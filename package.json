@@ -22,8 +22,9 @@
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "clean": "rimraf --glob \"{apps,packages}/*/{node_modules,dist}\" \"node_modules\" \".turbo\"",
-    "lint": "pnpm --filter docs exec next typegen && oxlint .",
-    "lint:fix": "pnpm --filter docs exec next typegen && oxlint . --fix",
+    "docs:generate": "pnpm --filter docs generate",
+    "lint": "pnpm run docs:generate && oxlint .",
+    "lint:fix": "pnpm run docs:generate && oxlint . --fix",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt --write .",
     "test": "turbo run test",
@@ -31,6 +32,9 @@
     "cli": "pnpm --filter ayanokoji",
     "docs": "pnpm --filter docs",
     "release": "pnpm run build && pnpm exec changeset publish",
+    "audit:internal": "node scripts/audit-internal-toolchain.mjs",
+    "verify:cli": "node scripts/verify-cli-boundary.mjs",
+    "verify": "pnpm run audit:internal && pnpm run verify:cli",
     "prepare": "lefthook install"
   },
   "devDependencies": {

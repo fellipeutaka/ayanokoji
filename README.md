@@ -25,6 +25,7 @@ pnpm lint
 pnpm format
 pnpm type-check
 pnpm build
+pnpm verify
 pnpm exec changeset status
 ```
 

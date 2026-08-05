@@ -7,9 +7,10 @@
     "dev": "next dev",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "type-check": "next typegen && fumadocs-mdx && oxlint . --type-aware --type-check",
-    "lint": "oxlint .",
-    "lint:fix": "oxlint . --fix",
+    "generate": "next typegen && fumadocs-mdx",
+    "type-check": "pnpm run generate && oxlint . --type-aware --type-check",
+    "lint": "pnpm run generate && oxlint .",
+    "lint:fix": "pnpm run generate && oxlint . --fix",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt --write ."
   },

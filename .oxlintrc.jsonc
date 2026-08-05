@@ -19,9 +19,6 @@
     "es2025": true,
     "node": true,
   },
-  "globals": {
-    "Bun": "readonly",
-  },
   "options": {
     "typeAware": true,
     "typeCheck": true,
