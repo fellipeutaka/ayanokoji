@@ -36,10 +36,11 @@
     "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "lefthook": "^2.0.16",
     "rimraf": "^6.1.2",
     "turbo": "^2.7.4",
-    "typescript": "^5.9.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "ultracite": "7.0.11"
   }
 }
