@@ -2,7 +2,6 @@
   "cSpell.words": [
     "antfu",
     "ayanokoji",
-    "biomejs",
     "commitlint",
     "execa",
     "fumadocs",
@@ -13,5 +12,9 @@
   "typescript.preferences.autoImportFileExcludePatterns": ["dist"],
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "biomejs.biome"
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports.oxc": "explicit"
+  }
 }

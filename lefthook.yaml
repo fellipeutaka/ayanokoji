@@ -5,8 +5,8 @@ pre-commit:
   commands:
     check:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,css}"
-      run: bun --bun biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
+      run: pnpm exec oxfmt --write --no-error-on-unmatched-pattern {staged_files} && pnpm exec oxlint --fix --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true
     type-check:
       glob: "*.{ts,d.cts,d.mts,tsx}"
-      run: bun run type-check
+      run: pnpm run type-check
