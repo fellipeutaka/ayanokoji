@@ -21,32 +21,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
-      # This is necessary since Bun doesn't support OIDC yet. See https://github.com/oven-sh/bun/issues/22423
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: lts/*
+          node-version-file: .nvmrc
           registry-url: "https://registry.npmjs.org"
+          cache: pnpm
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build the CLI
-        run: bun run build
+        run: pnpm install --frozen-lockfile
 
       - name: Create Version PR or Publish to NPM
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v1.9.0
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
-          publish: "npx changeset publish"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          publish: pnpm run release

@@ -1,13 +1,14 @@
-const PREFERRED_PACKAGE_MANAGER = "bun";
+const PREFERRED_PACKAGE_MANAGER = "pnpm";
 
 const WRONG_PACKAGE_MANAGERS = {
   npm: PREFERRED_PACKAGE_MANAGER,
-  npx: "bunx",
+  npx: "pnpm dlx",
   yarn: PREFERRED_PACKAGE_MANAGER,
-  pnpm: PREFERRED_PACKAGE_MANAGER,
-  pnpx: "bunx",
+  pnpx: "pnpm dlx",
   deno: PREFERRED_PACKAGE_MANAGER,
   vlt: PREFERRED_PACKAGE_MANAGER,
+  bun: PREFERRED_PACKAGE_MANAGER,
+  bunx: "pnpm dlx",
 };
 
 const DANGEROUS_GIT = [

@@ -1,4 +1,4 @@
-name: Lint
+name: CI
 
 on:
   pull_request:
@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 11.20.0
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -31,8 +31,22 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Format
+      - name: Format check
         run: pnpm run format
 
-      - name: Check Types
+      - name: Test
+        run: pnpm run test
+
+      - name: Type check
         run: pnpm run type-check
+
+      - name: Validate docs
+        run: pnpm --filter docs type-check
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check release status
+        run: |
+          git branch --force main origin/main
+          pnpm exec changeset status

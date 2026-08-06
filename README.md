@@ -16,3 +16,16 @@ Install dependencies with:
 corepack enable
 pnpm install --frozen-lockfile
 ```
+
+Run the repository quality gates with:
+
+```bash
+pnpm test
+pnpm lint
+pnpm format
+pnpm type-check
+pnpm build
+pnpm exec changeset status
+```
+
+Bun and nub are not required for repository development.

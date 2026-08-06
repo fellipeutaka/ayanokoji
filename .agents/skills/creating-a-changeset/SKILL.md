@@ -61,7 +61,7 @@ Completion criterion: the new file contains valid entries for every affected pac
 
 ### 5. Validate the result
 
-- Run the repository's package-manager equivalent of `changeset status` against the local CLI, such as `bun changeset status`, `pnpm exec changeset status`, `npm exec -- changeset status`, or `yarn changeset status`.
+- Run `pnpm exec changeset status` against the local CLI.
 - Run `git diff --check`.
 - Re-read the new file and confirm that it describes user impact rather than implementation mechanics.
 - Confirm with `git status --short` that only the intended Changeset file was added.
