@@ -1,4 +1,3 @@
-import { expect, mock, test } from "bun:test";
 import {
   mkdir,
   mkdtemp,
@@ -9,26 +8,39 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
 
-const handleErrorMock = mock((error: string): never => {
-  throw new Error(error);
-});
-const enhancedSelectMock = mock(async () => "latest");
-let confirmResult = false;
+const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
+  vi.hoisted(() => {
+    const confirmState = { value: false };
+    const handleErrorMock = vi.fn((error: string): never => {
+      throw new Error(error);
+    });
+    const enhancedSelectMock = vi.fn(async () => "latest");
+    const promptMocks = {
+      enhancedConfirm: vi.fn(async () => confirmState.value),
+      enhancedMultiselect: vi.fn(async () => ["postgres"]),
+      enhancedSelect: enhancedSelectMock,
+      enhancedText: vi.fn(
+        async ({ defaultValue }: { defaultValue?: string }) =>
+          defaultValue ?? ""
+      ),
+    };
 
-mock.module("~/utils/handle-error", () => ({
+    return {
+      confirmState,
+      enhancedSelectMock,
+      handleErrorMock,
+      promptMocks,
+    };
+  });
+
+vi.mock("~/utils/handle-error", () => ({
   handleError: handleErrorMock,
 }));
 
-mock.module("~/utils/prompts", () => ({
-  enhancedConfirm: mock(async () => confirmResult),
-  enhancedMultiselect: mock(async () => ["postgres"]),
-  enhancedSelect: enhancedSelectMock,
-  enhancedText: mock(
-    async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
-  ),
-}));
+vi.mock("~/utils/prompts", () => promptMocks);
 
 test("remove command writes the pure removal result", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
@@ -191,7 +203,7 @@ test("remove synchronizes environment cleanup after a successful Compose write",
 `
   );
   await writeFile(envPath, "POSTGRESQL_URL=postgresql://docker\n");
-  confirmResult = true;
+  confirmState.value = true;
 
   try {
     const { remove } = await import("./remove");
@@ -202,7 +214,7 @@ test("remove synchronizes environment cleanup after a successful Compose write",
     );
     expect((await readFile(envPath, "utf8")).toString()).toBe("\n");
   } finally {
-    confirmResult = false;
+    confirmState.value = false;
     await rm(cwd, { recursive: true, force: true });
   }
 });

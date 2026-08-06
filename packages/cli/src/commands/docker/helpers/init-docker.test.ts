@@ -1,22 +1,22 @@
-import { expect, mock, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
 
-const promptMocks = {
-  enhancedConfirm: mock(async () => true),
-  enhancedMultiselect: mock(async () => ["postgresql"]),
-  enhancedSelect: mock(
+const promptMocks = vi.hoisted(() => ({
+  enhancedConfirm: vi.fn(async () => true),
+  enhancedMultiselect: vi.fn(async () => ["postgresql"]),
+  enhancedSelect: vi.fn(
     async ({ initialValue }: { initialValue?: string }) =>
       initialValue ?? "latest"
   ),
-  enhancedText: mock(
+  enhancedText: vi.fn(
     async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
   ),
-};
+}));
 
-mock.module("~/utils/prompts", () => promptMocks);
+vi.mock("~/utils/prompts", () => promptMocks);
 
 test("initDocker writes the transformed document after service selection", async () => {
   const cwd = await createComposeFixture();
