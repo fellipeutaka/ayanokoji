@@ -47,4 +47,6 @@ jobs:
         run: pnpm run build
 
       - name: Check release status
-        run: pnpm exec changeset status
+        run: |
+          git branch --force main origin/main
+          pnpm exec changeset status
