@@ -2,13 +2,21 @@
   "name": "root",
   "type": "module",
   "private": true,
-  "packageManager": "bun@1.3.8",
-  "workspaces": {
-    "packages": [
-      "apps/*",
-      "config/*",
-      "packages/**/*"
-    ]
+  "engines": {
+    "node": "24.19.0"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.19.0",
+      "onFail": "warn"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.20.0",
+      "onFail": "warn"
+    }
   },
   "scripts": {
     "dev": "turbo run dev --parallel",
@@ -18,8 +26,8 @@
     "lint:fix": "biome check --write",
     "lint:doctor": "ultracite doctor",
     "type-check": "turbo run type-check",
-    "cli": "bun --filter \"ayanokoji\"",
-    "docs": "bun --filter \"docs\"",
+    "cli": "pnpm --filter ayanokoji",
+    "docs": "pnpm --filter docs",
     "prepare": "lefthook install"
   },
   "devDependencies": {

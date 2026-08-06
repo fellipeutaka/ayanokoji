@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - config/*
+  - packages/**/*
+
+strictDepBuilds: true
+
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  sharp: true
