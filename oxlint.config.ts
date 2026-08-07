@@ -44,8 +44,7 @@ export default defineConfig({
     "require-unicode-regexp": "error",
     // Deferred: 9 errors
     "no-shadow": "off",
-    // Deferred: 6 errors
-    "prefer-named-capture-group": "off",
+    "prefer-named-capture-group": "error",
     // Deferred: 30 errors
     "unicorn/no-await-expression-member": "off",
     // Deferred: 20 errors
