@@ -4,9 +4,7 @@ export type PackageManager = "yarn" | "pnpm" | "bun" | "npm" | "deno";
 
 export async function getPackageManager(
   targetDir: string,
-  { withFallback }: { withFallback?: boolean } = {
-    withFallback: false,
-  }
+  { withFallback = false }: { withFallback?: boolean } = {}
 ): Promise<PackageManager> {
   const packageManager = await detect({ cwd: targetDir, programmatic: true });
 
