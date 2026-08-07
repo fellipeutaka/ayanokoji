@@ -1,8 +1,7 @@
-import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
 
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
-import { getPortSchema } from "../schemas/port";
+import { validatePort } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
   defaultPort: 5672,
@@ -44,11 +43,7 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
     defaultValue: String(imageConfig.defaultPort),
     message: "What is the AMQP port?",
     validate(value) {
-      const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, imageConfig.defaultPort);
     },
   });
 
@@ -56,11 +51,7 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
     defaultValue: "15672",
     message: "What is the Management UI port?",
     validate(value) {
-      const result = getPortSchema(15_672).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, 15_672);
     },
   });
 

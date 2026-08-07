@@ -1,8 +1,7 @@
-import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
 
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
-import { getPortSchema } from "../schemas/port";
+import { validatePort } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
   defaultPort: 9000,
@@ -45,11 +44,7 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
     defaultValue: String(imageConfig.defaultPort),
     message: "What is the API port?",
     validate(value) {
-      const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, imageConfig.defaultPort);
     },
   });
 
@@ -57,11 +52,7 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
     defaultValue: "9001",
     message: "What is the Console port?",
     validate(value) {
-      const result = getPortSchema(9001).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, 9001);
     },
   });
 

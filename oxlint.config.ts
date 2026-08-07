@@ -55,8 +55,7 @@ export default defineConfig({
     "typescript/strict-boolean-expressions": "error",
     "typescript/no-unsafe-type-assertion": "error",
     "typescript/no-deprecated": "error",
-    // Deferred: 13 errors
-    "typescript/consistent-return": "off",
+    "typescript/consistent-return": "error",
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unsafe-member-access": "error",
     "typescript/switch-exhaustiveness-check": "error",
