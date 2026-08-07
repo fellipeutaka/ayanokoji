@@ -8,6 +8,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
 
@@ -17,10 +18,11 @@ const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
     const handleErrorMock = vi.fn((error: string): never => {
       throw new Error(error);
     });
-    const enhancedSelectMock = vi.fn(async () => "latest");
+    const enhancedSelectMock = vi.fn();
+    enhancedSelectMock.mockImplementation(async () => "latest");
     const promptMocks = {
       enhancedConfirm: vi.fn(async () => confirmState.value),
-      enhancedMultiselect: vi.fn(async () => ["postgres"]),
+      enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgres"]),
       enhancedSelect: enhancedSelectMock,
       enhancedText: vi.fn(
         async ({ defaultValue }: { defaultValue?: string }) =>
@@ -36,11 +38,11 @@ const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
     };
   });
 
-vi.mock("~/utils/handle-error", () => ({
+vi.mock(import("~/utils/handle-error"), () => ({
   handleError: handleErrorMock,
 }));
 
-vi.mock("~/utils/prompts", () => promptMocks);
+vi.mock(import("~/utils/prompts"), () => promptMocks);
 
 test("remove command writes the pure removal result", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
@@ -71,9 +73,14 @@ networks:
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    const document = parse((await readFile(composePath, "utf8")).toString());
-    expect(document).toEqual({
+    const document = parse((await readFile(composePath, "utf-8")).toString());
+    expect(document).toStrictEqual({
       name: "example",
+      networks: {
+        internal: {
+          driver: "bridge",
+        },
+      },
       services: {
         app: {
           image: "example/app",
@@ -86,14 +93,9 @@ networks:
           },
         },
       },
-      networks: {
-        internal: {
-          driver: "bridge",
-        },
-      },
     });
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -106,9 +108,9 @@ test("remove reports a missing Compose document without creating one", async () 
     await expect(
       remove.parseAsync(["node", "ayanokoji", "--cwd", cwd])
     ).rejects.toThrow("No Docker Compose file found.");
-    expect(await readdir(cwd)).toEqual([]);
+    await expect(readdir(cwd)).resolves.toStrictEqual([]);
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -124,9 +126,9 @@ test("remove reports no services without writing a valid document", async () => 
     await expect(
       remove.parseAsync(["node", "ayanokoji", "--cwd", cwd])
     ).rejects.toThrow("No services found in the compose file.");
-    expect((await readFile(composePath, "utf8")).toString()).toBe(source);
+    expect((await readFile(composePath, "utf-8")).toString()).toBe(source);
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -147,10 +149,10 @@ test("remove prompts for a candidate when multiple Compose files exist", async (
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    expect((await readFile(secondPath, "utf8")).toString()).not.toBe(source);
-    expect((await readFile(firstPath, "utf8")).toString()).toBe(source);
+    expect((await readFile(secondPath, "utf-8")).toString()).not.toBe(source);
+    expect((await readFile(firstPath, "utf-8")).toString()).toBe(source);
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -183,11 +185,11 @@ test("remove reports an environment failure after the Compose file is written", 
       "Docker Compose file was written successfully, but environment synchronization failed"
     );
 
-    expect((await readFile(composePath, "utf8")).toString()).not.toContain(
+    expect((await readFile(composePath, "utf-8")).toString()).not.toContain(
       "postgres:"
     );
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -209,12 +211,12 @@ test("remove synchronizes environment cleanup after a successful Compose write",
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    expect((await readFile(composePath, "utf8")).toString()).not.toContain(
+    expect((await readFile(composePath, "utf-8")).toString()).not.toContain(
       "postgres:"
     );
-    expect((await readFile(envPath, "utf8")).toString()).toBe("\n");
+    expect((await readFile(envPath, "utf-8")).toString()).toBe("\n");
   } finally {
     confirmState.value = false;
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });

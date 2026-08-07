@@ -1,10 +1,12 @@
 import { spinner } from "@clack/prompts";
+
 import { access, mkdir, writeFile } from "~/utils/fs";
 import { getPackageJson } from "~/utils/get-package-json";
 import { getPackageManager } from "~/utils/get-package-manager";
 import { installDeps } from "~/utils/install-deps";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+
 import type { ParsedInitOptions } from "../init";
 import { createPrismaSchema } from "./create-prisma-schema";
 import { createPrismaScripts } from "./create-prisma-scripts";
@@ -75,10 +77,10 @@ export async function initPrisma(options: ParsedInitOptions) {
   s.start("Installing dependencies");
 
   await installDeps({
-    packageManager,
     cwd: options.cwd,
     dependencies: ["@prisma/client"],
     devDependencies: ["prisma"],
+    packageManager,
   });
 
   s.stop("Dependencies installed");

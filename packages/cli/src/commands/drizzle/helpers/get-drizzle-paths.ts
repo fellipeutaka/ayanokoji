@@ -10,12 +10,12 @@ export function getDrizzlePaths(cwd: string) {
   const config = path.join(cwd, "drizzle.config.ts");
 
   return {
-    folder,
-    defaultOut,
-    schema,
     client,
-    migrate,
-    env,
     config,
+    defaultOut,
+    env,
+    folder,
+    migrate,
+    schema,
   };
 }

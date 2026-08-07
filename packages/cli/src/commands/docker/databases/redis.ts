@@ -1,38 +1,39 @@
 import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
-import { getPortSchema } from "../schemas/port";
+
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
+import { getPortSchema } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
-  repository: "redis",
   defaultPort: 6379,
+  repository: "redis",
 };
 
 const fallbackVersions = new Set(["latest", "7.4", "7.2", "6.2"] as const);
 
 async function createComposeService(): Promise<CreateComposeServiceResult> {
   const serviceName = await enhancedText({
-    message: "What is the service name?",
     defaultValue: "redis",
+    message: "What is the service name?",
   });
 
   const version = await enhancedSelect({
-    message: "What Redis version would you like to use?",
-    options: Array.from(fallbackVersions).map((value) => ({
-      value,
-      label: value,
-    })),
     initialValue: "latest",
+    message: "What Redis version would you like to use?",
+    options: [...fallbackVersions].map((value) => ({
+      label: value,
+      value,
+    })),
   });
 
   const password = await enhancedText({
-    message: "What is the Redis password?",
     defaultValue: "docker",
+    message: "What is the Redis password?",
   });
 
   const port = await enhancedText({
-    message: "What is the Redis port?",
     defaultValue: String(imageConfig.defaultPort),
+    message: "What is the Redis port?",
     validate(value) {
       const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
 
@@ -43,12 +44,11 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
   });
 
   const useVolume = await enhancedConfirm({
-    message: "Do you want to persist data with a volume?",
     initialValue: true,
+    message: "Do you want to persist data with a volume?",
   });
 
   return {
-    name: serviceName,
     config: {
       image: `${imageConfig.repository}:${version}`,
       command: ["redis-server", "--requirepass", password],
@@ -57,18 +57,19 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
         volumes: [`${serviceName}_data:/data`],
       }),
       healthcheck: {
-        test: ["CMD-SHELL", `redis-cli -a ${password} ping | grep PONG`],
         interval: "10s",
-        timeout: "5s",
         retries: 5,
+        test: ["CMD-SHELL", `redis-cli -a ${password} ping | grep PONG`],
+        timeout: "5s",
       },
     },
     connectionConfig: {
-      type: "redis" as const,
-      password,
       host: "localhost",
+      password,
       port,
+      type: "redis" as const,
     },
+    name: serviceName,
   };
 }
 

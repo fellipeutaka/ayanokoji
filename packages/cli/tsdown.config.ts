@@ -1,12 +1,12 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
+  clean: true,
+  dts: false,
   entry: ["src/index.ts"],
   format: ["esm"],
-  treeshake: true,
   minify: true,
-  clean: true,
   outDir: "dist",
-  dts: false,
   target: false,
+  treeshake: true,
 });

@@ -1,9 +1,11 @@
 import { Command } from "commander";
+
 import { formatZodErrors } from "~/utils/format-zod-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+
 import type { PrismaDatabase } from "./databases";
 import { prismaDatabaseSchema } from "./schemas/database";
 

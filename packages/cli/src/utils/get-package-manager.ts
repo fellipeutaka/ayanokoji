@@ -8,7 +8,7 @@ export async function getPackageManager(
     withFallback: false,
   }
 ): Promise<PackageManager> {
-  const packageManager = await detect({ programmatic: true, cwd: targetDir });
+  const packageManager = await detect({ cwd: targetDir, programmatic: true });
 
   if (packageManager === "yarn@berry") {
     return "yarn";

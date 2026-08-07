@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import type { DrizzleDatabase } from "../databases";
 
 interface CreateDrizzleConfigFileProps {
@@ -12,7 +13,9 @@ export function createDrizzleConfigFile({
   schemaPath,
   database,
 }: CreateDrizzleConfigFileProps) {
-  const schemaPathRelative = path.relative(cwd, schemaPath).replace(/\\/g, "/");
+  const schemaPathRelative = path
+    .relative(cwd, schemaPath)
+    .replaceAll("\\", "/");
 
   return `import { defineConfig } from "drizzle-kit";
 

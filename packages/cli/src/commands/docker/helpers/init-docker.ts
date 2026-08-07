@@ -1,20 +1,23 @@
 import { enhancedMultiselect, enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
-import { type DatabaseImageConfig, DOCKER_DATABASES } from "../databases";
-import {
-  addServices,
-  type ComposeDocument,
-  type ComposeMutationFailure,
-  type ComposeServiceEntry,
-  getServiceNames,
+
+import { DOCKER_DATABASES } from "../databases";
+import type { DatabaseImageConfig } from "../databases";
+import { addServices, getServiceNames } from "./compose-document";
+import type {
+  ComposeDocument,
+  ComposeMutationFailure,
+  ComposeServiceEntry,
 } from "./compose-document";
 import {
   COMPOSE_FILE_NAMES,
-  type ComposeFileName,
-  type ComposeFileRevision,
   discoverComposeFiles,
   readComposeDocument,
   writeComposeDocument,
+} from "./compose-file-adapter";
+import type {
+  ComposeFileName,
+  ComposeFileRevision,
 } from "./compose-file-adapter";
 import { formatComposeFileFailure } from "./format-compose-file-failure";
 import type { ConnectionConfig } from "./generate-connection-string";
@@ -42,12 +45,12 @@ export async function initDocker(options: InitDockerProps) {
   const candidates = discoveryResult.value;
   if (candidates.length === 0) {
     fileName = await enhancedSelect({
+      initialValue: "compose.yaml",
       message: "What Docker Compose file name would you like to use?",
       options: COMPOSE_FILE_NAMES.map((value) => ({
-        value,
         label: value,
+        value,
       })),
-      initialValue: "compose.yaml",
     });
   } else {
     const firstCandidate = candidates[0];
@@ -59,12 +62,12 @@ export async function initDocker(options: InitDockerProps) {
       candidates.length === 1
         ? firstCandidate
         : await enhancedSelect({
+            initialValue: firstCandidate,
             message: "Which Docker Compose file would you like to use?",
             options: candidates.map((value) => ({
-              value,
               label: value,
+              value,
             })),
-            initialValue: firstCandidate,
           });
 
     const fileResult = await readComposeDocument(options.cwd, fileName);
@@ -107,8 +110,8 @@ export async function initDocker(options: InitDockerProps) {
     const service = await createComposeService();
 
     serviceEntries.push({
-      name: service.name,
       config: service.config,
+      name: service.name,
     });
     imageConfigs.push(imageConfig);
     connectionConfigs.push(service.connectionConfig);
@@ -129,22 +132,28 @@ export async function initDocker(options: InitDockerProps) {
     return new Err(formatComposeFileFailure(writeResult.error));
   }
 
-  return new Ok({ imageConfigs, connectionConfigs });
+  return new Ok({ connectionConfigs, imageConfigs });
 }
 
 function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
   switch (failure.kind) {
-    case "empty-service-batch":
+    case "empty-service-batch": {
       return "No Docker services were selected.";
-    case "no-services":
+    }
+    case "no-services": {
       return "No services found in the compose file.";
-    case "invalid-document":
+    }
+    case "invalid-document": {
       return `The Docker Compose document has an invalid ${failure.field} collection.`;
-    case "invalid-service-entry":
+    }
+    case "invalid-service-entry": {
       return `The Docker service entry at position ${failure.index + 1} is invalid.`;
-    case "service-name-conflict":
+    }
+    case "service-name-conflict": {
       return `The Docker service name "${failure.serviceName}" already exists in the ${failure.scope === "existing-document" ? "Compose document" : "requested batch"}.`;
-    default:
+    }
+    default: {
       return "The Docker service selection could not be applied.";
+    }
   }
 }

@@ -35,7 +35,7 @@ ${
   previewFeatures.length > 0
     ? `  previewFeatures = [${previewFeatures.map((feature) => `"${feature}"`).join(", ")}]\n`
     : ""
-}${output !== defaultOutput ? `  output = "${output}"\n` : ""}}
+}${output === defaultOutput ? "" : `  output = "${output}"\n`}}
 
 datasource db {
   provider = "${database}"
@@ -49,7 +49,7 @@ datasource db {
   name  String?`;
 
     switch (database) {
-      case "mongodb":
+      case "mongodb": {
         schema += `
 model User {
   id    String  @id @default(auto()) @map("_id") @db.ObjectId
@@ -57,7 +57,8 @@ model User {
 }
 `;
         break;
-      case "cockroachdb":
+      }
+      case "cockroachdb": {
         schema += `
 model User {
   id    BigInt  @id @default(sequence())
@@ -65,13 +66,15 @@ model User {
 }
 `;
         break;
-      default:
+      }
+      default: {
         schema += `
 model User {
   id    Int     @id @default(autoincrement())
   ${defaultAttributes}
 }
 `;
+      }
     }
   }
 

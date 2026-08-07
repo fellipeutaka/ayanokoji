@@ -1,4 +1,5 @@
 import type { PackageJson } from "type-fest";
+
 import { readFile } from "./fs";
 import { Err, Ok } from "./result";
 

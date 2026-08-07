@@ -1,4 +1,5 @@
 import type { PackageJson } from "type-fest";
+
 import { writeFile } from "~/utils/fs";
 
 const script = {
@@ -17,8 +18,8 @@ export async function createTypecheckScript({
   const scriptsToAdd = Object.entries(script)
     .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
     .map(([scriptName, scriptCommand]) => ({
-      scriptName,
       scriptCommand,
+      scriptName,
     }));
 
   if (scriptsToAdd.length === 0) {

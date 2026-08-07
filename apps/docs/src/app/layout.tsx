@@ -1,23 +1,23 @@
 import "@/styles/globals.css";
-
 import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata, Viewport } from "next";
+
 import { fonts } from "@/config/fonts";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: {
-    template: `%s | ${siteConfig.name}`,
-    default: siteConfig.name,
-  },
-  description: siteConfig.description,
-  keywords: siteConfig.keywords,
   alternates: {
     canonical: siteConfig.url,
   },
   authors: {
     name: siteConfig.name,
     url: siteConfig.url,
+  },
+  description: siteConfig.description,
+  keywords: siteConfig.keywords,
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
   twitter: {
     creator: "@fellipeutaka",
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
+    { color: "white", media: "(prefers-color-scheme: light)" },
+    { color: "black", media: "(prefers-color-scheme: dark)" },
   ],
 };
 

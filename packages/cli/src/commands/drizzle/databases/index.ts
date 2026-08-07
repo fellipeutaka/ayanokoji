@@ -9,19 +9,19 @@ export interface DrizzleAdapter {
 
 export const DRIZZLE_DATABASES = [
   {
+    data: async () => await import("./postgresql").then((m) => m.data),
     label: "PostgreSQL",
     value: "postgresql",
-    data: () => import("./postgresql").then((m) => m.data),
   },
   {
+    data: async () => await import("./mysql").then((m) => m.data),
     label: "MySQL",
     value: "mysql",
-    data: () => import("./mysql").then((m) => m.data),
   },
   {
+    data: async () => await import("./sqlite").then((m) => m.data),
     label: "SQLite",
     value: "sqlite",
-    data: () => import("./sqlite").then((m) => m.data),
   },
 ] as const;
 

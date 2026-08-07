@@ -1,12 +1,13 @@
 import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
-import { getPortSchema } from "../schemas/port";
+
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
+import { getPortSchema } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
+  defaultPort: 9000,
   namespace: "minio",
   repository: "minio",
-  defaultPort: 9000,
 };
 
 const fallbackVersions = new Set([
@@ -17,32 +18,32 @@ const fallbackVersions = new Set([
 
 async function createComposeService(): Promise<CreateComposeServiceResult> {
   const serviceName = await enhancedText({
-    message: "What is the service name?",
     defaultValue: "minio",
+    message: "What is the service name?",
   });
 
   const version = await enhancedSelect({
-    message: "What MinIO version would you like to use?",
-    options: Array.from(fallbackVersions).map((value) => ({
-      value,
-      label: value,
-    })),
     initialValue: "latest",
+    message: "What MinIO version would you like to use?",
+    options: [...fallbackVersions].map((value) => ({
+      label: value,
+      value,
+    })),
   });
 
   const rootUser = await enhancedText({
-    message: "What is the MinIO root user?",
     defaultValue: "minioadmin",
+    message: "What is the MinIO root user?",
   });
 
   const rootPassword = await enhancedText({
-    message: "What is the MinIO root password?",
     defaultValue: "minioadmin",
+    message: "What is the MinIO root password?",
   });
 
   const apiPort = await enhancedText({
-    message: "What is the API port?",
     defaultValue: String(imageConfig.defaultPort),
+    message: "What is the API port?",
     validate(value) {
       const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
 
@@ -53,8 +54,8 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
   });
 
   const consolePort = await enhancedText({
-    message: "What is the Console port?",
     defaultValue: "9001",
+    message: "What is the Console port?",
     validate(value) {
       const result = getPortSchema(9001).safeParse(value);
 
@@ -65,37 +66,37 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
   });
 
   const useVolume = await enhancedConfirm({
-    message: "Do you want to persist data with a volume?",
     initialValue: true,
+    message: "Do you want to persist data with a volume?",
   });
 
   return {
-    name: serviceName,
     config: {
       image: `${imageConfig.namespace}/${imageConfig.repository}:${version}`,
       command: ["server", "/data", "--console-address", ":9001"],
       environment: {
-        MINIO_ROOT_USER: rootUser,
         MINIO_ROOT_PASSWORD: rootPassword,
+        MINIO_ROOT_USER: rootUser,
       },
       ports: [`${apiPort}:9000`, `${consolePort}:9001`],
       ...(useVolume && {
         volumes: [`${serviceName}_data:/data`],
       }),
       healthcheck: {
-        test: ["CMD-SHELL", "mc ready local || exit 1"],
         interval: "10s",
-        timeout: "5s",
         retries: 5,
+        test: ["CMD-SHELL", "mc ready local || exit 1"],
+        timeout: "5s",
       },
     },
     connectionConfig: {
+      host: "localhost",
+      password: rootPassword,
+      port: apiPort,
       type: "minio" as const,
       user: rootUser,
-      password: rootPassword,
-      host: "localhost",
-      port: apiPort,
     },
+    name: serviceName,
   };
 }
 

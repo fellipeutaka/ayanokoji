@@ -8,6 +8,7 @@ import {
 } from "fumadocs-ui/page";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
 import { siteConfig } from "@/config/site";
 import { parseGitHubUrl } from "@/lib/github";
@@ -27,11 +28,11 @@ export async function generateMetadata(
   }
 
   return {
-    title: page.data.title,
     description: page.data.description,
     openGraph: {
       images: getPageImage(page).url,
     },
+    title: page.data.title,
   };
 }
 
@@ -42,7 +43,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     notFound();
   }
 
-  const { lastModified, body: MDX, toc, full, title, description } = page.data;
+  const { lastModified, body: Mdx, toc, full, title, description } = page.data;
 
   const { owner, repo } = parseGitHubUrl(siteConfig.links.github);
   const path = `/apps/docs/src/content/docs/${page.path}`;
@@ -51,8 +52,8 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     <DocsPage
       editOnGithub={{
         owner,
-        repo,
         path,
+        repo,
         sha: "main",
       }}
       full={full}
@@ -69,7 +70,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         />
       </div>
       <DocsBody>
-        <MDX components={{ ...defaultMdxComponents, Tab, Tabs }} />
+        <Mdx components={{ ...defaultMdxComponents, Tab, Tabs }} />
       </DocsBody>
     </DocsPage>
   );

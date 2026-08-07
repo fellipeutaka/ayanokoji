@@ -1,28 +1,28 @@
 {
   "name": "ayanokoji",
-  "description": "A CLI to setup some tools for a new project",
-  "type": "module",
-  "private": false,
   "version": "0.11.0",
+  "private": false,
+  "description": "A CLI to setup some tools for a new project",
+  "license": "MIT",
   "author": {
     "name": "Fellipe Utaka",
     "email": "fellipeutaka@gmail.com",
     "url": "https://github.com/fellipeutaka"
   },
-  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fellipeutaka/ayanokoji.git",
     "directory": "packages/cli"
   },
-  "main": "./dist/index.mjs",
-  "exports": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
   "bin": "./dist/index.mjs",
   "files": [
     "dist"
   ],
+  "type": "module",
   "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "exports": "./dist/index.mjs",
   "scripts": {
     "dev": "tsdown --watch",
     "build": "tsdown",
@@ -34,11 +34,6 @@
     "format": "oxfmt --check .",
     "format:fix": "oxfmt --write ."
   },
-  "devDependencies": {
-    "tsdown": "^0.20.1",
-    "type-fest": "^5.4.3",
-    "vitest": "^4.1.10"
-  },
   "dependencies": {
     "@antfu/ni": "^28.2.0",
     "@clack/prompts": "^1.0.0",
@@ -47,5 +42,10 @@
     "picocolors": "^1.1.1",
     "yaml": "^2.8.2",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "tsdown": "^0.20.1",
+    "type-fest": "^5.4.3",
+    "vitest": "^4.1.10"
   }
 }

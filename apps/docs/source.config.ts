@@ -11,10 +11,10 @@ import lastModified from "fumadocs-mdx/plugins/last-modified";
 export const docs = defineDocs({
   dir: "src/content/docs",
   docs: {
-    schema: frontmatterSchema,
     postprocess: {
       includeProcessedMarkdown: true,
     },
+    schema: frontmatterSchema,
   },
   meta: {
     schema: metaSchema,
@@ -22,7 +22,6 @@ export const docs = defineDocs({
 });
 
 export default defineConfig({
-  plugins: [lastModified()],
   mdxOptions: {
     remarkNpmOptions: {
       persist: {
@@ -30,4 +29,5 @@ export default defineConfig({
       },
     },
   },
+  plugins: [lastModified()],
 });

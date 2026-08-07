@@ -1,23 +1,7 @@
 {
   "name": "root",
-  "type": "module",
   "private": true,
-  "engines": {
-    "node": "24.19.0"
-  },
-  "packageManager": "pnpm@11.20.0",
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "24.19.0",
-      "onFail": "warn"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.20.0",
-      "onFail": "warn"
-    }
-  },
+  "type": "module",
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
@@ -31,19 +15,37 @@
     "cli": "pnpm --filter ayanokoji",
     "docs": "pnpm --filter docs",
     "release": "pnpm run build && pnpm exec changeset publish",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "check": "ultracite check",
+    "fix": "ultracite fix"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
-    "@typescript/native": "npm:typescript@^7.0.2",
     "lefthook": "^2.0.16",
     "oxfmt": "0.62.0",
     "oxlint": "1.77.0",
     "oxlint-tsgolint": "7.0.2001",
     "rimraf": "^6.1.2",
     "turbo": "^2.7.4",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
-  }
+    "typescript": "7.0.2",
+    "ultracite": "7.10.1"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.20.0",
+      "onFail": "warn"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.19.0",
+      "onFail": "warn"
+    }
+  },
+  "engines": {
+    "node": "24.19.0"
+  },
+  "packageManager": "pnpm@11.20.0"
 }

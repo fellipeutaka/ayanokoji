@@ -1,8 +1,9 @@
 import spawn from "nano-spawn";
+
 import type { PackageManager } from "./get-package-manager";
 import { isDefined } from "./is-defined";
 
-type Dependencies = Array<string | null>;
+type Dependencies = (string | null)[];
 
 type InstallDepsProps = {
   packageManager: PackageManager;

@@ -1,26 +1,32 @@
 import { expect, test } from "vitest";
+
 import {
   addServices,
-  type ComposeDocument,
-  type ComposeMutationFailure,
   getRemovableServiceNames,
   removeServices,
+} from "./compose-document";
+import type {
+  ComposeDocument,
+  ComposeMutationFailure,
 } from "./compose-document";
 
 test("reports a valid document without services as a structured no-services result", () => {
   const result = getRemovableServiceNames({ name: "example" });
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual({ kind: "no-services" });
+  expect(result.error).toStrictEqual({ kind: "no-services" });
 });
 
 test("adds a service while preserving unrelated document data", () => {
   const document: ComposeDocument = {
     name: "example",
+    networks: {
+      internal: { driver: "bridge" },
+    },
     services: {
       app: {
         image: "example/app",
@@ -30,28 +36,28 @@ test("adds a service while preserving unrelated document data", () => {
     volumes: {
       shared_data: { labels: { "com.example.owner": "user" } },
     },
-    networks: {
-      internal: { driver: "bridge" },
-    },
   };
 
   const result = addServices(document, [
     {
-      name: "postgres",
       config: {
         image: "postgres:17",
         volumes: ["postgres_data:/var/lib/postgresql/data"],
       },
+      name: "postgres",
     },
   ]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value).toEqual({
+  expect(result.value).toStrictEqual({
     name: "example",
+    networks: {
+      internal: { driver: "bridge" },
+    },
     services: {
       app: {
         image: "example/app",
@@ -63,15 +69,15 @@ test("adds a service while preserving unrelated document data", () => {
       },
     },
     volumes: {
-      shared_data: { labels: { "com.example.owner": "user" } },
       postgres_data: {},
+      shared_data: { labels: { "com.example.owner": "user" } },
     },
+  });
+  expect(document).toStrictEqual({
+    name: "example",
     networks: {
       internal: { driver: "bridge" },
     },
-  });
-  expect(document).toEqual({
-    name: "example",
     services: {
       app: {
         image: "example/app",
@@ -80,9 +86,6 @@ test("adds a service while preserving unrelated document data", () => {
     },
     volumes: {
       shared_data: { labels: { "com.example.owner": "user" } },
-    },
-    networks: {
-      internal: { driver: "bridge" },
     },
   });
   expect(result.value).not.toBe(document);
@@ -97,42 +100,42 @@ test("rejects an existing service collision without a partial batch", () => {
   const original = structuredClone(document);
 
   const result = addServices(document, [
-    { name: "worker", config: { image: "example/worker" } },
-    { name: "app", config: { image: "replacement" } },
+    { config: { image: "example/worker" }, name: "worker" },
+    { config: { image: "replacement" }, name: "app" },
   ]);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual<ComposeMutationFailure>({
+  expect(result.error).toStrictEqual<ComposeMutationFailure>({
     kind: "service-name-conflict",
-    serviceName: "app",
     scope: "existing-document",
+    serviceName: "app",
   });
-  expect(document).toEqual(original);
+  expect(document).toStrictEqual(original);
 });
 
 test("rejects duplicate service names within one requested batch", () => {
   const document: ComposeDocument = { services: {} };
 
   const result = addServices(document, [
-    { name: "worker", config: { image: "example/worker" } },
-    { name: "worker", config: { image: "example/other-worker" } },
+    { config: { image: "example/worker" }, name: "worker" },
+    { config: { image: "example/other-worker" }, name: "worker" },
   ]);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual({
+  expect(result.error).toStrictEqual({
     kind: "service-name-conflict",
-    serviceName: "worker",
     scope: "requested-batch",
+    serviceName: "worker",
   });
-  expect(document).toEqual({ services: {} });
+  expect(document).toStrictEqual({ services: {} });
 });
 
 test("treats an omitted service collection as empty", () => {
@@ -143,27 +146,27 @@ test("treats an omitted service collection as empty", () => {
 
   const result = addServices(document, [
     {
-      name: "redis",
       config: {
         image: "redis:7",
         volumes: ["redis_data:/data"],
       },
+      name: "redis",
     },
   ]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.services).toEqual({
+  expect(result.value.services).toStrictEqual({
     redis: {
       image: "redis:7",
       volumes: ["redis_data:/data"],
     },
   });
-  expect(result.value.volumes).toEqual({ redis_data: {} });
-  expect(document).toEqual({
+  expect(result.value.volumes).toStrictEqual({ redis_data: {} });
+  expect(document).toStrictEqual({
     name: "example",
     networks: { internal: { driver: "bridge" } },
   });
@@ -179,23 +182,23 @@ test("preserves existing generated volume declarations", () => {
 
   const result = addServices(document, [
     {
-      name: "postgres",
       config: {
         image: "postgres:17",
         volumes: ["postgres_data:/var/lib/postgresql/data"],
       },
+      name: "postgres",
     },
   ]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.volumes).toEqual({
+  expect(result.value.volumes).toStrictEqual({
     postgres_data: { external: true, labels: { owner: "user" } },
   });
-  expect(document.volumes).toEqual({
+  expect(document.volumes).toStrictEqual({
     postgres_data: { external: true, labels: { owner: "user" } },
   });
 });
@@ -205,15 +208,15 @@ test("does not create generated volumes for bind or anonymous mounts", () => {
 
   const result = addServices(document, [
     {
-      name: "app",
       config: {
         image: "example/app",
         volumes: ["./data:/data", "/tmp/cache:/cache", "/anonymous"],
       },
+      name: "app",
     },
   ]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
@@ -224,34 +227,37 @@ test("does not create generated volumes for bind or anonymous mounts", () => {
 test("removes a service and its unreferenced generated volume", () => {
   const document: ComposeDocument = {
     name: "example",
+    networks: {
+      internal: { driver: "bridge" },
+    },
     services: {
+      app: {
+        image: "example/app",
+      },
       postgres: {
         image: "postgres:17",
         volumes: ["postgres_data:/var/lib/postgresql/data"],
-      },
-      app: {
-        image: "example/app",
       },
     },
     volumes: {
       postgres_data: {},
       shared_data: { labels: { owner: "user" } },
     },
-    networks: {
-      internal: { driver: "bridge" },
-    },
   };
   const original = structuredClone(document);
 
   const result = removeServices(document, ["postgres"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value).toEqual({
+  expect(result.value).toStrictEqual({
     name: "example",
+    networks: {
+      internal: { driver: "bridge" },
+    },
     services: {
       app: {
         image: "example/app",
@@ -260,11 +266,8 @@ test("removes a service and its unreferenced generated volume", () => {
     volumes: {
       shared_data: { labels: { owner: "user" } },
     },
-    networks: {
-      internal: { driver: "bridge" },
-    },
   });
-  expect(document).toEqual(original);
+  expect(document).toStrictEqual(original);
   expect(result.value).not.toBe(document);
 });
 
@@ -283,12 +286,12 @@ test("omits the volume collection when its last generated declaration is removed
 
   const result = removeServices(document, ["postgres"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value).toEqual({ services: {} });
+  expect(result.value).toStrictEqual({ services: {} });
   expect(result.value).not.toHaveProperty("volumes");
 });
 
@@ -303,16 +306,16 @@ test("rejects a removal batch with a missing service without changing the docume
 
   const result = removeServices(document, ["postgres", "missing"]);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual<ComposeMutationFailure>({
+  expect(result.error).toStrictEqual<ComposeMutationFailure>({
     kind: "service-not-found",
     serviceName: "missing",
   });
-  expect(document).toEqual(original);
+  expect(document).toStrictEqual(original);
 });
 
 test("rejects an empty removal batch", () => {
@@ -322,12 +325,12 @@ test("rejects an empty removal batch", () => {
 
   const result = removeServices(document, []);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual({ kind: "empty-service-batch" });
+  expect(result.error).toStrictEqual({ kind: "empty-service-batch" });
   expect(document.services).toHaveProperty("postgres");
 });
 
@@ -338,42 +341,42 @@ test("rejects an empty service name in a removal batch", () => {
 
   const result = removeServices(document, [""]);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual<ComposeMutationFailure>({
-    kind: "invalid-service-entry",
+  expect(result.error).toStrictEqual<ComposeMutationFailure>({
     index: 0,
-    serviceName: "",
+    kind: "invalid-service-entry",
     reason: "empty-name",
+    serviceName: "",
   });
 });
 
 test("rejects removal when a remaining service depends on a selected service", () => {
   const document: ComposeDocument = {
     services: {
+      app: {
+        depends_on: ["postgres"],
+        image: "example/app",
+      },
       postgres: { image: "postgres:17" },
       redis: { image: "redis:7" },
-      app: {
-        image: "example/app",
-        depends_on: ["postgres"],
-      },
     },
   };
 
   const result = removeServices(document, ["postgres", "redis"]);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual<ComposeMutationFailure>({
+  expect(result.error).toStrictEqual<ComposeMutationFailure>({
+    dependencyName: "postgres",
     kind: "service-dependency-conflict",
     serviceName: "app",
-    dependencyName: "postgres",
   });
   expect(document.services).toHaveProperty("postgres");
   expect(document.services).toHaveProperty("redis");
@@ -382,56 +385,56 @@ test("rejects removal when a remaining service depends on a selected service", (
 test("protects dependencies declared in the mapping form", () => {
   const document: ComposeDocument = {
     services: {
-      postgres: { image: "postgres:17" },
       app: {
-        image: "example/app",
         depends_on: {
           postgres: { condition: "service_healthy" },
         },
+        image: "example/app",
       },
+      postgres: { image: "postgres:17" },
     },
   };
 
   const result = removeServices(document, ["postgres"]);
 
-  expect(result.isErr()).toBe(true);
+  expect(result.isErr()).toBeTruthy();
   if (result.isOk()) {
     return;
   }
 
-  expect(result.error).toEqual({
+  expect(result.error).toStrictEqual({
+    dependencyName: "postgres",
     kind: "service-dependency-conflict",
     serviceName: "app",
-    dependencyName: "postgres",
   });
 });
 
 test("ignores service references outside explicit depends_on declarations", () => {
   const document: ComposeDocument = {
     services: {
-      postgres: { image: "postgres:17" },
       app: {
+        environment: ["DATABASE_HOST=postgres"],
         image: "example/app",
         links: ["postgres"],
         network_mode: "service:postgres",
-        environment: ["DATABASE_HOST=postgres"],
       },
+      postgres: { image: "postgres:17" },
     },
   };
 
   const result = removeServices(document, ["postgres"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.services).toEqual({
+  expect(result.value.services).toStrictEqual({
     app: {
+      environment: ["DATABASE_HOST=postgres"],
       image: "example/app",
       links: ["postgres"],
       network_mode: "service:postgres",
-      environment: ["DATABASE_HOST=postgres"],
     },
   });
 });
@@ -439,13 +442,13 @@ test("ignores service references outside explicit depends_on declarations", () =
 test("preserves a generated volume shared by a remaining service", () => {
   const document: ComposeDocument = {
     services: {
-      postgres: {
-        image: "postgres:17",
-        volumes: ["postgres_data:/var/lib/postgresql/data"],
-      },
       backup: {
         image: "example/backup",
         volumes: ["postgres_data:/backup"],
+      },
+      postgres: {
+        image: "postgres:17",
+        volumes: ["postgres_data:/var/lib/postgresql/data"],
       },
     },
     volumes: {
@@ -455,17 +458,21 @@ test("preserves a generated volume shared by a remaining service", () => {
 
   const result = removeServices(document, ["postgres"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.volumes).toEqual({ postgres_data: {} });
+  expect(result.value.volumes).toStrictEqual({ postgres_data: {} });
 });
 
 test("cleans only simple generated volume declarations", () => {
   const document: ComposeDocument = {
     services: {
+      mysql: {
+        image: "mysql:9",
+        volumes: ["mysql_data:/var/lib/mysql"],
+      },
       postgres: {
         image: "postgres:17",
         volumes: [
@@ -478,34 +485,30 @@ test("cleans only simple generated volume declarations", () => {
       },
       redis: {
         image: "redis:7",
-        volumes: [{ type: "volume", source: "redis_data", target: "/data" }],
-      },
-      mysql: {
-        image: "mysql:9",
-        volumes: ["mysql_data:/var/lib/mysql"],
+        volumes: [{ source: "redis_data", target: "/data", type: "volume" }],
       },
     },
     volumes: {
-      postgres_data: {},
-      shared_data: {},
       custom_data: {},
-      redis_data: { external: true },
       mysql_data: { labels: { owner: "user" } },
+      postgres_data: {},
+      redis_data: { external: true },
+      shared_data: {},
     },
   };
 
   const result = removeServices(document, ["postgres", "redis", "mysql"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.volumes).toEqual({
-    shared_data: {},
+  expect(result.value.volumes).toStrictEqual({
     custom_data: {},
-    redis_data: { external: true },
     mysql_data: { labels: { owner: "user" } },
+    redis_data: { external: true },
+    shared_data: {},
   });
 });
 
@@ -524,12 +527,12 @@ test("preserves top-level volumes for bind and anonymous mounts", () => {
 
   const result = removeServices(document, ["app"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.volumes).toEqual({ app_data: {} });
+  expect(result.value.volumes).toStrictEqual({ app_data: {} });
 });
 
 test("preserves an empty volume collection when no generated declaration is removed", () => {
@@ -542,10 +545,10 @@ test("preserves an empty volume collection when no generated declaration is remo
 
   const result = removeServices(document, ["app"]);
 
-  expect(result.isOk()).toBe(true);
+  expect(result.isOk()).toBeTruthy();
   if (result.isErr()) {
     return;
   }
 
-  expect(result.value.volumes).toEqual({});
+  expect(result.value.volumes).toStrictEqual({});
 });

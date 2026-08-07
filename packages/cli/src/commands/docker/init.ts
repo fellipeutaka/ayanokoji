@@ -1,9 +1,11 @@
 import { Command } from "commander";
+
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { enhancedConfirm, enhancedSelect } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
+
 import {
   addToGitignore,
   appendEnvFile,
@@ -64,8 +66,8 @@ export const init = new Command()
 
     // Prompt for .env file generation
     const writeToEnv = await enhancedConfirm({
-      message: "Write connection strings to .env file?",
       initialValue: true,
+      message: "Write connection strings to .env file?",
     });
 
     if (writeToEnv) {
@@ -102,12 +104,12 @@ export const init = new Command()
             }
 
             const action = await enhancedSelect({
+              initialValue: "skip",
               message: `${key} already exists. What do you want to do?`,
               options: [
-                { value: "skip", label: "Skip (keep existing)" },
-                { value: "override", label: "Override (use new value)" },
+                { label: "Skip (keep existing)", value: "skip" },
+                { label: "Override (use new value)", value: "override" },
               ],
-              initialValue: "skip",
             });
 
             if (action === "override") {

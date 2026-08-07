@@ -1,48 +1,49 @@
 import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
-import { getPortSchema } from "../schemas/port";
+
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
+import { getPortSchema } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
-  repository: "postgres",
   defaultPort: 5432,
+  repository: "postgres",
 };
 
 const fallbackVersions = new Set(["latest", "17", "16", "15", "14"] as const);
 
 async function createComposeService(): Promise<CreateComposeServiceResult> {
   const serviceName = await enhancedText({
-    message: "What is the service name?",
     defaultValue: "postgres",
+    message: "What is the service name?",
   });
 
   const version = await enhancedSelect({
-    message: "What Postgres version would you like to use?",
-    options: Array.from(fallbackVersions).map((value) => ({
-      value,
-      label: value,
-    })),
     initialValue: "latest",
+    message: "What Postgres version would you like to use?",
+    options: [...fallbackVersions].map((value) => ({
+      label: value,
+      value,
+    })),
   });
 
   const user = await enhancedText({
-    message: "What is the Postgres user?",
     defaultValue: "docker",
+    message: "What is the Postgres user?",
   });
 
   const password = await enhancedText({
-    message: "What is the Postgres password?",
     defaultValue: "docker",
+    message: "What is the Postgres password?",
   });
 
   const db = await enhancedText({
-    message: "What is the Postgres database?",
     defaultValue: "docker",
+    message: "What is the Postgres database?",
   });
 
   const port = await enhancedText({
-    message: "What is the Postgres port?",
     defaultValue: String(imageConfig.defaultPort),
+    message: "What is the Postgres port?",
     validate(value) {
       const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
 
@@ -53,38 +54,38 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
   });
 
   const useVolume = await enhancedConfirm({
-    message: "Do you want to persist data with a volume?",
     initialValue: true,
+    message: "Do you want to persist data with a volume?",
   });
 
   return {
-    name: serviceName,
     config: {
       image: `${imageConfig.repository}:${version}`,
       environment: {
-        POSTGRES_USER: user,
-        POSTGRES_PASSWORD: password,
         POSTGRES_DB: db,
+        POSTGRES_PASSWORD: password,
+        POSTGRES_USER: user,
       },
       ports: [`${port}:${imageConfig.defaultPort}`],
       ...(useVolume && {
         volumes: [`${serviceName}_data:/var/lib/postgresql/data`],
       }),
       healthcheck: {
-        test: ["CMD-SHELL", `pg_isready -U ${user} -d ${db}`],
         interval: "10s",
-        timeout: "5s",
         retries: 5,
+        test: ["CMD-SHELL", `pg_isready -U ${user} -d ${db}`],
+        timeout: "5s",
       },
     },
     connectionConfig: {
+      database: db,
+      host: "localhost",
+      password,
+      port,
       type: "postgresql" as const,
       user,
-      password,
-      host: "localhost",
-      port,
-      database: db,
     },
+    name: serviceName,
   };
 }
 

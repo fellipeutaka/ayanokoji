@@ -13,10 +13,6 @@ export const user = sqliteTable("users", {
 
 const DRIZZLE_SQLITE_ADAPTERS = [
   {
-    label: "Turso",
-    value: "turso",
-    dependencies: ["@libsql/client"],
-    devDependencies: null,
     client: `import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 
@@ -26,6 +22,9 @@ const client = createClient({
 
 export const db = drizzle(client);
 `,
+    dependencies: ["@libsql/client"],
+    devDependencies: null,
+    label: "Turso",
     migrate: `import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
@@ -56,20 +55,17 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "turso",
   },
   {
-    label: "Cloudflare D1",
-    value: "cloudflare-d1",
+    client: "",
     dependencies: null,
     devDependencies: null,
-    client: "",
+    label: "Cloudflare D1",
     migrate: "",
+    value: "cloudflare-d1",
   },
   {
-    label: "Bun SQLite",
-    value: "bun-sqlite",
-    dependencies: null,
-    devDependencies: ["@types/bun"],
     client: `import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
@@ -77,6 +73,9 @@ const sqlite = new Database(process.env.DATABASE_URL!);
 
 export const db = drizzle(sqlite);
 `,
+    dependencies: null,
+    devDependencies: ["@types/bun"],
+    label: "Bun SQLite",
     migrate: `import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
@@ -103,6 +102,7 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "bun-sqlite",
   },
   // TODO: Uncomment when expo-sqlite is released
   // {
@@ -123,10 +123,6 @@ main().catch((err) => {
   //   migrate: "",
   // },
   {
-    label: "better-sqlite3",
-    value: "better-sqlite3",
-    dependencies: ["better-sqlite3"],
-    devDependencies: ["@types/better-sqlite3"],
     client: `import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
@@ -134,6 +130,9 @@ const sqlite = new Database(process.env.DATABASE_URL!);
 
 export const db = drizzle(sqlite);
 `,
+    dependencies: ["better-sqlite3"],
+    devDependencies: ["@types/better-sqlite3"],
+    label: "better-sqlite3",
     migrate: `import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
@@ -160,11 +159,12 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "better-sqlite3",
   },
 ] as const satisfies DrizzleAdapter[];
 
 export const data = {
   adapters: DRIZZLE_SQLITE_ADAPTERS,
-  schema: DRIZZLE_SQLITE_SCHEMA,
   defaultUrl: DRIZZLE_SQLITE_DEFAULT_URL,
+  schema: DRIZZLE_SQLITE_SCHEMA,
 };

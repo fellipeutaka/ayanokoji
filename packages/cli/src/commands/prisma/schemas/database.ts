@@ -1,4 +1,5 @@
 import * as z from "zod/mini";
+
 import { PRISMA_DATABASES } from "../databases";
 
 export const prismaDatabaseSchema = z.optional(

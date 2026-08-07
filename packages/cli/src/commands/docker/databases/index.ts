@@ -24,49 +24,49 @@ export interface CreateComposeServiceResult {
 
 export const DOCKER_DATABASES = [
   {
+    config: async () => await import("./postgresql").then((m) => m.config),
     label: "PostgreSQL",
     value: "postgresql",
-    config: () => import("./postgresql").then((m) => m.config),
   },
   {
+    config: async () => await import("./mysql").then((m) => m.config),
     label: "MySQL",
     value: "mysql",
-    config: () => import("./mysql").then((m) => m.config),
   },
   {
+    config: async () => await import("./mariadb").then((m) => m.config),
     label: "MariaDB",
     value: "mariadb",
-    config: () => import("./mariadb").then((m) => m.config),
   },
   {
+    config: async () => await import("./redis").then((m) => m.config),
     label: "Redis",
     value: "redis",
-    config: () => import("./redis").then((m) => m.config),
   },
   {
+    config: async () => await import("./valkey").then((m) => m.config),
     label: "Valkey",
     value: "valkey",
-    config: () => import("./valkey").then((m) => m.config),
   },
   {
+    config: async () => await import("./mongodb").then((m) => m.config),
     label: "MongoDB",
     value: "mongodb",
-    config: () => import("./mongodb").then((m) => m.config),
   },
   {
+    config: async () => await import("./rabbitmq").then((m) => m.config),
     label: "RabbitMQ",
     value: "rabbitmq",
-    config: () => import("./rabbitmq").then((m) => m.config),
   },
   {
+    config: async () => await import("./minio").then((m) => m.config),
     label: "MinIO",
     value: "minio",
-    config: () => import("./minio").then((m) => m.config),
   },
   {
+    config: async () => await import("./mailpit").then((m) => m.config),
     label: "Mailpit",
     value: "mailpit",
-    config: () => import("./mailpit").then((m) => m.config),
   },
 ] as const;
 

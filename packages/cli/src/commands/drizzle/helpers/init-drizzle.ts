@@ -1,10 +1,12 @@
 import { spinner } from "@clack/prompts";
+
 import { access, mkdir, writeFile } from "~/utils/fs";
 import { getPackageJson } from "~/utils/get-package-json";
 import { getPackageManager } from "~/utils/get-package-manager";
 import { installDeps } from "~/utils/install-deps";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+
 import type { ParsedInitOptions } from "../init";
 import { createDrizzleConfigFile } from "./create-drizzle-config-file";
 import { createDrizzleScripts } from "./create-drizzle-scripts";
@@ -45,8 +47,8 @@ export async function initDrizzle(options: ParsedInitOptions) {
 
   const configFile = createDrizzleConfigFile({
     cwd: options.cwd,
-    schemaPath: paths.schema,
     database: config.database.value,
+    schemaPath: paths.schema,
   });
   const writeConfigFileResult = await writeFile(paths.config, configFile);
   if (writeConfigFileResult.isErr()) {
@@ -107,7 +109,6 @@ export async function initDrizzle(options: ParsedInitOptions) {
   s.start("Installing dependencies");
 
   await installDeps({
-    packageManager,
     cwd: options.cwd,
     dependencies: ["drizzle-orm", ...(config.adapter.dependencies ?? [])],
     devDependencies: [
@@ -115,6 +116,7 @@ export async function initDrizzle(options: ParsedInitOptions) {
       packageManager === "bun" ? null : "tsx",
       ...(config.adapter.devDependencies ?? []),
     ],
+    packageManager,
   });
 
   s.stop("Dependencies installed");

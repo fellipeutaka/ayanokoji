@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { expect, test, vi } from "vitest";
 
 const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
@@ -10,11 +11,13 @@ const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
   });
   const promptMocks = {
     enhancedConfirm: vi.fn(async () => confirmResults.shift() ?? true),
-    enhancedMultiselect: vi.fn(async () => ["postgresql"]),
-    enhancedSelect: vi.fn(
-      async ({ initialValue }: { initialValue?: string }) =>
-        initialValue ?? "latest"
-    ),
+    enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgresql"]),
+    enhancedSelect: vi
+      .fn()
+      .mockImplementation(
+        async ({ initialValue }: { initialValue?: string }) =>
+          initialValue ?? "latest"
+      ),
     enhancedText: vi.fn(
       async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
     ),
@@ -23,11 +26,11 @@ const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
   return { confirmResults, handleErrorMock, promptMocks };
 });
 
-vi.mock("~/utils/handle-error", () => ({
+vi.mock(import("~/utils/handle-error"), () => ({
   handleError: handleErrorMock,
 }));
 
-vi.mock("~/utils/prompts", () => promptMocks);
+vi.mock(import("~/utils/prompts"), () => promptMocks);
 
 test("init reports an environment failure after the Compose file is written", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-docker-init-"));
@@ -53,11 +56,11 @@ test("init reports an environment failure after the Compose file is written", as
     );
 
     expect(
-      (await readFile(join(cwd, "compose.yaml"), "utf8")).toString()
+      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
     ).toContain("postgres:");
-    expect(handleErrorMock).toHaveBeenCalledTimes(1);
+    expect(handleErrorMock).toHaveBeenCalledOnce();
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -77,14 +80,14 @@ test("init synchronizes the environment after a successful Compose write", async
       envPath,
     ]);
 
-    expect((await readFile(envPath, "utf8")).toString()).toContain(
+    expect((await readFile(envPath, "utf-8")).toString()).toContain(
       "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
     );
-    expect((await readFile(join(cwd, ".gitignore"), "utf8")).toString()).toBe(
+    expect((await readFile(join(cwd, ".gitignore"), "utf-8")).toString()).toBe(
       ".env\n"
     );
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -107,7 +110,7 @@ test("init succeeds without environment changes when synchronization is declined
     await expect(readFile(envPath)).rejects.toThrow();
     await expect(readFile(join(cwd, ".gitignore"))).rejects.toThrow();
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 

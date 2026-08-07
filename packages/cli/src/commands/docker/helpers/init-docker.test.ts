@@ -1,22 +1,25 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
 
 const promptMocks = vi.hoisted(() => ({
   enhancedConfirm: vi.fn(async () => true),
-  enhancedMultiselect: vi.fn(async () => ["postgresql"]),
-  enhancedSelect: vi.fn(
-    async ({ initialValue }: { initialValue?: string }) =>
-      initialValue ?? "latest"
-  ),
+  enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgresql"]),
+  enhancedSelect: vi
+    .fn()
+    .mockImplementation(
+      async ({ initialValue }: { initialValue?: string }) =>
+        initialValue ?? "latest"
+    ),
   enhancedText: vi.fn(
     async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
   ),
 }));
 
-vi.mock("~/utils/prompts", () => promptMocks);
+vi.mock(import("~/utils/prompts"), () => promptMocks);
 
 test("initDocker writes the transformed document after service selection", async () => {
   const cwd = await createComposeFixture();
@@ -25,22 +28,22 @@ test("initDocker writes the transformed document after service selection", async
     const { initDocker } = await import("./init-docker");
     const result = await initDocker({ cwd });
 
-    expect(result.isOk()).toBe(true);
+    expect(result.isOk()).toBeTruthy();
     const document = parse(
-      (await readFile(join(cwd, "compose.yaml"), "utf8")).toString()
+      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
     );
 
     expect(document.services.postgres.image).toBe("postgres:latest");
-    expect(document.services.app).toEqual({
+    expect(document.services.app).toStrictEqual({
       image: "example/app",
       labels: { "com.example.owner": "user" },
     });
-    expect(document.volumes).toEqual({
-      shared_data: { labels: { "com.example.owner": "user" } },
+    expect(document.volumes).toStrictEqual({
       postgres_data: {},
+      shared_data: { labels: { "com.example.owner": "user" } },
     });
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -49,21 +52,23 @@ test("initDocker reports a service collision without writing a partial batch", a
     services:
       "  postgres:\n    image: user/postgres\n  app:\n    image: example/app",
   });
-  const original = await readFile(join(cwd, "compose.yaml"), "utf8");
+  const original = await readFile(join(cwd, "compose.yaml"), "utf-8");
 
   try {
     const { initDocker } = await import("./init-docker");
     const result = await initDocker({ cwd });
 
-    expect(result.isErr()).toBe(true);
+    expect(result.isErr()).toBeTruthy();
     if (result.isOk()) {
       return;
     }
 
     expect(result.error).toContain('service name "postgres"');
-    expect(await readFile(join(cwd, "compose.yaml"), "utf8")).toBe(original);
+    await expect(readFile(join(cwd, "compose.yaml"), "utf-8")).resolves.toBe(
+      original
+    );
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -77,7 +82,7 @@ test("initDocker returns a parse failure without writing the Compose file", asyn
     const { initDocker } = await import("./init-docker");
     const result = await initDocker({ cwd });
 
-    expect(result.isErr()).toBe(true);
+    expect(result.isErr()).toBeTruthy();
     if (result.isOk()) {
       return;
     }
@@ -85,11 +90,11 @@ test("initDocker returns a parse failure without writing the Compose file", asyn
     expect(result.error).toBe(
       "Failed to parse existing Docker Compose file: compose.yaml"
     );
-    expect((await readFile(composePath, "utf8")).toString()).toBe(
+    expect((await readFile(composePath, "utf-8")).toString()).toBe(
       invalidDocument
     );
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -110,15 +115,17 @@ services:
     const { initDocker } = await import("./init-docker");
     const result = await initDocker({ cwd });
 
-    expect(result.isOk()).toBe(true);
-    expect((await readFile(alternatePath, "utf8")).toString()).not.toBe(
+    expect(result.isOk()).toBeTruthy();
+    expect((await readFile(alternatePath, "utf-8")).toString()).not.toBe(
       alternateSource
     );
-    expect((await readFile(join(cwd, "compose.yaml"), "utf8")).toString()).toBe(
+    expect(
+      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
+    ).toBe(
       "name: example\nservices:\n  app:\n    image: example/app\n    labels:\n      com.example.owner: user\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n"
     );
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 
@@ -129,12 +136,12 @@ test("initDocker prompts for a supported filename when no Compose file exists", 
     const { initDocker } = await import("./init-docker");
     const result = await initDocker({ cwd });
 
-    expect(result.isOk()).toBe(true);
+    expect(result.isOk()).toBeTruthy();
     expect(
-      (await readFile(join(cwd, "compose.yaml"), "utf8")).toString()
+      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
     ).toContain("services:");
   } finally {
-    await rm(cwd, { recursive: true, force: true });
+    await rm(cwd, { force: true, recursive: true });
   }
 });
 

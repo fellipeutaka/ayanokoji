@@ -1,5 +1,6 @@
 import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
+
 import { siteConfig } from "@/config/site";
 
 const withMDX = createMDX();
@@ -14,26 +15,24 @@ const config: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/docs/:path*.mdx",
         destination: "/llms.mdx/docs/:path*",
+        source: "/docs/:path*.mdx",
       },
     ];
   },
   // oxlint-disable-next-line typescript/require-await
-  redirects: async () => {
-    return [
-      {
-        destination: siteConfig.links.github,
-        source: "/github",
-        permanent: true,
-      },
-      {
-        source: "/",
-        destination: "/docs",
-        permanent: true,
-      },
-    ];
-  },
+  redirects: async () => [
+    {
+      destination: siteConfig.links.github,
+      permanent: true,
+      source: "/github",
+    },
+    {
+      destination: "/docs",
+      permanent: true,
+      source: "/",
+    },
+  ],
 };
 
 export default withMDX(config);

@@ -1,15 +1,16 @@
 import type { PackageJson } from "type-fest";
+
 import { writeFile } from "~/utils/fs";
 
 const scripts = {
+  "db:check": "prisma validate",
   "db:generate": "prisma generate",
-  "db:migrate:dev": "prisma migrate dev",
   "db:migrate:deploy": "prisma migrate deploy",
-  "db:seed": "prisma seed",
+  "db:migrate:dev": "prisma migrate dev",
   "db:pull": "prisma db pull",
   "db:push": "prisma db push",
+  "db:seed": "prisma seed",
   "db:studio": "prisma studio",
-  "db:check": "prisma validate",
 } as const;
 
 interface CreatePrismaScriptsProps {
@@ -24,8 +25,8 @@ export async function createPrismaScripts({
   const scriptsToAdd = Object.entries(scripts)
     .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
     .map(([scriptName, scriptCommand]) => ({
-      scriptName,
       scriptCommand,
+      scriptName,
     }));
 
   if (scriptsToAdd.length === 0) {

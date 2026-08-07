@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+
 import { Icons } from "@/components/ui/icons";
 import { siteConfig } from "@/config/site";
 
@@ -10,6 +11,7 @@ import { siteConfig } from "@/config/site";
  * Docs Layout: app/docs/layout.tsx
  */
 export const baseOptions: BaseLayoutProps = {
+  githubUrl: siteConfig.links.github,
   nav: {
     title: (
       <>
@@ -18,5 +20,4 @@ export const baseOptions: BaseLayoutProps = {
       </>
     ),
   },
-  githubUrl: siteConfig.links.github,
 };

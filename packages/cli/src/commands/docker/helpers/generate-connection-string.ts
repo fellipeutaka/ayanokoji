@@ -83,24 +83,33 @@ export type ConnectionConfig =
 
 export function generateConnectionString(config: ConnectionConfig): string {
   switch (config.type) {
-    case "postgresql":
+    case "postgresql": {
       return `postgresql://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}`;
-    case "mysql":
+    }
+    case "mysql": {
       return `mysql://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}`;
-    case "redis":
+    }
+    case "redis": {
       return `redis://:${config.password}@${config.host}:${config.port}`;
-    case "mongodb":
+    }
+    case "mongodb": {
       return `mongodb://${config.user}:${config.password}@${config.host}:${config.port}`;
-    case "mariadb":
+    }
+    case "mariadb": {
       return `mysql://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}`;
-    case "valkey":
+    }
+    case "valkey": {
       return `redis://:${config.password}@${config.host}:${config.port}`;
-    case "rabbitmq":
+    }
+    case "rabbitmq": {
       return `amqp://${config.user}:${config.password}@${config.host}:${config.port}`;
-    case "minio":
+    }
+    case "minio": {
       return `http://${config.host}:${config.port}`;
-    case "mailpit":
+    }
+    case "mailpit": {
       return `smtp://${config.host}:${config.smtpPort}`;
+    }
     default: {
       const _exhaustive: never = config;
       return _exhaustive;

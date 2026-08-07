@@ -1,32 +1,32 @@
 import type { TypeScriptConfig } from "./get-typescript-config";
 
 export const baseOptions = {
+  allowJs: true,
+  erasableSyntaxOnly: true,
   esModuleInterop: true,
+  moduleDetection: "force",
+  resolveJsonModule: true,
   skipLibCheck: true,
   target: "es2022",
   verbatimModuleSyntax: true,
-  allowJs: true,
-  resolveJsonModule: true,
-  moduleDetection: "force",
-  erasableSyntaxOnly: true,
 };
 
 export const strictnessOptions = {
-  strict: true,
-  noUncheckedIndexedAccess: true,
   noImplicitOverride: true,
+  noUncheckedIndexedAccess: true,
+  strict: true,
 };
 
 export const tscOptions = {
-  moduleResolution: "NodeNext",
   module: "NodeNext",
+  moduleResolution: "NodeNext",
   outDir: "dist",
   sourceMap: true,
 };
 
 export const nonTscOptions = {
-  moduleResolution: "Bundler",
   module: "Preserve",
+  moduleResolution: "Bundler",
   noEmit: true,
 };
 

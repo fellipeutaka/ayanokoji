@@ -1,15 +1,15 @@
 const ENV_VAR_PREFIXES: Record<string, string[]> = {
-  postgresql: ["POSTGRESQL_URL"],
-  postgres: ["POSTGRESQL_URL"],
-  mysql: ["MYSQL_URL"],
+  mailpit: ["MAILPIT_URL", "MAILPIT_UI_URL"],
   mariadb: ["MARIADB_URL"],
+  minio: ["MINIO_URL", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY"],
+  mongo: ["MONGODB_URL"],
+  mongodb: ["MONGODB_URL"],
+  mysql: ["MYSQL_URL"],
+  postgres: ["POSTGRESQL_URL"],
+  postgresql: ["POSTGRESQL_URL"],
+  rabbitmq: ["RABBITMQ_URL"],
   redis: ["REDIS_URL"],
   valkey: ["VALKEY_URL"],
-  mongodb: ["MONGODB_URL"],
-  mongo: ["MONGODB_URL"],
-  rabbitmq: ["RABBITMQ_URL"],
-  minio: ["MINIO_URL", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY"],
-  mailpit: ["MAILPIT_URL", "MAILPIT_UI_URL"],
 };
 
 export function getEnvVarKeysForService(serviceName: string): string[] {

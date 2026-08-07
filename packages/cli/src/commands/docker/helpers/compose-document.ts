@@ -61,11 +61,11 @@ export function getRemovableServiceNames(
   | Ok<string[], ComposeMutationFailure>
   | Err<string[], ComposeMutationFailure> {
   if (!isRecord(document)) {
-    return new Err({ kind: "invalid-document", field: "document" });
+    return new Err({ field: "document", kind: "invalid-document" });
   }
 
   if (document.services !== undefined && !isRecord(document.services)) {
-    return new Err({ kind: "invalid-document", field: "services" });
+    return new Err({ field: "services", kind: "invalid-document" });
   }
 
   const serviceNames = Object.keys(document.services ?? {});
@@ -83,7 +83,7 @@ export function addServices(
   | Ok<ComposeDocument, ComposeMutationFailure>
   | Err<ComposeDocument, ComposeMutationFailure> {
   if (!isRecord(document)) {
-    return new Err({ kind: "invalid-document", field: "document" });
+    return new Err({ field: "document", kind: "invalid-document" });
   }
 
   if (entries.length === 0) {
@@ -92,12 +92,12 @@ export function addServices(
 
   const existingServices = document.services;
   if (existingServices !== undefined && !isRecord(existingServices)) {
-    return new Err({ kind: "invalid-document", field: "services" });
+    return new Err({ field: "services", kind: "invalid-document" });
   }
 
   const existingVolumes = document.volumes;
   if (existingVolumes !== undefined && !isRecord(existingVolumes)) {
-    return new Err({ kind: "invalid-document", field: "volumes" });
+    return new Err({ field: "volumes", kind: "invalid-document" });
   }
 
   const requestedNames = new Set<string>();
@@ -105,8 +105,8 @@ export function addServices(
   for (const [index, entry] of entries.entries()) {
     if (typeof entry.name !== "string" || entry.name.length === 0) {
       return new Err({
-        kind: "invalid-service-entry",
         index,
+        kind: "invalid-service-entry",
         reason: "empty-name",
         ...(typeof entry.name === "string" && { serviceName: entry.name }),
       });
@@ -114,8 +114,8 @@ export function addServices(
 
     if (!isRecord(entry.config)) {
       return new Err({
-        kind: "invalid-service-entry",
         index,
+        kind: "invalid-service-entry",
         reason: "invalid-config",
         serviceName: entry.name,
       });
@@ -124,16 +124,16 @@ export function addServices(
     if (hasOwn(existingServices, entry.name)) {
       return new Err({
         kind: "service-name-conflict",
-        serviceName: entry.name,
         scope: "existing-document",
+        serviceName: entry.name,
       });
     }
 
     if (requestedNames.has(entry.name)) {
       return new Err({
         kind: "service-name-conflict",
-        serviceName: entry.name,
         scope: "requested-batch",
+        serviceName: entry.name,
       });
     }
 
@@ -141,7 +141,7 @@ export function addServices(
   }
 
   const nextServices: Record<string, ComposeServiceConfig> = {
-    ...(existingServices ?? {}),
+    ...existingServices,
   };
 
   for (const entry of entries) {
@@ -159,7 +159,7 @@ export function addServices(
 
   if (generatedVolumeNames.size > 0) {
     const nextVolumes: Record<string, unknown> = {
-      ...(existingVolumes ?? {}),
+      ...existingVolumes,
     };
 
     for (const volumeName of generatedVolumeNames) {
@@ -181,7 +181,7 @@ export function removeServices(
   | Ok<ComposeDocument, ComposeMutationFailure>
   | Err<ComposeDocument, ComposeMutationFailure> {
   if (!isRecord(document)) {
-    return new Err({ kind: "invalid-document", field: "document" });
+    return new Err({ field: "document", kind: "invalid-document" });
   }
 
   if (serviceNames.length === 0) {
@@ -190,12 +190,12 @@ export function removeServices(
 
   const existingServices = document.services;
   if (existingServices !== undefined && !isRecord(existingServices)) {
-    return new Err({ kind: "invalid-document", field: "services" });
+    return new Err({ field: "services", kind: "invalid-document" });
   }
 
   const existingVolumes = document.volumes;
   if (existingVolumes !== undefined && !isRecord(existingVolumes)) {
-    return new Err({ kind: "invalid-document", field: "volumes" });
+    return new Err({ field: "volumes", kind: "invalid-document" });
   }
 
   const services = existingServices ?? {};
@@ -204,8 +204,8 @@ export function removeServices(
   for (const [index, serviceName] of serviceNames.entries()) {
     if (typeof serviceName !== "string" || serviceName.length === 0) {
       return new Err({
-        kind: "invalid-service-entry",
         index,
+        kind: "invalid-service-entry",
         reason: "empty-name",
         ...(typeof serviceName === "string" && { serviceName }),
       });
@@ -214,8 +214,8 @@ export function removeServices(
     if (requestedNames.has(serviceName)) {
       return new Err({
         kind: "service-name-conflict",
-        serviceName,
         scope: "requested-batch",
+        serviceName,
       });
     }
 
@@ -235,9 +235,9 @@ export function removeServices(
     for (const dependencyName of dependencies) {
       if (requestedNames.has(dependencyName)) {
         return new Err({
+          dependencyName,
           kind: "service-dependency-conflict",
           serviceName,
-          dependencyName,
         });
       }
     }
@@ -251,12 +251,12 @@ export function removeServices(
   for (const serviceName of serviceNames) {
     const service = services[serviceName];
     if (!isRecord(service)) {
-      return new Err({ kind: "invalid-document", field: "services" });
+      return new Err({ field: "services", kind: "invalid-document" });
     }
 
     for (const volumeName of getGeneratedVolumeNames({
-      name: serviceName,
       config: service,
+      name: serviceName,
     })) {
       removedGeneratedVolumes.add(volumeName);
     }

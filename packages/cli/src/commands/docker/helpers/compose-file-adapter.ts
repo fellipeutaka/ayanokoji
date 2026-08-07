@@ -9,8 +9,11 @@ import {
   writeFile as writeFileToDisk,
 } from "node:fs/promises";
 import { join } from "node:path";
+
 import { parseAllDocuments, stringify } from "yaml";
+
 import { Err, Ok } from "~/utils/result";
+
 import type { ComposeDocument } from "./compose-document";
 
 export const COMPOSE_FILE_NAMES = [
@@ -113,15 +116,23 @@ export type ComposeFileFailure =
     };
 
 const nodeFileSystem: ComposeFileSystem = {
-  chmod: (path, mode) => chmodOnDisk(path, mode),
-  link: (existingPath, newPath) => linkOnDisk(existingPath, newPath),
+  chmod: async (path, mode) => {
+    await chmodOnDisk(path, mode);
+  },
+  link: async (existingPath, newPath) => {
+    await linkOnDisk(existingPath, newPath);
+  },
   readFile: async (path) => {
     const contents = await readFileFromDisk(path);
-    return contents.toString("utf8");
+    return contents.toString("utf-8");
   },
-  rename: (oldPath, newPath) => renameOnDisk(oldPath, newPath),
-  stat: (path) => statOnDisk(path),
-  unlink: (path) => unlinkOnDisk(path),
+  rename: async (oldPath, newPath) => {
+    await renameOnDisk(oldPath, newPath);
+  },
+  stat: async (path) => await statOnDisk(path),
+  unlink: async (path) => {
+    await unlinkOnDisk(path);
+  },
   writeFile: async (path, data, options) => {
     await writeFileToDisk(path, data, options);
   },
@@ -140,7 +151,7 @@ export async function discoverComposeFiles(
     try {
       const stats = await fileSystem.stat(join(cwd, fileName));
       if (isSymbolicLink(stats)) {
-        return new Err({ kind: "symlinked-document", fileName });
+        return new Err({ fileName, kind: "symlinked-document" });
       }
 
       if (stats.isFile()) {
@@ -151,7 +162,7 @@ export async function discoverComposeFiles(
         continue;
       }
 
-      return new Err({ kind: "discovery-failure", fileName });
+      return new Err({ fileName, kind: "discovery-failure" });
     }
   }
 
@@ -173,18 +184,18 @@ export async function readComposeDocument(
     initialStats = await fileSystem.stat(path);
   } catch (error) {
     if (isMissingFileError(error)) {
-      return new Err({ kind: "missing-document", fileName });
+      return new Err({ fileName, kind: "missing-document" });
     }
 
-    return new Err({ kind: "read-failure", fileName });
+    return new Err({ fileName, kind: "read-failure" });
   }
 
   if (isSymbolicLink(initialStats)) {
-    return new Err({ kind: "symlinked-document", fileName });
+    return new Err({ fileName, kind: "symlinked-document" });
   }
 
   if (!initialStats.isFile()) {
-    return new Err({ kind: "read-failure", fileName });
+    return new Err({ fileName, kind: "read-failure" });
   }
 
   let source: string;
@@ -193,27 +204,27 @@ export async function readComposeDocument(
     source = await fileSystem.readFile(path);
   } catch (error) {
     if (isMissingFileError(error)) {
-      return new Err({ kind: "missing-document", fileName });
+      return new Err({ fileName, kind: "missing-document" });
     }
 
-    return new Err({ kind: "read-failure", fileName });
+    return new Err({ fileName, kind: "read-failure" });
   }
 
   let finalStats: ComposeFileStats;
   try {
     finalStats = await fileSystem.stat(path);
   } catch {
-    return new Err({ kind: "stale-document", fileName });
+    return new Err({ fileName, kind: "stale-document" });
   }
 
   if (isSymbolicLink(finalStats)) {
-    return new Err({ kind: "symlinked-document", fileName });
+    return new Err({ fileName, kind: "symlinked-document" });
   }
 
   if (
     !(finalStats.isFile() && sameRevisionMetadata(initialStats, finalStats))
   ) {
-    return new Err({ kind: "stale-document", fileName });
+    return new Err({ fileName, kind: "stale-document" });
   }
 
   let documents: ReturnType<typeof parseAllDocuments>;
@@ -225,24 +236,24 @@ export async function readComposeDocument(
     });
   } catch {
     return new Err({
-      kind: "parse-failure",
       fileName,
+      kind: "parse-failure",
       reason: "invalid-yaml",
     });
   }
 
   if (documents.length === 0) {
     return new Err({
-      kind: "parse-failure",
       fileName,
+      kind: "parse-failure",
       reason: "empty-document",
     });
   }
 
   if (documents.length > 1) {
     return new Err({
-      kind: "parse-failure",
       fileName,
+      kind: "parse-failure",
       reason: "multi-document",
     });
   }
@@ -250,16 +261,16 @@ export async function readComposeDocument(
   const document = documents[0];
   if (!document) {
     return new Err({
-      kind: "parse-failure",
       fileName,
+      kind: "parse-failure",
       reason: "empty-document",
     });
   }
 
   if (document.errors.length > 0) {
     return new Err({
-      kind: "parse-failure",
       fileName,
+      kind: "parse-failure",
       reason: document.errors.some((error) => error.code === "DUPLICATE_KEY")
         ? "duplicate-key"
         : "invalid-yaml",
@@ -271,8 +282,8 @@ export async function readComposeDocument(
     value = document.toJS();
   } catch {
     return new Err({
-      kind: "parse-failure",
       fileName,
+      kind: "parse-failure",
       reason: "invalid-yaml",
     });
   }
@@ -303,17 +314,17 @@ export async function writeComposeDocument(
     targetStats = await fileSystem.stat(path);
   } catch (error) {
     if (!isMissingFileError(error)) {
-      return new Err({ kind: "write-failure", fileName });
+      return new Err({ fileName, kind: "write-failure" });
     }
   }
 
   if (targetStats) {
     if (isSymbolicLink(targetStats)) {
-      return new Err({ kind: "symlinked-document", fileName });
+      return new Err({ fileName, kind: "symlinked-document" });
     }
 
     if (!expectedRevision) {
-      return new Err({ kind: "creation-conflict", fileName });
+      return new Err({ fileName, kind: "creation-conflict" });
     }
 
     const revisionFailure = await verifyRevision(
@@ -327,14 +338,14 @@ export async function writeComposeDocument(
       return new Err(revisionFailure);
     }
   } else if (revision) {
-    return new Err({ kind: "stale-document", fileName });
+    return new Err({ fileName, kind: "stale-document" });
   }
 
   let serializedDocument: string;
   try {
     serializedDocument = stringify(document, { indent: 2 });
   } catch {
-    return new Err({ kind: "serialization-failure", fileName });
+    return new Err({ fileName, kind: "serialization-failure" });
   }
 
   const temporaryPath = join(cwd, `.${fileName}.${randomUUID()}.tmp`);
@@ -352,7 +363,7 @@ export async function writeComposeDocument(
 
     if (targetStats) {
       if (!expectedRevision) {
-        return new Err({ kind: "stale-document", fileName });
+        return new Err({ fileName, kind: "stale-document" });
       }
 
       const revisionFailure = await verifyRevision(
@@ -389,7 +400,7 @@ export async function writeComposeDocument(
 
     return new Ok(null);
   } catch {
-    return new Err({ kind: "write-failure", fileName });
+    return new Err({ fileName, kind: "write-failure" });
   } finally {
     if (temporaryFileExists) {
       await removeTemporaryFile(temporaryPath, fileSystem);
@@ -404,20 +415,20 @@ function validateComposeDocument(
   | Ok<ComposeDocument, ComposeFileFailure>
   | Err<ComposeDocument, ComposeFileFailure> {
   if (!isRecord(value)) {
-    return new Err({ kind: "invalid-document", fileName, field: "root" });
+    return new Err({ field: "root", fileName, kind: "invalid-document" });
   }
 
   if (value.services !== undefined) {
     if (!isRecord(value.services)) {
-      return new Err({ kind: "invalid-document", fileName, field: "services" });
+      return new Err({ field: "services", fileName, kind: "invalid-document" });
     }
 
     for (const [serviceName, service] of Object.entries(value.services)) {
       if (!isRecord(service)) {
         return new Err({
-          kind: "invalid-document",
-          fileName,
           field: "services",
+          fileName,
+          kind: "invalid-document",
           serviceName,
         });
       }
@@ -425,10 +436,10 @@ function validateComposeDocument(
   }
 
   if (value.volumes !== undefined && !isRecord(value.volumes)) {
-    return new Err({ kind: "invalid-document", fileName, field: "volumes" });
+    return new Err({ field: "volumes", fileName, kind: "invalid-document" });
   }
 
-  return new Ok(value as ComposeDocument);
+  return new Ok(value);
 }
 
 function isMissingFileError(error: unknown): boolean {
@@ -470,28 +481,28 @@ async function verifyRevision(
     try {
       stats = await fileSystem.stat(path);
     } catch {
-      return { kind: "stale-document", fileName };
+      return { fileName, kind: "stale-document" };
     }
   }
 
   if (isSymbolicLink(stats)) {
-    return { kind: "symlinked-document", fileName };
+    return { fileName, kind: "symlinked-document" };
   }
 
   if (!(stats.isFile() && sameRevisionMetadata(stats, revision))) {
-    return { kind: "stale-document", fileName };
+    return { fileName, kind: "stale-document" };
   }
 
   let source: string;
   try {
     source = await fileSystem.readFile(path);
   } catch {
-    return { kind: "read-failure", fileName };
+    return { fileName, kind: "read-failure" };
   }
 
   return sameRevision(revision, createFileRevision(stats, source))
     ? undefined
-    : { kind: "stale-document", fileName };
+    : { fileName, kind: "stale-document" };
 }
 
 function sameRevisionMetadata(
@@ -530,10 +541,10 @@ async function getExistingTargetFailure(
   try {
     const stats = await fileSystem.stat(path);
     return isSymbolicLink(stats)
-      ? { kind: "symlinked-document", fileName }
-      : { kind: "creation-conflict", fileName };
+      ? { fileName, kind: "symlinked-document" }
+      : { fileName, kind: "creation-conflict" };
   } catch {
-    return { kind: "creation-conflict", fileName };
+    return { fileName, kind: "creation-conflict" };
   }
 }
 
