@@ -60,8 +60,7 @@ export default defineConfig({
     "typescript/no-deprecated": "off",
     // Deferred: 13 errors
     "typescript/consistent-return": "off",
-    // Deferred: 2 errors
-    "typescript/no-unsafe-assignment": "off",
+    "typescript/no-unsafe-assignment": "error",
     // Deferred: 3 errors
     "typescript/no-unsafe-member-access": "off",
     // Deferred: 2 errors

@@ -29,18 +29,38 @@ test("initDocker writes the transformed document after service selection", async
     const result = await initDocker({ cwd });
 
     expect(result.isOk()).toBeTruthy();
-    const document = parse(
+    const document: unknown = parse(
       await readFile(path.join(cwd, "compose.yaml"), "utf-8")
     );
 
-    expect(document.services.postgres.image).toBe("postgres:latest");
-    expect(document.services.app).toStrictEqual({
-      image: "example/app",
-      labels: { "com.example.owner": "user" },
-    });
-    expect(document.volumes).toStrictEqual({
-      postgres_data: {},
-      shared_data: { labels: { "com.example.owner": "user" } },
+    expect(document).toStrictEqual({
+      name: "example",
+      services: {
+        app: {
+          image: "example/app",
+          labels: { "com.example.owner": "user" },
+        },
+        postgres: {
+          environment: {
+            POSTGRES_DB: "docker",
+            POSTGRES_PASSWORD: "docker",
+            POSTGRES_USER: "docker",
+          },
+          healthcheck: {
+            interval: "10s",
+            retries: 5,
+            test: ["CMD-SHELL", "pg_isready -U docker -d docker"],
+            timeout: "5s",
+          },
+          image: "postgres:latest",
+          ports: ["5432:5432"],
+          volumes: ["postgres_data:/var/lib/postgresql/data"],
+        },
+      },
+      volumes: {
+        postgres_data: {},
+        shared_data: { labels: { "com.example.owner": "user" } },
+      },
     });
   } finally {
     await rm(cwd, { force: true, recursive: true });
