@@ -73,6 +73,34 @@ test("initDocker writes the transformed document after service selection", async
   }
 });
 
+test("initDocker preserves selected database order during configuration loading", async () => {
+  const cwd = await createComposeFixture();
+  promptMocks.enhancedMultiselect.mockImplementationOnce(
+    // Preserve the async prompt helper contract in this test double.
+    // oxlint-disable-next-line require-await
+    async () => ["postgresql", "mysql"]
+  );
+
+  try {
+    const { initDocker } = await import("./init-docker");
+    const result = await initDocker({ cwd });
+
+    expect(result.isOk()).toBeTruthy();
+    if (result.isErr()) {
+      return;
+    }
+
+    expect(
+      result.value.imageConfigs.map(({ repository }) => repository)
+    ).toStrictEqual(["postgres", "mysql"]);
+    expect(
+      result.value.connectionConfigs.map(({ type }) => type)
+    ).toStrictEqual(["postgresql", "mysql"]);
+  } finally {
+    await rm(cwd, { force: true, recursive: true });
+  }
+});
+
 test("initDocker reports a service collision without writing a partial batch", async () => {
   const cwd = await createComposeFixture({
     services:

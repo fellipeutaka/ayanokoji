@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import {
   COMPOSE_FILE_NAMES,
@@ -46,6 +46,39 @@ test("discovers every supported Compose candidate without selecting one", async 
   } finally {
     await removeTempDirectory(cwd);
   }
+});
+
+test("inspects supported Compose candidates concurrently", async () => {
+  const started: string[] = [];
+  const { promise: firstStat, resolve: releaseFirstStat } =
+    Promise.withResolvers<true>();
+
+  const resultPromise = discoverComposeFiles("/project", {
+    readFile: vi.fn().mockResolvedValue(""),
+    stat: vi.fn(async (filePath: string) => {
+      const fileName = path.basename(filePath);
+      started.push(fileName);
+      if (started.length === 1) {
+        await firstStat;
+      }
+
+      return {
+        isFile: () =>
+          fileName === "compose.yaml" || fileName === "docker-compose.yaml",
+      };
+    }),
+  });
+
+  expect(started).toStrictEqual([...COMPOSE_FILE_NAMES]);
+
+  releaseFirstStat(true);
+  const result = await resultPromise;
+  expect(result.isOk()).toBeTruthy();
+  if (result.isErr()) {
+    return;
+  }
+
+  expect(result.value).toStrictEqual(["compose.yaml", "docker-compose.yaml"]);
 });
 
 test("reports no candidates without inventing a Compose filename", async () => {

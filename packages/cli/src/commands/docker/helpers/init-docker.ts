@@ -100,12 +100,20 @@ export async function initDocker(options: InitDockerProps) {
     selectedDatabases.includes(db.value)
   );
 
+  const databaseConfigs = await Promise.all(
+    selectedDatabaseEntries.map(
+      // The registry loaders return promises consumed by Promise.all.
+      // oxlint-disable-next-line typescript/promise-function-async
+      (database) => database.config()
+    )
+  );
   const imageConfigs: DatabaseImageConfig[] = [];
   const connectionConfigs: ConnectionConfig[] = [];
   const serviceEntries: ComposeServiceEntry[] = [];
 
-  for (const database of selectedDatabaseEntries) {
-    const { createComposeService, imageConfig } = await database.config();
+  for (const { createComposeService, imageConfig } of databaseConfigs) {
+    // Preserve prompt order so independent service configurations do not interleave terminal input.
+    // oxlint-disable-next-line no-await-in-loop
     const service = await createComposeService();
 
     serviceEntries.push({
