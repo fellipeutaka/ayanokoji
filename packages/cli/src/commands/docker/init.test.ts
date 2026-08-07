@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import { expect, test, vi } from "vitest";
 
@@ -33,9 +33,9 @@ vi.mock(import("~/utils/handle-error"), () => ({
 vi.mock(import("~/utils/prompts"), () => promptMocks);
 
 test("init reports an environment failure after the Compose file is written", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-docker-init-"));
-  const envPath = join(cwd, "env-directory");
-  await writeFile(join(cwd, "compose.yaml"), "services: {}\n");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
+  const envPath = path.join(cwd, "env-directory");
+  await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
   await mkdir(envPath);
   confirmResults.splice(0, confirmResults.length, true, true);
 
@@ -56,7 +56,7 @@ test("init reports an environment failure after the Compose file is written", as
     );
 
     expect(
-      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
+      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
     ).toContain("postgres:");
     expect(handleErrorMock).toHaveBeenCalledOnce();
   } finally {
@@ -66,7 +66,7 @@ test("init reports an environment failure after the Compose file is written", as
 
 test("init synchronizes the environment after a successful Compose write", async () => {
   const cwd = await createComposeFixture();
-  const envPath = join(cwd, ".env.local");
+  const envPath = path.join(cwd, ".env.local");
   confirmResults.splice(0, confirmResults.length, true, true);
 
   try {
@@ -83,9 +83,9 @@ test("init synchronizes the environment after a successful Compose write", async
     expect((await readFile(envPath, "utf-8")).toString()).toContain(
       "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
     );
-    expect((await readFile(join(cwd, ".gitignore"), "utf-8")).toString()).toBe(
-      ".env\n"
-    );
+    expect(
+      (await readFile(path.join(cwd, ".gitignore"), "utf-8")).toString()
+    ).toBe(".env\n");
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
@@ -93,7 +93,7 @@ test("init synchronizes the environment after a successful Compose write", async
 
 test("init succeeds without environment changes when synchronization is declined", async () => {
   const cwd = await createComposeFixture();
-  const envPath = join(cwd, ".env.local");
+  const envPath = path.join(cwd, ".env.local");
   confirmResults.splice(0, confirmResults.length, true, false);
 
   try {
@@ -108,14 +108,14 @@ test("init succeeds without environment changes when synchronization is declined
     ]);
 
     await expect(readFile(envPath)).rejects.toThrow();
-    await expect(readFile(join(cwd, ".gitignore"))).rejects.toThrow();
+    await expect(readFile(path.join(cwd, ".gitignore"))).rejects.toThrow();
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
 });
 
 async function createComposeFixture(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-docker-init-"));
-  await writeFile(join(cwd, "compose.yaml"), "services: {}\n");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
+  await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
   return cwd;
 }

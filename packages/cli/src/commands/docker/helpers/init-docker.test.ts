@@ -1,6 +1,6 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
@@ -30,7 +30,7 @@ test("initDocker writes the transformed document after service selection", async
 
     expect(result.isOk()).toBeTruthy();
     const document = parse(
-      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
+      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
     );
 
     expect(document.services.postgres.image).toBe("postgres:latest");
@@ -52,7 +52,7 @@ test("initDocker reports a service collision without writing a partial batch", a
     services:
       "  postgres:\n    image: user/postgres\n  app:\n    image: example/app",
   });
-  const original = await readFile(join(cwd, "compose.yaml"), "utf-8");
+  const original = await readFile(path.join(cwd, "compose.yaml"), "utf-8");
 
   try {
     const { initDocker } = await import("./init-docker");
@@ -64,17 +64,17 @@ test("initDocker reports a service collision without writing a partial batch", a
     }
 
     expect(result.error).toContain('service name "postgres"');
-    await expect(readFile(join(cwd, "compose.yaml"), "utf-8")).resolves.toBe(
-      original
-    );
+    await expect(
+      readFile(path.join(cwd, "compose.yaml"), "utf-8")
+    ).resolves.toBe(original);
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
 });
 
 test("initDocker returns a parse failure without writing the Compose file", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-"));
-  const composePath = join(cwd, "compose.yaml");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-"));
+  const composePath = path.join(cwd, "compose.yaml");
   const invalidDocument = "services:\n  app: [";
   await writeFile(composePath, invalidDocument);
 
@@ -100,7 +100,7 @@ test("initDocker returns a parse failure without writing the Compose file", asyn
 
 test("initDocker prompts for a candidate when multiple Compose files exist", async () => {
   const cwd = await createComposeFixture();
-  const alternatePath = join(cwd, "docker-compose.yml");
+  const alternatePath = path.join(cwd, "docker-compose.yml");
   const alternateSource = `name: alternate
 services:
   app:
@@ -120,7 +120,7 @@ services:
       alternateSource
     );
     expect(
-      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
+      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
     ).toBe(
       "name: example\nservices:\n  app:\n    image: example/app\n    labels:\n      com.example.owner: user\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n"
     );
@@ -130,7 +130,7 @@ services:
 });
 
 test("initDocker prompts for a supported filename when no Compose file exists", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-"));
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-"));
 
   try {
     const { initDocker } = await import("./init-docker");
@@ -138,7 +138,7 @@ test("initDocker prompts for a supported filename when no Compose file exists", 
 
     expect(result.isOk()).toBeTruthy();
     expect(
-      (await readFile(join(cwd, "compose.yaml"), "utf-8")).toString()
+      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
     ).toContain("services:");
   } finally {
     await rm(cwd, { force: true, recursive: true });
@@ -148,13 +148,13 @@ test("initDocker prompts for a supported filename when no Compose file exists", 
 async function createComposeFixture(
   overrides: { services?: string } = {}
 ): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-"));
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-"));
   const services =
     overrides.services ??
     "  app:\n    image: example/app\n    labels:\n      com.example.owner: user";
 
   await writeFile(
-    join(cwd, "compose.yaml"),
+    path.join(cwd, "compose.yaml"),
     `name: example\nservices:\n${services}\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n`
   );
 

@@ -74,8 +74,7 @@ export default defineConfig({
     // Deferred: 3 errors
     "typescript/prefer-nullish-coalescing": "off",
     "typescript/method-signature-style": ["error", "property"],
-    // Deferred: 5 errors
-    "unicorn/import-style": "off",
+    "unicorn/import-style": "error",
     // Deferred: 2 errors
     "promise/prefer-await-to-callbacks": "off",
     // Deferred: 3 errors
