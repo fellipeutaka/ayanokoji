@@ -104,7 +104,7 @@ main().catch((err) => {
 `,
     value: "bun-sqlite",
   },
-  // TODO: Uncomment when expo-sqlite is released
+  // Deferred: Re-enable when expo-sqlite is released.
   // {
   //   label: "Expo SQLite",
   //   value: "expo-sqlite",
@@ -113,7 +113,7 @@ main().catch((err) => {
   //   client: "",
   //   migrate: "",
   // },
-  // TODO: Uncomment when op-sqlite is released
+  // Deferred: Re-enable when op-sqlite is released.
   // {
   //   label: "OP SQLite",
   //   value: "op-sqlite",
