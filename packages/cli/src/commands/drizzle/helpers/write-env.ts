@@ -22,7 +22,7 @@ export async function writeEnv({ envPath, url }: WriteEnvProps) {
     return new Ok(null);
   }
 
-  const envFileResult = await readFile<string>(envPath, "utf-8");
+  const envFileResult = await readFile(envPath, "utf-8");
   if (envFileResult.isErr()) {
     return new Err("Could not read the .env file.");
   }

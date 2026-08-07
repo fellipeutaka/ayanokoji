@@ -1,27 +1,36 @@
+export const PRISMA_DATABASE_VALUES = [
+  "postgresql",
+  "mysql",
+  "sqlite",
+  "mongodb",
+  "sqlserver",
+  "cockroachdb",
+] as const;
+
 export const PRISMA_DATABASES = [
   {
     label: "PostgreSQL",
-    value: "postgresql",
+    value: PRISMA_DATABASE_VALUES[0],
   },
   {
     label: "MySQL",
-    value: "mysql",
+    value: PRISMA_DATABASE_VALUES[1],
   },
   {
     label: "SQLite",
-    value: "sqlite",
+    value: PRISMA_DATABASE_VALUES[2],
   },
   {
     label: "MongoDB",
-    value: "mongodb",
+    value: PRISMA_DATABASE_VALUES[3],
   },
   {
     label: "SQL Server",
-    value: "sqlserver",
+    value: PRISMA_DATABASE_VALUES[4],
   },
   {
     label: "Cockroach",
-    value: "cockroachdb",
+    value: PRISMA_DATABASE_VALUES[5],
   },
 ] as const satisfies { label: string; value: string }[];
 

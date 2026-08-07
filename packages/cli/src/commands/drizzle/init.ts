@@ -76,7 +76,7 @@ async function parseOptions(options: InitOptions) {
 
   return new Ok({
     cwd: options.cwd,
-    database: result.data as DrizzleDatabase | undefined,
+    database: result.data,
     withModel: options.withModel,
     withScripts: options.withScripts,
   });

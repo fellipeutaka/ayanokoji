@@ -5,6 +5,10 @@ import { createElement } from "react";
 
 import { Icons } from "@/components/ui/icons";
 
+function isIconName(icon: string): icon is keyof typeof Icons {
+  return Object.hasOwn(Icons, icon);
+}
+
 // See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: "/docs",
@@ -13,8 +17,8 @@ export const source = loader({
       return;
     }
 
-    if (icon in Icons) {
-      return createElement(Icons[icon as keyof typeof Icons]);
+    if (isIconName(icon)) {
+      return createElement(Icons[icon]);
     }
   },
   source: docs.toFumadocsSource(),
