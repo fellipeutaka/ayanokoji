@@ -61,8 +61,7 @@ export default defineConfig({
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unsafe-member-access": "error",
     "typescript/switch-exhaustiveness-check": "error",
-    // Deferred: 3 errors
-    "typescript/prefer-nullish-coalescing": "off",
+    "typescript/prefer-nullish-coalescing": "error",
     "typescript/method-signature-style": ["error", "property"],
     "unicorn/import-style": "error",
     // Deferred: 2 errors
