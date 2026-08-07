@@ -349,7 +349,7 @@ function getReferencedVolumeNames(service: ComposeServiceConfig): string[] {
 
   return service.volumes.flatMap((mount) => {
     const source = getMountSource(mount);
-    return source ? [source] : [];
+    return source !== undefined && source !== "" ? [source] : [];
   });
 }
 

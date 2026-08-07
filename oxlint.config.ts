@@ -52,8 +52,7 @@ export default defineConfig({
     // Deferred: 1 error
     "oxc/branches-sharing-code": "off",
     "typescript/no-unnecessary-type-conversion": "error",
-    // Deferred: 12 errors
-    "typescript/strict-boolean-expressions": "off",
+    "typescript/strict-boolean-expressions": "error",
     "typescript/no-unsafe-type-assertion": "error",
     // Deferred: 3 errors
     "typescript/no-deprecated": "off",

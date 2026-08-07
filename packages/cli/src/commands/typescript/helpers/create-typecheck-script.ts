@@ -16,7 +16,7 @@ export async function createTypecheckScript({
   packageJson,
 }: CreateDrizzleScriptsProps) {
   const scriptsToAdd = Object.entries(script)
-    .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
+    .filter(([scriptName]) => (packageJson.scripts?.[scriptName] ?? "") === "")
     .map(([scriptName, scriptCommand]) => ({
       scriptCommand,
       scriptName,

@@ -13,7 +13,7 @@ export function parseEnv(env: string) {
   while (match) {
     const { key, value: matchedValue } = match.groups ?? {};
 
-    let value = matchedValue || "";
+    let value = matchedValue ?? "";
 
     value = value.trim();
 
@@ -29,7 +29,7 @@ export function parseEnv(env: string) {
       value = value.replaceAll("\\r", "\r");
     }
 
-    if (key) {
+    if (key !== undefined && key !== "") {
       obj[key] = value;
     }
 

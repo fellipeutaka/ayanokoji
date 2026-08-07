@@ -74,7 +74,7 @@ function formatInvalidDocumentFailure(
     return `Docker Compose document must use a mapping root: ${fileName}`;
   }
 
-  if (field === "services" && serviceName) {
+  if (field === "services" && serviceName !== undefined && serviceName !== "") {
     return `Docker Compose service "${serviceName}" must use a mapping: ${fileName}`;
   }
 

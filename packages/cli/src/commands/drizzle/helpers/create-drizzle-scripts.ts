@@ -84,7 +84,7 @@ export async function createDrizzleScripts({
   packageManager,
 }: CreateDrizzleScriptsProps) {
   const scriptsToAdd = Object.entries(scripts[packageManager])
-    .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
+    .filter(([scriptName]) => (packageJson.scripts?.[scriptName] ?? "") === "")
     .map(([scriptName, scriptCommand]) => ({
       scriptCommand: scriptCommand.replace(
         "<DATABASE_PATH>",

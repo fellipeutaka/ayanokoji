@@ -23,7 +23,7 @@ export async function createPrismaScripts({
   packageJson,
 }: CreatePrismaScriptsProps) {
   const scriptsToAdd = Object.entries(scripts)
-    .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
+    .filter(([scriptName]) => (packageJson.scripts?.[scriptName] ?? "") === "")
     .map(([scriptName, scriptCommand]) => ({
       scriptCommand,
       scriptName,
