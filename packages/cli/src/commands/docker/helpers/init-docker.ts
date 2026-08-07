@@ -151,8 +151,15 @@ function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
     case "service-name-conflict": {
       return `The Docker service name "${failure.serviceName}" already exists in the ${failure.scope === "existing-document" ? "Compose document" : "requested batch"}.`;
     }
+    case "service-not-found": {
+      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
+    }
+    case "service-dependency-conflict": {
+      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
+    }
     default: {
-      return "The Docker service selection could not be applied.";
+      const _exhaustive: never = failure;
+      return _exhaustive;
     }
   }
 }

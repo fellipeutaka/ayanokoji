@@ -67,13 +67,21 @@ model User {
 `;
         break;
       }
-      default: {
+      case "postgresql":
+      case "mysql":
+      case "sqlite":
+      case "sqlserver": {
         schema += `
 model User {
   id    Int     @id @default(autoincrement())
   ${defaultAttributes}
 }
 `;
+        break;
+      }
+      default: {
+        const _exhaustive: never = database;
+        return _exhaustive;
       }
     }
   }

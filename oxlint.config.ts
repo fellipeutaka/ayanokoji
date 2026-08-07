@@ -60,8 +60,7 @@ export default defineConfig({
     "typescript/consistent-return": "off",
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unsafe-member-access": "error",
-    // Deferred: 2 errors
-    "typescript/switch-exhaustiveness-check": "off",
+    "typescript/switch-exhaustiveness-check": "error",
     // Deferred: 3 errors
     "typescript/prefer-nullish-coalescing": "off",
     "typescript/method-signature-style": ["error", "property"],
