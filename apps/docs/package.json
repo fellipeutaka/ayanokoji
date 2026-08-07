@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
+    "test": "node --experimental-strip-types --test src/**/*.test.ts",
     "postinstall": "fumadocs-mdx",
     "type-check": "next typegen && fumadocs-mdx && oxlint . --type-aware --type-check",
     "lint": "oxlint .",

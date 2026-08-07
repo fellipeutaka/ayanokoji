@@ -210,7 +210,13 @@ test("does not create generated volumes for bind or anonymous mounts", () => {
     {
       config: {
         image: "example/app",
-        volumes: ["./data:/data", "/tmp/cache:/cache", "/anonymous"],
+        volumes: [
+          "./data:/data",
+          "/tmp/cache:/cache",
+          "C:/workspace:/workspace",
+          "C:\\workspace:/workspace",
+          "/anonymous",
+        ],
       },
       name: "app",
     },
