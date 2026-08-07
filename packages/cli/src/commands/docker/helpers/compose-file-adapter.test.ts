@@ -383,9 +383,7 @@ test("replaces an existing Compose document through the write seam", async () =>
     );
 
     expect(writeResult.isOk()).toBeTruthy();
-    expect((await readFile(composePath, "utf-8")).toString()).toContain(
-      "image: new/app"
-    );
+    expect(await readFile(composePath, "utf-8")).toContain("image: new/app");
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -463,7 +461,7 @@ test("rejects a symlinked Compose path without replacing the link", async () => 
       kind: "symlinked-document",
     });
     expect((await lstat(composePath)).isSymbolicLink()).toBeTruthy();
-    expect((await readFile(targetPath, "utf-8")).toString()).toBe(source);
+    expect(await readFile(targetPath, "utf-8")).toBe(source);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -501,7 +499,7 @@ test("rejects a stale revision without overwriting newer Compose content", async
       fileName: "compose.yaml",
       kind: "stale-document",
     });
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(newerSource);
+    expect(await readFile(composePath, "utf-8")).toBe(newerSource);
     expect(
       (await readdir(cwd)).filter((name) => name.startsWith(".compose.yaml."))
     ).toStrictEqual([]);
@@ -544,7 +542,7 @@ test("reports serialization failures without touching an existing file", async (
       fileName: "compose.yaml",
       kind: "serialization-failure",
     });
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(source);
+    expect(await readFile(composePath, "utf-8")).toBe(source);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -584,7 +582,7 @@ test("reports deterministic write failures without replacing the original", asyn
       fileName: "compose.yaml",
       kind: "write-failure",
     });
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(source);
+    expect(await readFile(composePath, "utf-8")).toBe(source);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -618,9 +616,7 @@ test("creates a new Compose file exclusively when another process wins the race"
       fileName: "compose.yaml",
       kind: "creation-conflict",
     });
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(
-      competitorSource
-    );
+    expect(await readFile(composePath, "utf-8")).toBe(competitorSource);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -652,7 +648,7 @@ test("reports replacement failures without leaving a temporary file", async () =
     );
 
     expect(writeResult.isErr()).toBeTruthy();
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(source);
+    expect(await readFile(composePath, "utf-8")).toBe(source);
     expect(
       (await readdir(cwd)).filter((name) => name.startsWith(".compose.yaml."))
     ).toStrictEqual([]);
@@ -675,7 +671,7 @@ async function readComposeFailure(source: string): Promise<{
     const error = result.isErr() ? result.error : undefined;
 
     return {
-      contents: (await readFile(composePath, "utf-8")).toString(),
+      contents: await readFile(composePath, "utf-8"),
       error,
     };
   } finally {
@@ -693,7 +689,7 @@ function createFileSystem(
   return {
     chmod,
     link,
-    readFile: async (path) => (await readFile(path, "utf-8")).toString(),
+    readFile: async (path) => await readFile(path, "utf-8"),
     rename,
     stat: lstat,
     unlink,

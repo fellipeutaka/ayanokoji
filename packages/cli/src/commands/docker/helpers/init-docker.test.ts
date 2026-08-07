@@ -30,7 +30,7 @@ test("initDocker writes the transformed document after service selection", async
 
     expect(result.isOk()).toBeTruthy();
     const document = parse(
-      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
+      await readFile(path.join(cwd, "compose.yaml"), "utf-8")
     );
 
     expect(document.services.postgres.image).toBe("postgres:latest");
@@ -90,9 +90,7 @@ test("initDocker returns a parse failure without writing the Compose file", asyn
     expect(result.error).toBe(
       "Failed to parse existing Docker Compose file: compose.yaml"
     );
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(
-      invalidDocument
-    );
+    expect(await readFile(composePath, "utf-8")).toBe(invalidDocument);
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
@@ -116,12 +114,8 @@ services:
     const result = await initDocker({ cwd });
 
     expect(result.isOk()).toBeTruthy();
-    expect((await readFile(alternatePath, "utf-8")).toString()).not.toBe(
-      alternateSource
-    );
-    expect(
-      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
-    ).toBe(
+    expect(await readFile(alternatePath, "utf-8")).not.toBe(alternateSource);
+    expect(await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toBe(
       "name: example\nservices:\n  app:\n    image: example/app\n    labels:\n      com.example.owner: user\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n"
     );
   } finally {
@@ -137,9 +131,9 @@ test("initDocker prompts for a supported filename when no Compose file exists", 
     const result = await initDocker({ cwd });
 
     expect(result.isOk()).toBeTruthy();
-    expect(
-      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
-    ).toContain("services:");
+    expect(await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toContain(
+      "services:"
+    );
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }

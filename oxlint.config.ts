@@ -54,8 +54,7 @@ export default defineConfig({
     "require-await": "off",
     // Deferred: 1 error
     "oxc/branches-sharing-code": "off",
-    // Deferred: 24 errors
-    "typescript/no-unnecessary-type-conversion": "off",
+    "typescript/no-unnecessary-type-conversion": "error",
     // Deferred: 12 errors
     "typescript/strict-boolean-expressions": "off",
     // Deferred: 7 errors
