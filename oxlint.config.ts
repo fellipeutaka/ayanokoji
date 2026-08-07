@@ -41,8 +41,7 @@ export default defineConfig({
     "no-use-before-define": "off",
     // Deferred: 3 errors
     "typescript/no-dynamic-delete": "off",
-    // Deferred: 6 errors
-    "prefer-destructuring": "off",
+    "prefer-destructuring": "error",
     // Deferred: 6 errors
     "require-unicode-regexp": "off",
     // Deferred: 9 errors

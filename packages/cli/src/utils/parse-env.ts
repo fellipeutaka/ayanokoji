@@ -11,13 +11,13 @@ export function parseEnv(env: string) {
   let match = LINE.exec(lines);
 
   while (match) {
-    const key = match[1];
+    const [, key] = match;
 
     let value = match[2] || "";
 
     value = value.trim();
 
-    const maybeQuote = value[0];
+    const [maybeQuote] = value;
 
     value = value.replaceAll(/^(['"`])([\s\S]*)\1$/gm, "$2");
 

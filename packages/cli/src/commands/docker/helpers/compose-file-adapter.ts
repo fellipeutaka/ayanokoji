@@ -258,7 +258,7 @@ export async function readComposeDocument(
     });
   }
 
-  const document = documents[0];
+  const [document] = documents;
   if (!document) {
     return new Err({
       fileName,
