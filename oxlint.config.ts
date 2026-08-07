@@ -73,8 +73,7 @@ export default defineConfig({
     "typescript/switch-exhaustiveness-check": "off",
     // Deferred: 3 errors
     "typescript/prefer-nullish-coalescing": "off",
-    // Deferred: 11 errors
-    "typescript/method-signature-style": "off",
+    "typescript/method-signature-style": ["error", "property"],
     // Deferred: 5 errors
     "unicorn/import-style": "off",
     // Deferred: 2 errors
