@@ -61,8 +61,7 @@ export default defineConfig({
     // Deferred: 13 errors
     "typescript/consistent-return": "off",
     "typescript/no-unsafe-assignment": "error",
-    // Deferred: 3 errors
-    "typescript/no-unsafe-member-access": "off",
+    "typescript/no-unsafe-member-access": "error",
     // Deferred: 2 errors
     "typescript/switch-exhaustiveness-check": "off",
     // Deferred: 3 errors
