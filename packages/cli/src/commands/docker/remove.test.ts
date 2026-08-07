@@ -19,12 +19,20 @@ const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
       throw new Error(error);
     });
     const enhancedSelectMock = vi.fn();
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // oxlint-disable-next-line require-await
     enhancedSelectMock.mockImplementation(async () => "latest");
     const promptMocks = {
+      // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+      // oxlint-disable-next-line require-await
       enhancedConfirm: vi.fn(async () => confirmState.value),
+      // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+      // oxlint-disable-next-line require-await
       enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgres"]),
       enhancedSelect: enhancedSelectMock,
       enhancedText: vi.fn(
+        // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+        // oxlint-disable-next-line require-await
         async ({ defaultValue }: { defaultValue?: string }) =>
           defaultValue ?? ""
       ),
@@ -143,6 +151,8 @@ test("remove prompts for a candidate when multiple Compose files exist", async (
   await writeFile(firstPath, source);
   await writeFile(secondPath, source);
 
+  // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+  // oxlint-disable-next-line require-await
   enhancedSelectMock.mockImplementationOnce(async () => "docker-compose.yml");
 
   try {

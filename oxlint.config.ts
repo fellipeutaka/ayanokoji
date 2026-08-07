@@ -47,8 +47,7 @@ export default defineConfig({
     "prefer-named-capture-group": "error",
     // Deferred: 30 errors
     "unicorn/no-await-expression-member": "off",
-    // Deferred: 20 errors
-    "require-await": "off",
+    "require-await": "error",
     // Deferred: 1 error
     "oxc/branches-sharing-code": "off",
     "typescript/no-unnecessary-type-conversion": "error",

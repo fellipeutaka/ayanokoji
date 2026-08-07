@@ -6,15 +6,21 @@ import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
 
 const promptMocks = vi.hoisted(() => ({
+  // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+  // oxlint-disable-next-line require-await
   enhancedConfirm: vi.fn(async () => true),
+  // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+  // oxlint-disable-next-line require-await
   enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgresql"]),
-  enhancedSelect: vi
-    .fn()
-    .mockImplementation(
-      async ({ initialValue }: { initialValue?: string }) =>
-        initialValue ?? "latest"
-    ),
+  enhancedSelect: vi.fn().mockImplementation(
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // oxlint-disable-next-line require-await
+    async ({ initialValue }: { initialValue?: string }) =>
+      initialValue ?? "latest"
+  ),
   enhancedText: vi.fn(
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // oxlint-disable-next-line require-await
     async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
   ),
 }));
@@ -123,9 +129,11 @@ test("initDocker prompts for a candidate when multiple Compose files exist", asy
 services:
   app:
     image: alternate/app
-`;
+  `;
   await writeFile(alternatePath, alternateSource);
   promptMocks.enhancedSelect.mockImplementationOnce(
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // oxlint-disable-next-line require-await
     async () => "docker-compose.yml"
   );
 

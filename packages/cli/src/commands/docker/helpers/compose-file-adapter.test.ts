@@ -142,7 +142,11 @@ test("reports an inspection failure instead of treating an inaccessible candidat
   });
 
   const result = await discoverComposeFiles("/project", {
+    // Preserve the async file-system adapter contract in this test double.
+    // oxlint-disable-next-line require-await
     readFile: async () => "",
+    // Preserve the async file-system adapter contract in this test double.
+    // oxlint-disable-next-line require-await
     stat: async () => {
       throw inaccessible;
     },
@@ -345,9 +349,13 @@ test("reports a non-missing read failure as structured data", async () => {
   });
 
   const result = await readComposeDocument("/project", "compose.yaml", {
+    // Preserve the async file-system adapter contract in this test double.
+    // oxlint-disable-next-line require-await
     readFile: async () => {
       throw unreadable;
     },
+    // Preserve the async file-system adapter contract in this test double.
+    // oxlint-disable-next-line require-await
     stat: async () => ({ isFile: () => true }),
   });
 
@@ -567,6 +575,8 @@ test("reports deterministic write failures without replacing the original", asyn
       { services: { app: { image: "new/app" } } },
       readResult.value.revision,
       createFileSystem({
+        // Preserve the async file-system adapter contract in this test double.
+        // oxlint-disable-next-line require-await
         writeFile: async () => {
           throw new Error("disk full");
         },
@@ -641,6 +651,8 @@ test("reports replacement failures without leaving a temporary file", async () =
       { services: { app: { image: "new/app" } } },
       readResult.value.revision,
       createFileSystem({
+        // Preserve the async file-system adapter contract in this test double.
+        // oxlint-disable-next-line require-await
         rename: async () => {
           throw new Error("rename failed");
         },
