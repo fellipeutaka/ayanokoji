@@ -58,7 +58,7 @@ export const remove = new Command()
     }
 
     const candidates = discoveryResult.value;
-    const firstCandidate = candidates[0];
+    const [firstCandidate] = candidates;
     if (!firstCandidate) {
       handleError(
         formatComposeFileFailure({

@@ -53,7 +53,7 @@ export async function initDocker(options: InitDockerProps) {
       })),
     });
   } else {
-    const firstCandidate = candidates[0];
+    const [firstCandidate] = candidates;
     if (!firstCandidate) {
       return new Err("No Docker Compose file found.");
     }
@@ -75,8 +75,7 @@ export async function initDocker(options: InitDockerProps) {
       return new Err(formatComposeFileFailure(fileResult.error));
     }
 
-    config = fileResult.value.document;
-    revision = fileResult.value.revision;
+    ({ document: config, revision } = fileResult.value);
   }
 
   const existingServices = getServiceNames(config);
