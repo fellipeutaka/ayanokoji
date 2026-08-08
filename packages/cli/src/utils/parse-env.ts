@@ -1,12 +1,12 @@
 // Source: https://github.com/motdotla/dotenv/blob/master/lib/main.js
 
 const LINE =
-  /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/gm;
+  /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/gmu;
 
 export function parseEnv(env: string) {
   const obj: Record<string, string> = {};
 
-  const lines = env.replaceAll(/\r\n?/gm, "\n");
+  const lines = env.replaceAll(/\r\n?/gmu, "\n");
 
   let match = LINE.exec(lines);
 
@@ -19,7 +19,7 @@ export function parseEnv(env: string) {
 
     const [maybeQuote] = value;
 
-    value = value.replaceAll(/^(['"`])([\s\S]*)\1$/gm, "$2");
+    value = value.replaceAll(/^(['"`])([\s\S]*)\1$/gmu, "$2");
 
     if (maybeQuote === '"') {
       value = value.replaceAll("\\n", "\n");

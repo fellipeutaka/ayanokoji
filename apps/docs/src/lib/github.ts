@@ -1,5 +1,5 @@
-const TRAILING_SLASH_REGEX = /\/$/;
-const GITHUB_URL_REGEX = /github\.com\/([^/]+)\/([^/]+)/;
+const TRAILING_SLASH_REGEX = /\/$/u;
+const GITHUB_URL_REGEX = /github\.com\/([^/]+)\/([^/]+)/u;
 
 export function parseGitHubUrl(url: string) {
   const cleanUrl = url.replace(TRAILING_SLASH_REGEX, "");

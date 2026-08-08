@@ -1,6 +1,6 @@
 import { Err, Ok } from "~/utils/result";
 
-const WINDOWS_PATH_PATTERN = /^[A-Za-z]:[\\/]/;
+const WINDOWS_PATH_PATTERN = /^[A-Za-z]:[\\/]/u;
 
 export type ComposeServiceConfig = object;
 
