@@ -47,6 +47,21 @@ export type ComposeMutationFailure =
       dependencyName: string;
     };
 
+type ComposeMutationResult<T> =
+  | Ok<T, ComposeMutationFailure>
+  | Err<T, ComposeMutationFailure>;
+
+interface ServiceRemovalContext {
+  existingVolumes?: Record<string, unknown>;
+  requestedNames: Set<string>;
+  services: Record<string, ComposeServiceConfig>;
+}
+
+interface RemovedVolumeResult {
+  nextVolumes?: Record<string, unknown>;
+  volumeChanged: boolean;
+}
+
 export function getServiceNames(document: unknown): string[] {
   if (!(isRecord(document) && isRecord(document.services))) {
     return [];
@@ -177,9 +192,35 @@ export function addServices(
 export function removeServices(
   document: ComposeDocument,
   serviceNames: readonly string[]
-):
-  | Ok<ComposeDocument, ComposeMutationFailure>
-  | Err<ComposeDocument, ComposeMutationFailure> {
+): ComposeMutationResult<ComposeDocument> {
+  const validationResult = validateServiceRemoval(document, serviceNames);
+  if (validationResult.isErr()) {
+    return new Err(validationResult.error);
+  }
+
+  const { existingVolumes, requestedNames, services } = validationResult.value;
+  const removedVolumeNamesResult = collectRemovedGeneratedVolumeNames(
+    services,
+    serviceNames
+  );
+  if (removedVolumeNamesResult.isErr()) {
+    return new Err(removedVolumeNamesResult.error);
+  }
+
+  const nextServices = withoutRequestedServices(services, requestedNames);
+  const volumeResult = removeUnusedGeneratedVolumes(
+    existingVolumes,
+    nextServices,
+    removedVolumeNamesResult.value
+  );
+
+  return new Ok(createRemovedDocument(document, nextServices, volumeResult));
+}
+
+function validateServiceRemoval(
+  document: ComposeDocument,
+  serviceNames: readonly string[]
+): ComposeMutationResult<ServiceRemovalContext> {
   if (!isRecord(document)) {
     return new Err({ field: "document", kind: "invalid-document" });
   }
@@ -199,6 +240,33 @@ export function removeServices(
   }
 
   const services = existingServices ?? {};
+  const requestedNamesResult = validateRequestedServiceNames(
+    services,
+    serviceNames
+  );
+  if (requestedNamesResult.isErr()) {
+    return new Err(requestedNamesResult.error);
+  }
+
+  const dependencyFailure = findServiceDependencyConflict(
+    services,
+    requestedNamesResult.value
+  );
+  if (dependencyFailure !== undefined) {
+    return new Err(dependencyFailure);
+  }
+
+  return new Ok({
+    existingVolumes,
+    requestedNames: requestedNamesResult.value,
+    services,
+  });
+}
+
+function validateRequestedServiceNames(
+  services: Record<string, ComposeServiceConfig>,
+  serviceNames: readonly string[]
+): ComposeMutationResult<Set<string>> {
   const requestedNames = new Set<string>();
 
   for (const [index, serviceName] of serviceNames.entries()) {
@@ -226,25 +294,38 @@ export function removeServices(
     requestedNames.add(serviceName);
   }
 
+  return new Ok(requestedNames);
+}
+
+function findServiceDependencyConflict(
+  services: Record<string, ComposeServiceConfig>,
+  requestedNames: Set<string>
+): ComposeMutationFailure | undefined {
   for (const [serviceName, service] of Object.entries(services)) {
     if (requestedNames.has(serviceName)) {
       continue;
     }
 
-    const dependencies = getDependencyNames(service);
-    for (const dependencyName of dependencies) {
-      if (requestedNames.has(dependencyName)) {
-        return new Err({
-          dependencyName,
-          kind: "service-dependency-conflict",
-          serviceName,
-        });
-      }
+    const dependencyName = getDependencyNames(service).find((name) =>
+      requestedNames.has(name)
+    );
+    if (dependencyName !== undefined) {
+      return {
+        dependencyName,
+        kind: "service-dependency-conflict",
+        serviceName,
+      };
     }
   }
 
-  const removedGeneratedVolumes = new Set<string>();
+  return undefined;
+}
 
+function collectRemovedGeneratedVolumeNames(
+  services: Record<string, ComposeServiceConfig>,
+  serviceNames: readonly string[]
+): ComposeMutationResult<Set<string>> {
+  const removedGeneratedVolumes = new Set<string>();
   for (const serviceName of serviceNames) {
     const service = services[serviceName];
     if (!isRecord(service)) {
@@ -259,50 +340,70 @@ export function removeServices(
     }
   }
 
-  const nextServices = Object.fromEntries(
+  return new Ok(removedGeneratedVolumes);
+}
+
+function withoutRequestedServices(
+  services: Record<string, ComposeServiceConfig>,
+  requestedNames: Set<string>
+): Record<string, ComposeServiceConfig> {
+  return Object.fromEntries(
     Object.entries(services).filter(
       ([serviceName]) => !requestedNames.has(serviceName)
     )
   );
+}
 
-  let nextVolumes: Record<string, unknown> | undefined;
-  let volumeChanged = false;
-  if (existingVolumes !== undefined) {
-    const remainingVolumeNames = new Set(
-      Object.values(nextServices).flatMap((service) =>
-        getReferencedVolumeNames(service)
-      )
-    );
-
-    nextVolumes = Object.fromEntries(
-      Object.entries(existingVolumes).filter(([volumeName, declaration]) => {
-        const shouldRemove =
-          removedGeneratedVolumes.has(volumeName) &&
-          !remainingVolumeNames.has(volumeName) &&
-          isGeneratedVolumeDeclaration(declaration);
-        if (shouldRemove) {
-          volumeChanged = true;
-        }
-
-        return !shouldRemove;
-      })
-    );
+function removeUnusedGeneratedVolumes(
+  existingVolumes: Record<string, unknown> | undefined,
+  nextServices: Record<string, ComposeServiceConfig>,
+  removedGeneratedVolumes: Set<string>
+): RemovedVolumeResult {
+  if (existingVolumes === undefined) {
+    return { volumeChanged: false };
   }
 
-  const nextDocument: ComposeDocument = {
-    ...(volumeChanged &&
-    nextVolumes !== undefined &&
-    Object.keys(nextVolumes).length === 0
-      ? withoutVolumes(document)
-      : document),
-    services: nextServices,
-    ...(nextVolumes !== undefined &&
-      (!volumeChanged || Object.keys(nextVolumes).length > 0) && {
-        volumes: nextVolumes,
-      }),
-  };
+  const remainingVolumeNames = new Set(
+    Object.values(nextServices).flatMap((service) =>
+      getReferencedVolumeNames(service)
+    )
+  );
+  let volumeChanged = false;
+  const nextVolumes = Object.fromEntries(
+    Object.entries(existingVolumes).filter(([volumeName, declaration]) => {
+      const shouldRemove =
+        removedGeneratedVolumes.has(volumeName) &&
+        !remainingVolumeNames.has(volumeName) &&
+        isGeneratedVolumeDeclaration(declaration);
+      if (shouldRemove) {
+        volumeChanged = true;
+      }
 
-  return new Ok(nextDocument);
+      return !shouldRemove;
+    })
+  );
+
+  return { nextVolumes, volumeChanged };
+}
+
+function createRemovedDocument(
+  document: ComposeDocument,
+  nextServices: Record<string, ComposeServiceConfig>,
+  volumeResult: RemovedVolumeResult
+): ComposeDocument {
+  const { nextVolumes, volumeChanged } = volumeResult;
+  const hasRemainingVolumes =
+    nextVolumes !== undefined && Object.keys(nextVolumes).length > 0;
+  const baseDocument =
+    volumeChanged && !hasRemainingVolumes ? withoutVolumes(document) : document;
+
+  return {
+    ...baseDocument,
+    services: nextServices,
+    ...(nextVolumes !== undefined && (!volumeChanged || hasRemainingVolumes)
+      ? { volumes: nextVolumes }
+      : {}),
+  };
 }
 
 function getDependencyNames(service: ComposeServiceConfig): string[] {
