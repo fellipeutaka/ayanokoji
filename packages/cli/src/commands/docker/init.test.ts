@@ -104,6 +104,68 @@ test("init synchronizes the environment after a successful Compose write", async
   }
 });
 
+test("init skips existing environment variables when requested", async () => {
+  const cwd = await createComposeFixture();
+  const envPath = path.join(cwd, ".env.local");
+  const existingEnv = "POSTGRESQL_URL=existing\n";
+  await writeFile(envPath, existingEnv);
+  confirmResults.splice(0, confirmResults.length, true, true);
+
+  try {
+    const { init } = await import("./init");
+    await init.parseAsync([
+      "node",
+      "ayanokoji",
+      "--cwd",
+      cwd,
+      "--env-path",
+      envPath,
+      "--skip-conflicts",
+    ]);
+
+    expect(await readFile(envPath, "utf-8")).toBe(existingEnv);
+  } finally {
+    await rm(cwd, { force: true, recursive: true });
+  }
+});
+
+test("init overrides an existing environment variable when selected", async () => {
+  const cwd = await createComposeFixture();
+  const envPath = path.join(cwd, ".env.local");
+  await writeFile(envPath, "POSTGRESQL_URL=existing\n");
+  confirmResults.splice(0, confirmResults.length, true, true);
+  promptMocks.enhancedSelect
+    .mockImplementationOnce(
+      // Preserve the database version default before the conflict prompt.
+      // oxlint-disable-next-line require-await
+      async ({ initialValue }: { initialValue?: string }) =>
+        initialValue ?? "latest"
+    )
+    .mockImplementationOnce(
+      // Preserve the async prompt helper contract in this test double.
+      // oxlint-disable-next-line require-await
+      async () => "override"
+    );
+
+  try {
+    const { init } = await import("./init");
+    await init.parseAsync([
+      "node",
+      "ayanokoji",
+      "--cwd",
+      cwd,
+      "--env-path",
+      envPath,
+    ]);
+
+    expect(await readFile(envPath, "utf-8")).toContain(
+      "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
+    );
+  } finally {
+    await rm(cwd, { force: true, recursive: true });
+  }
+});
+
 test("init succeeds without environment changes when synchronization is declined", async () => {
   const cwd = await createComposeFixture();
   const envPath = path.join(cwd, ".env.local");
