@@ -391,7 +391,6 @@ export async function writeComposeDocument(
       }
 
       await fileSystem.rename(temporaryPath, documentPath);
-      temporaryFileExists = false;
     } else {
       try {
         await fileSystem.link(temporaryPath, documentPath);
@@ -409,9 +408,9 @@ export async function writeComposeDocument(
       }
 
       await fileSystem.unlink(temporaryPath);
-      temporaryFileExists = false;
     }
 
+    temporaryFileExists = false;
     return new Ok(null);
   } catch {
     return new Err({ fileName, kind: "write-failure" });
