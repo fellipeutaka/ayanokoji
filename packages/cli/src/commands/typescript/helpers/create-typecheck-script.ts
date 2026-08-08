@@ -26,13 +26,10 @@ export async function createTypecheckScript({
     return;
   }
 
-  const newScripts = scriptsToAdd.reduce(
-    (acc, { scriptName, scriptCommand }) => {
-      acc[scriptName] = scriptCommand;
-      return acc;
-    },
-    packageJson.scripts ?? {}
-  );
+  const newScripts = packageJson.scripts ?? {};
+  for (const { scriptName, scriptCommand } of scriptsToAdd) {
+    newScripts[scriptName] = scriptCommand;
+  }
 
   packageJson.scripts = newScripts;
 

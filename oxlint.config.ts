@@ -59,8 +59,7 @@ export default defineConfig({
     "typescript/method-signature-style": ["error", "property"],
     "unicorn/import-style": "error",
     "promise/prefer-await-to-callbacks": "error",
-    // Deferred: 3 errors
-    "unicorn/no-array-reduce": "off",
+    "unicorn/no-array-reduce": "error",
     "unicorn/no-object-as-default-parameter": "error",
     // Deferred: 1 error
     "max-classes-per-file": "off",
