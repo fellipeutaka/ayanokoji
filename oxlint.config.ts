@@ -34,8 +34,7 @@ export default defineConfig({
     // Deferred: 3 errors
     complexity: "off",
     "no-warning-comments": "error",
-    // Deferred: 4 errors
-    "no-await-in-loop": "off",
+    "no-await-in-loop": "error",
     // Deferred: 118 errors
     "no-use-before-define": "off",
     // Deferred: 3 errors

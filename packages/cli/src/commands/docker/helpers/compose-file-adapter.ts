@@ -147,22 +147,36 @@ export async function discoverComposeFiles(
 > {
   const candidates: ComposeFileName[] = [];
 
-  for (const fileName of COMPOSE_FILE_NAMES) {
-    try {
-      const stats = await fileSystem.stat(path.join(cwd, fileName));
-      if (isSymbolicLink(stats)) {
-        return new Err({ fileName, kind: "symlinked-document" });
+  const inspections = await Promise.all(
+    COMPOSE_FILE_NAMES.map(async (fileName) => {
+      try {
+        return {
+          fileName,
+          stats: await fileSystem.stat(path.join(cwd, fileName)),
+        };
+      } catch (error) {
+        return { error, fileName };
       }
+    })
+  );
 
-      if (stats.isFile()) {
-        candidates.push(fileName);
-      }
-    } catch (error) {
+  for (const inspection of inspections) {
+    if ("error" in inspection) {
+      const { error, fileName } = inspection;
       if (isMissingFileError(error)) {
         continue;
       }
 
       return new Err({ fileName, kind: "discovery-failure" });
+    }
+
+    const { fileName, stats } = inspection;
+    if (isSymbolicLink(stats)) {
+      return new Err({ fileName, kind: "symlinked-document" });
+    }
+
+    if (stats.isFile()) {
+      candidates.push(fileName);
     }
   }
 

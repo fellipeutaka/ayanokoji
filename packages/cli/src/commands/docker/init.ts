@@ -103,6 +103,8 @@ export const init = new Command()
               continue;
             }
 
+            // Preserve prompt order so each conflict decision remains deterministic.
+            // oxlint-disable-next-line no-await-in-loop
             const action = await enhancedSelect({
               initialValue: "skip",
               message: `${key} already exists. What do you want to do?`,
