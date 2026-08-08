@@ -26,8 +26,8 @@ export const COMPOSE_FILE_NAMES = [
 export type ComposeFileName = (typeof COMPOSE_FILE_NAMES)[number];
 
 export interface ComposeFileStats {
-  isFile(): boolean;
-  isSymbolicLink?(): boolean;
+  isFile: () => boolean;
+  isSymbolicLink?: () => boolean;
   dev?: number;
   ino?: number;
   mode?: number;
@@ -36,20 +36,20 @@ export interface ComposeFileStats {
 }
 
 export interface ComposeFileReader {
-  stat(path: string): Promise<ComposeFileStats>;
-  readFile(path: string): Promise<string>;
+  stat: (path: string) => Promise<ComposeFileStats>;
+  readFile: (path: string) => Promise<string>;
 }
 
 export interface ComposeFileSystem extends ComposeFileReader {
-  chmod(path: string, mode: number): Promise<void>;
-  link(existingPath: string, newPath: string): Promise<void>;
-  rename(oldPath: string, newPath: string): Promise<void>;
-  unlink(path: string): Promise<void>;
-  writeFile(
+  chmod: (path: string, mode: number) => Promise<void>;
+  link: (existingPath: string, newPath: string) => Promise<void>;
+  rename: (oldPath: string, newPath: string) => Promise<void>;
+  unlink: (path: string) => Promise<void>;
+  writeFile: (
     path: string,
     data: string,
     options?: { flag?: string; mode?: number }
-  ): Promise<void>;
+  ) => Promise<void>;
 }
 
 export interface ComposeFileRevision {
