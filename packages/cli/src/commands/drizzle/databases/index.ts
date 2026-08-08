@@ -7,21 +7,27 @@ export interface DrizzleAdapter {
   migrate: string;
 }
 
+export const DRIZZLE_DATABASE_VALUES = [
+  "postgresql",
+  "mysql",
+  "sqlite",
+] as const;
+
 export const DRIZZLE_DATABASES = [
   {
     data: async () => await import("./postgresql").then((m) => m.data),
     label: "PostgreSQL",
-    value: "postgresql",
+    value: DRIZZLE_DATABASE_VALUES[0],
   },
   {
     data: async () => await import("./mysql").then((m) => m.data),
     label: "MySQL",
-    value: "mysql",
+    value: DRIZZLE_DATABASE_VALUES[1],
   },
   {
     data: async () => await import("./sqlite").then((m) => m.data),
     label: "SQLite",
-    value: "sqlite",
+    value: DRIZZLE_DATABASE_VALUES[2],
   },
 ] as const;
 

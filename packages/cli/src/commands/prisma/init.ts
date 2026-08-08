@@ -67,7 +67,7 @@ async function parseOptions(options: InitOptions) {
 
   return new Ok({
     cwd: options.cwd,
-    database: result.data as PrismaDatabase | undefined,
+    database: result.data,
     withModel: options.withModel,
     withScripts: options.withScripts,
   });
