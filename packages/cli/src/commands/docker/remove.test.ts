@@ -73,7 +73,7 @@ networks:
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    const document = parse(await readFile(composePath, "utf-8"));
+    const document: unknown = parse(await readFile(composePath, "utf-8"));
     expect(document).toStrictEqual({
       name: "example",
       networks: {
