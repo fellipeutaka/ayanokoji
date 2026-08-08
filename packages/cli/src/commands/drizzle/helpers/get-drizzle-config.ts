@@ -18,9 +18,9 @@ export async function getDrizzleConfig(options: ParsedInitOptions) {
 
   const adapter = await enhancedSelect({
     message: "What adapter would you like to use?",
-    options: data.adapters.map((adapter) => ({
-      label: adapter.label,
-      value: adapter,
+    options: data.adapters.map((adapterOption) => ({
+      label: adapterOption.label,
+      value: adapterOption,
     })),
   });
 

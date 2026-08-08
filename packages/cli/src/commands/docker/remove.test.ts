@@ -14,25 +14,25 @@ import { parse } from "yaml";
 
 const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
   vi.hoisted(() => {
-    const confirmState = { value: false };
+    const mockConfirmState = { value: false };
     // Keep the synchronous handleError contract so mocked command failures stop
     // execution just like the process-exiting production implementation.
     // oxlint-disable-next-line promise/prefer-await-to-callbacks
-    const handleErrorMock = vi.fn((error: string): never => {
+    const mockHandleError = vi.fn((error: string): never => {
       throw new Error(error);
     });
-    const enhancedSelectMock = vi.fn();
+    const mockEnhancedSelect = vi.fn();
     // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
     // oxlint-disable-next-line require-await
-    enhancedSelectMock.mockImplementation(async () => "latest");
-    const promptMocks = {
+    mockEnhancedSelect.mockImplementation(async () => "latest");
+    const mockPromptMocks = {
       // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
       // oxlint-disable-next-line require-await
-      enhancedConfirm: vi.fn(async () => confirmState.value),
+      enhancedConfirm: vi.fn(async () => mockConfirmState.value),
       // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
       // oxlint-disable-next-line require-await
       enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgres"]),
-      enhancedSelect: enhancedSelectMock,
+      enhancedSelect: mockEnhancedSelect,
       enhancedText: vi.fn(
         // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
         // oxlint-disable-next-line require-await
@@ -42,10 +42,10 @@ const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
     };
 
     return {
-      confirmState,
-      enhancedSelectMock,
-      handleErrorMock,
-      promptMocks,
+      confirmState: mockConfirmState,
+      enhancedSelectMock: mockEnhancedSelect,
+      handleErrorMock: mockHandleError,
+      promptMocks: mockPromptMocks,
     };
   });
 

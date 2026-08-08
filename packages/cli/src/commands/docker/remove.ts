@@ -174,9 +174,9 @@ export const remove = new Command()
             )
           );
 
-          const writeResult = await writeEnvFile(envPath, newEnvVars);
-          if (writeResult.isErr()) {
-            handleError(formatEnvironmentSyncFailure(writeResult.error));
+          const envWriteResult = await writeEnvFile(envPath, newEnvVars);
+          if (envWriteResult.isErr()) {
+            handleError(formatEnvironmentSyncFailure(envWriteResult.error));
           }
 
           logger.success(

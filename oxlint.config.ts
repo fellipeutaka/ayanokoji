@@ -40,8 +40,7 @@ export default defineConfig({
     "typescript/no-dynamic-delete": "error",
     "prefer-destructuring": "error",
     "require-unicode-regexp": "error",
-    // Deferred: 9 errors
-    "no-shadow": "off",
+    "no-shadow": "error",
     "prefer-named-capture-group": "error",
     "unicorn/no-await-expression-member": "error",
     "require-await": "error",
