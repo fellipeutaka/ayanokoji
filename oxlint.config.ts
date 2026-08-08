@@ -54,8 +54,7 @@ export default defineConfig({
     "typescript/no-unnecessary-type-conversion": "error",
     "typescript/strict-boolean-expressions": "error",
     "typescript/no-unsafe-type-assertion": "error",
-    // Deferred: 3 errors
-    "typescript/no-deprecated": "off",
+    "typescript/no-deprecated": "error",
     // Deferred: 13 errors
     "typescript/consistent-return": "off",
     "typescript/no-unsafe-assignment": "error",
