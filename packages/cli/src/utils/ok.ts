@@ -2,7 +2,11 @@ import type { Err } from "./err";
 import type { Result } from "./result-contract";
 
 export class Ok<T, E> implements Result<T, E> {
-  constructor(readonly value: T) {}
+  readonly value: T;
+
+  constructor(value: T) {
+    this.value = value;
+  }
 
   isOk(): this is Ok<T, E> {
     return true;
