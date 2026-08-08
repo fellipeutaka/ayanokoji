@@ -58,8 +58,7 @@ export default defineConfig({
     "promise/prefer-await-to-callbacks": "error",
     "unicorn/no-array-reduce": "error",
     "unicorn/no-object-as-default-parameter": "error",
-    // Deferred: 1 error
-    "max-classes-per-file": "off",
+    "max-classes-per-file": "error",
     // Deferred: 2 errors
     "typescript/parameter-properties": "off",
     // Deferred: 4 errors
