@@ -243,9 +243,6 @@ export function removeServices(
     }
   }
 
-  const nextServices: Record<string, ComposeServiceConfig> = {
-    ...services,
-  };
   const removedGeneratedVolumes = new Set<string>();
 
   for (const serviceName of serviceNames) {
@@ -260,28 +257,36 @@ export function removeServices(
     })) {
       removedGeneratedVolumes.add(volumeName);
     }
-    delete nextServices[serviceName];
   }
+
+  const nextServices = Object.fromEntries(
+    Object.entries(services).filter(
+      ([serviceName]) => !requestedNames.has(serviceName)
+    )
+  );
 
   let nextVolumes: Record<string, unknown> | undefined;
   let volumeChanged = false;
   if (existingVolumes !== undefined) {
-    nextVolumes = { ...existingVolumes };
     const remainingVolumeNames = new Set(
       Object.values(nextServices).flatMap((service) =>
         getReferencedVolumeNames(service)
       )
     );
 
-    for (const volumeName of removedGeneratedVolumes) {
-      if (
-        !remainingVolumeNames.has(volumeName) &&
-        isGeneratedVolumeDeclaration(nextVolumes[volumeName])
-      ) {
-        delete nextVolumes[volumeName];
-        volumeChanged = true;
-      }
-    }
+    nextVolumes = Object.fromEntries(
+      Object.entries(existingVolumes).filter(([volumeName, declaration]) => {
+        const shouldRemove =
+          removedGeneratedVolumes.has(volumeName) &&
+          !remainingVolumeNames.has(volumeName) &&
+          isGeneratedVolumeDeclaration(declaration);
+        if (shouldRemove) {
+          volumeChanged = true;
+        }
+
+        return !shouldRemove;
+      })
+    );
   }
 
   const nextDocument: ComposeDocument = {
