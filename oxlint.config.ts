@@ -60,8 +60,7 @@ export default defineConfig({
     "unicorn/no-object-as-default-parameter": "error",
     "max-classes-per-file": "error",
     "typescript/parameter-properties": "error",
-    // Deferred: 4 errors
-    "class-methods-use-this": "off",
+    "class-methods-use-this": "error",
   },
   options: {
     typeAware: true,
