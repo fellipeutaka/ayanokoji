@@ -1,3 +1,4 @@
+// oxlint-disable vitest/no-import-node-test vitest/prefer-importing-vitest-globals
 import { deepStrictEqual } from "node:assert/strict";
 import { test } from "node:test";
 

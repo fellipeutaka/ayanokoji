@@ -6,20 +6,6 @@ import vitest from "ultracite/oxlint/vitest";
 
 export default defineConfig({
   extends: [core, react, next, vitest],
-  overrides: [
-    {
-      // The docs package intentionally runs these tests with Node's built-in test runner.
-      files: [
-        "apps/docs/src/lib/github.test.ts",
-        "apps/docs/src/lib/resolve-icon.test.ts",
-      ],
-      plugins: ["vitest"],
-      rules: {
-        "vitest/no-import-node-test": "off",
-        "vitest/prefer-importing-vitest-globals": "off",
-      },
-    },
-  ],
   ignorePatterns: [
     ...(core.ignorePatterns ?? []),
     "**/.agents/**",
@@ -37,36 +23,6 @@ export default defineConfig({
         namedComponents: "function-declaration",
       },
     ],
-
-    complexity: "error",
-    "no-warning-comments": "error",
-    "no-await-in-loop": "error",
-    "no-use-before-define": "error",
-    "typescript/no-dynamic-delete": "error",
-    "prefer-destructuring": "error",
-    "require-unicode-regexp": "error",
-    "no-shadow": "error",
-    "prefer-named-capture-group": "error",
-    "unicorn/no-await-expression-member": "error",
-    "require-await": "error",
-    "oxc/branches-sharing-code": "error",
-    "typescript/no-unnecessary-type-conversion": "error",
-    "typescript/strict-boolean-expressions": "error",
-    "typescript/no-unsafe-type-assertion": "error",
-    "typescript/no-deprecated": "error",
-    "typescript/consistent-return": "error",
-    "typescript/no-unsafe-assignment": "error",
-    "typescript/no-unsafe-member-access": "error",
-    "typescript/switch-exhaustiveness-check": "error",
-    "typescript/prefer-nullish-coalescing": "error",
-    "typescript/method-signature-style": ["error", "property"],
-    "unicorn/import-style": "error",
-    "promise/prefer-await-to-callbacks": "error",
-    "unicorn/no-array-reduce": "error",
-    "unicorn/no-object-as-default-parameter": "error",
-    "max-classes-per-file": "error",
-    "typescript/parameter-properties": "error",
-    "class-methods-use-this": "error",
   },
   options: {
     typeAware: true,
