@@ -45,6 +45,12 @@ vi.mock(import("~/utils/handle-error"), () => ({
 
 vi.mock(import("~/utils/prompts"), () => promptMocks);
 
+async function createComposeFixture(): Promise<string> {
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
+  await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
+  return cwd;
+}
+
 test("init reports an environment failure after the Compose file is written", async () => {
   const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
   const envPath = path.join(cwd, "env-directory");
@@ -188,9 +194,3 @@ test("init succeeds without environment changes when synchronization is declined
     await rm(cwd, { force: true, recursive: true });
   }
 });
-
-async function createComposeFixture(): Promise<string> {
-  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
-  await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
-  return cwd;
-}

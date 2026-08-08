@@ -27,6 +27,22 @@ const promptMocks = vi.hoisted(() => ({
 
 vi.mock(import("~/utils/prompts"), () => promptMocks);
 
+async function createComposeFixture(
+  overrides: { services?: string } = {}
+): Promise<string> {
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-"));
+  const services =
+    overrides.services ??
+    "  app:\n    image: example/app\n    labels:\n      com.example.owner: user";
+
+  await writeFile(
+    path.join(cwd, "compose.yaml"),
+    `name: example\nservices:\n${services}\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n`
+  );
+
+  return cwd;
+}
+
 test("initDocker writes the transformed document after service selection", async () => {
   const cwd = await createComposeFixture();
 
@@ -194,19 +210,3 @@ test("initDocker prompts for a supported filename when no Compose file exists", 
     await rm(cwd, { force: true, recursive: true });
   }
 });
-
-async function createComposeFixture(
-  overrides: { services?: string } = {}
-): Promise<string> {
-  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-"));
-  const services =
-    overrides.services ??
-    "  app:\n    image: example/app\n    labels:\n      com.example.owner: user";
-
-  await writeFile(
-    path.join(cwd, "compose.yaml"),
-    `name: example\nservices:\n${services}\nvolumes:\n  shared_data:\n    labels:\n      com.example.owner: user\n`
-  );
-
-  return cwd;
-}

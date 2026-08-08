@@ -138,6 +138,161 @@ const nodeFileSystem: ComposeFileSystem = {
   },
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return isRecord(error) && error.code === "ENOENT";
+}
+
+function isExistingFileError(error: unknown): boolean {
+  return isRecord(error) && error.code === "EEXIST";
+}
+
+function isSymbolicLink(stats: ComposeFileStats): boolean {
+  return stats.isSymbolicLink?.() ?? false;
+}
+
+function sameRevisionMetadata(
+  first: Pick<ComposeFileStats, "dev" | "ino" | "mode" | "mtimeMs" | "size">,
+  second: Pick<ComposeFileStats, "dev" | "ino" | "mode" | "mtimeMs" | "size">
+): boolean {
+  return (
+    first.dev === second.dev &&
+    first.ino === second.ino &&
+    first.mode === second.mode &&
+    first.mtimeMs === second.mtimeMs &&
+    first.size === second.size
+  );
+}
+
+function createFileRevision(
+  stats: ComposeFileStats,
+  source: string
+): ComposeFileRevision {
+  return {
+    contentHash: createHash("sha256").update(source).digest("hex"),
+    dev: stats.dev,
+    ino: stats.ino,
+    mode: stats.mode,
+    mtimeMs: stats.mtimeMs,
+    size: stats.size,
+  };
+}
+
+function sameRevision(
+  first: ComposeFileRevision,
+  second: ComposeFileRevision
+): boolean {
+  return (
+    first.contentHash === second.contentHash &&
+    sameRevisionMetadata(first, second)
+  );
+}
+
+async function verifyRevision(
+  filePath: string,
+  fileName: ComposeFileName,
+  revision: ComposeFileRevision,
+  fileSystem: ComposeFileReader,
+  knownStats?: ComposeFileStats
+): Promise<ComposeFileFailure | undefined> {
+  let stats = knownStats;
+
+  if (!stats) {
+    try {
+      stats = await fileSystem.stat(filePath);
+    } catch {
+      return { fileName, kind: "stale-document" };
+    }
+  }
+
+  if (isSymbolicLink(stats)) {
+    return { fileName, kind: "symlinked-document" };
+  }
+
+  if (!(stats.isFile() && sameRevisionMetadata(stats, revision))) {
+    return { fileName, kind: "stale-document" };
+  }
+
+  let source: string;
+  try {
+    source = await fileSystem.readFile(filePath);
+  } catch {
+    return { fileName, kind: "read-failure" };
+  }
+
+  return sameRevision(revision, createFileRevision(stats, source))
+    ? undefined
+    : { fileName, kind: "stale-document" };
+}
+
+function validateComposeDocument(
+  value: unknown,
+  fileName: ComposeFileName
+):
+  | Ok<ComposeDocument, ComposeFileFailure>
+  | Err<ComposeDocument, ComposeFileFailure> {
+  if (!isRecord(value)) {
+    return new Err({ field: "root", fileName, kind: "invalid-document" });
+  }
+
+  if (value.services !== undefined) {
+    if (!isRecord(value.services)) {
+      return new Err({ field: "services", fileName, kind: "invalid-document" });
+    }
+
+    for (const [serviceName, service] of Object.entries(value.services)) {
+      if (!isRecord(service)) {
+        return new Err({
+          field: "services",
+          fileName,
+          kind: "invalid-document",
+          serviceName,
+        });
+      }
+    }
+  }
+
+  if (value.volumes !== undefined && !isRecord(value.volumes)) {
+    return new Err({ field: "volumes", fileName, kind: "invalid-document" });
+  }
+
+  return new Ok(value);
+}
+
+async function getExistingTargetFailure(
+  filePath: string,
+  fileName: ComposeFileName,
+  fileSystem: ComposeFileReader
+): Promise<
+  Extract<
+    ComposeFileFailure,
+    { kind: "symlinked-document" | "creation-conflict" }
+  >
+> {
+  try {
+    const stats = await fileSystem.stat(filePath);
+    return isSymbolicLink(stats)
+      ? { fileName, kind: "symlinked-document" }
+      : { fileName, kind: "creation-conflict" };
+  } catch {
+    return { fileName, kind: "creation-conflict" };
+  }
+}
+
+async function removeTemporaryFile(
+  filePath: string,
+  fileSystem: ComposeFileSystem
+): Promise<void> {
+  try {
+    await fileSystem.unlink(filePath);
+  } catch {
+    // Preserve the original file even when temporary-file cleanup fails.
+  }
+}
+
 export async function discoverComposeFiles(
   cwd: string,
   fileSystem: ComposeFileReader = nodeFileSystem
@@ -419,159 +574,4 @@ export async function writeComposeDocument(
       await removeTemporaryFile(temporaryPath, fileSystem);
     }
   }
-}
-
-function validateComposeDocument(
-  value: unknown,
-  fileName: ComposeFileName
-):
-  | Ok<ComposeDocument, ComposeFileFailure>
-  | Err<ComposeDocument, ComposeFileFailure> {
-  if (!isRecord(value)) {
-    return new Err({ field: "root", fileName, kind: "invalid-document" });
-  }
-
-  if (value.services !== undefined) {
-    if (!isRecord(value.services)) {
-      return new Err({ field: "services", fileName, kind: "invalid-document" });
-    }
-
-    for (const [serviceName, service] of Object.entries(value.services)) {
-      if (!isRecord(service)) {
-        return new Err({
-          field: "services",
-          fileName,
-          kind: "invalid-document",
-          serviceName,
-        });
-      }
-    }
-  }
-
-  if (value.volumes !== undefined && !isRecord(value.volumes)) {
-    return new Err({ field: "volumes", fileName, kind: "invalid-document" });
-  }
-
-  return new Ok(value);
-}
-
-function isMissingFileError(error: unknown): boolean {
-  return isRecord(error) && error.code === "ENOENT";
-}
-
-function isExistingFileError(error: unknown): boolean {
-  return isRecord(error) && error.code === "EEXIST";
-}
-
-function isSymbolicLink(stats: ComposeFileStats): boolean {
-  return stats.isSymbolicLink?.() ?? false;
-}
-
-function createFileRevision(
-  stats: ComposeFileStats,
-  source: string
-): ComposeFileRevision {
-  return {
-    contentHash: createHash("sha256").update(source).digest("hex"),
-    dev: stats.dev,
-    ino: stats.ino,
-    mode: stats.mode,
-    mtimeMs: stats.mtimeMs,
-    size: stats.size,
-  };
-}
-
-async function verifyRevision(
-  filePath: string,
-  fileName: ComposeFileName,
-  revision: ComposeFileRevision,
-  fileSystem: ComposeFileReader,
-  knownStats?: ComposeFileStats
-): Promise<ComposeFileFailure | undefined> {
-  let stats = knownStats;
-
-  if (!stats) {
-    try {
-      stats = await fileSystem.stat(filePath);
-    } catch {
-      return { fileName, kind: "stale-document" };
-    }
-  }
-
-  if (isSymbolicLink(stats)) {
-    return { fileName, kind: "symlinked-document" };
-  }
-
-  if (!(stats.isFile() && sameRevisionMetadata(stats, revision))) {
-    return { fileName, kind: "stale-document" };
-  }
-
-  let source: string;
-  try {
-    source = await fileSystem.readFile(filePath);
-  } catch {
-    return { fileName, kind: "read-failure" };
-  }
-
-  return sameRevision(revision, createFileRevision(stats, source))
-    ? undefined
-    : { fileName, kind: "stale-document" };
-}
-
-function sameRevisionMetadata(
-  first: Pick<ComposeFileStats, "dev" | "ino" | "mode" | "mtimeMs" | "size">,
-  second: Pick<ComposeFileStats, "dev" | "ino" | "mode" | "mtimeMs" | "size">
-): boolean {
-  return (
-    first.dev === second.dev &&
-    first.ino === second.ino &&
-    first.mode === second.mode &&
-    first.mtimeMs === second.mtimeMs &&
-    first.size === second.size
-  );
-}
-
-function sameRevision(
-  first: ComposeFileRevision,
-  second: ComposeFileRevision
-): boolean {
-  return (
-    first.contentHash === second.contentHash &&
-    sameRevisionMetadata(first, second)
-  );
-}
-
-async function getExistingTargetFailure(
-  filePath: string,
-  fileName: ComposeFileName,
-  fileSystem: ComposeFileReader
-): Promise<
-  Extract<
-    ComposeFileFailure,
-    { kind: "symlinked-document" | "creation-conflict" }
-  >
-> {
-  try {
-    const stats = await fileSystem.stat(filePath);
-    return isSymbolicLink(stats)
-      ? { fileName, kind: "symlinked-document" }
-      : { fileName, kind: "creation-conflict" };
-  } catch {
-    return { fileName, kind: "creation-conflict" };
-  }
-}
-
-async function removeTemporaryFile(
-  filePath: string,
-  fileSystem: ComposeFileSystem
-): Promise<void> {
-  try {
-    await fileSystem.unlink(filePath);
-  } catch {
-    // Preserve the original file even when temporary-file cleanup fails.
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

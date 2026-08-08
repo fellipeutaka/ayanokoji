@@ -31,6 +31,36 @@ export interface InitDockerResult {
   connectionConfigs: ConnectionConfig[];
 }
 
+function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
+  switch (failure.kind) {
+    case "empty-service-batch": {
+      return "No Docker services were selected.";
+    }
+    case "no-services": {
+      return "No services found in the compose file.";
+    }
+    case "invalid-document": {
+      return `The Docker Compose document has an invalid ${failure.field} collection.`;
+    }
+    case "invalid-service-entry": {
+      return `The Docker service entry at position ${failure.index + 1} is invalid.`;
+    }
+    case "service-name-conflict": {
+      return `The Docker service name "${failure.serviceName}" already exists in the ${failure.scope === "existing-document" ? "Compose document" : "requested batch"}.`;
+    }
+    case "service-not-found": {
+      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
+    }
+    case "service-dependency-conflict": {
+      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
+    }
+    default: {
+      const _exhaustive: never = failure;
+      return _exhaustive;
+    }
+  }
+}
+
 export async function initDocker(options: InitDockerProps) {
   const discoveryResult = await discoverComposeFiles(options.cwd);
 
@@ -140,34 +170,4 @@ export async function initDocker(options: InitDockerProps) {
   }
 
   return new Ok({ connectionConfigs, imageConfigs });
-}
-
-function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
-  switch (failure.kind) {
-    case "empty-service-batch": {
-      return "No Docker services were selected.";
-    }
-    case "no-services": {
-      return "No services found in the compose file.";
-    }
-    case "invalid-document": {
-      return `The Docker Compose document has an invalid ${failure.field} collection.`;
-    }
-    case "invalid-service-entry": {
-      return `The Docker service entry at position ${failure.index + 1} is invalid.`;
-    }
-    case "service-name-conflict": {
-      return `The Docker service name "${failure.serviceName}" already exists in the ${failure.scope === "existing-document" ? "Compose document" : "requested batch"}.`;
-    }
-    case "service-not-found": {
-      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
-    }
-    case "service-dependency-conflict": {
-      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
-    }
-    default: {
-      const _exhaustive: never = failure;
-      return _exhaustive;
-    }
-  }
 }

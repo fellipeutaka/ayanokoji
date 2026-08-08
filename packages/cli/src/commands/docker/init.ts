@@ -25,36 +25,15 @@ interface InitOptions {
   skipConflicts: boolean;
 }
 
-export const init = new Command()
-  .name("init")
-  .description("Init a Docker Compose")
-  .option(
-    "-c, --cwd <cwd>",
-    "The working directory. Defaults to the current directory.",
-    process.cwd()
-  )
-  .option("--env-path <path>", "Custom path for .env file")
-  .option("--skip-conflicts", "Skip existing env vars without prompting", false)
-  .action(async (options: InitOptions) => {
-    const optionsResult = await parseOptions(options);
+async function parseOptions(options: InitOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
 
-    if (optionsResult.isErr()) {
-      handleError(optionsResult.error);
-    }
-
-    const { initDocker } = await import("./helpers/init-docker");
-    const initResult = await initDocker(optionsResult.value);
-
-    if (initResult.isErr()) {
-      handleError(initResult.error);
-    }
-
-    const { imageConfigs, connectionConfigs } = initResult.value;
-
-    logConnectionStrings(connectionConfigs);
-    await syncEnvironment(optionsResult.value.cwd, options, connectionConfigs);
-    logImageLinks(imageConfigs);
+  return new Ok({
+    cwd: options.cwd,
   });
+}
 
 function logConnectionStrings(connectionConfigs: ConnectionConfig[]): void {
   logger.break();
@@ -73,35 +52,18 @@ function logConnectionStrings(connectionConfigs: ConnectionConfig[]): void {
   logger.break();
 }
 
-async function syncEnvironment(
-  cwd: string,
-  options: InitOptions,
-  connectionConfigs: ConnectionConfig[]
-): Promise<void> {
-  const writeToEnv = await enhancedConfirm({
-    initialValue: true,
-    message: "Write connection strings to .env file?",
-  });
-  if (!writeToEnv) {
-    return;
+function logImageLinks(imageConfigs: DatabaseImageConfig[]): void {
+  logger.break();
+  logger.info(
+    "Check out the Docker Image documentation to learn more about how to use it."
+  );
+
+  for (const { repository, namespace } of imageConfigs) {
+    const repositoryLink = getRepositoryLink(repository, namespace);
+    logger.info(`- ${repository}: ${repositoryLink}`);
   }
 
-  const envPath = options.envPath ?? `${cwd}/.env`;
-  const newVars = getAllEnvVars(connectionConfigs);
-  const existingVarsResult = await readEnvFile(envPath);
-  if (existingVarsResult.isErr()) {
-    handleError(formatEnvironmentSyncFailure(existingVarsResult.error));
-  }
-
-  const existingVars = existingVarsResult.value;
-  await (existingVars === null
-    ? createEnvFile(envPath, newVars)
-    : updateEnvFile(envPath, newVars, existingVars, options.skipConflicts));
-
-  const gitignoreResult = await addToGitignore(cwd, ".env");
-  if (gitignoreResult.isErr()) {
-    handleError(formatEnvironmentSyncFailure(gitignoreResult.error));
-  }
+  logger.break();
 }
 
 async function createEnvFile(
@@ -176,26 +138,64 @@ async function updateEnvFile(
   }
 }
 
-function logImageLinks(imageConfigs: DatabaseImageConfig[]): void {
-  logger.break();
-  logger.info(
-    "Check out the Docker Image documentation to learn more about how to use it."
-  );
-
-  for (const { repository, namespace } of imageConfigs) {
-    const repositoryLink = getRepositoryLink(repository, namespace);
-    logger.info(`- ${repository}: ${repositoryLink}`);
-  }
-
-  logger.break();
-}
-
-async function parseOptions(options: InitOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  return new Ok({
-    cwd: options.cwd,
+async function syncEnvironment(
+  cwd: string,
+  options: InitOptions,
+  connectionConfigs: ConnectionConfig[]
+): Promise<void> {
+  const writeToEnv = await enhancedConfirm({
+    initialValue: true,
+    message: "Write connection strings to .env file?",
   });
+  if (!writeToEnv) {
+    return;
+  }
+
+  const envPath = options.envPath ?? `${cwd}/.env`;
+  const newVars = getAllEnvVars(connectionConfigs);
+  const existingVarsResult = await readEnvFile(envPath);
+  if (existingVarsResult.isErr()) {
+    handleError(formatEnvironmentSyncFailure(existingVarsResult.error));
+  }
+
+  const existingVars = existingVarsResult.value;
+  await (existingVars === null
+    ? createEnvFile(envPath, newVars)
+    : updateEnvFile(envPath, newVars, existingVars, options.skipConflicts));
+
+  const gitignoreResult = await addToGitignore(cwd, ".env");
+  if (gitignoreResult.isErr()) {
+    handleError(formatEnvironmentSyncFailure(gitignoreResult.error));
+  }
 }
+
+export const init = new Command()
+  .name("init")
+  .description("Init a Docker Compose")
+  .option(
+    "-c, --cwd <cwd>",
+    "The working directory. Defaults to the current directory.",
+    process.cwd()
+  )
+  .option("--env-path <path>", "Custom path for .env file")
+  .option("--skip-conflicts", "Skip existing env vars without prompting", false)
+  .action(async (options: InitOptions) => {
+    const optionsResult = await parseOptions(options);
+
+    if (optionsResult.isErr()) {
+      handleError(optionsResult.error);
+    }
+
+    const { initDocker } = await import("./helpers/init-docker");
+    const initResult = await initDocker(optionsResult.value);
+
+    if (initResult.isErr()) {
+      handleError(initResult.error);
+    }
+
+    const { imageConfigs, connectionConfigs } = initResult.value;
+
+    logConnectionStrings(connectionConfigs);
+    await syncEnvironment(optionsResult.value.cwd, options, connectionConfigs);
+    logImageLinks(imageConfigs);
+  });

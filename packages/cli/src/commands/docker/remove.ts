@@ -34,6 +34,45 @@ interface RemoveOptions {
   envPath?: string;
 }
 
+async function parseOptions(options: RemoveOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+  });
+}
+
+function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
+  switch (failure.kind) {
+    case "empty-service-batch": {
+      return "No Docker services were selected.";
+    }
+    case "no-services": {
+      return "No services found in the compose file.";
+    }
+    case "invalid-document": {
+      return `The Docker Compose document has an invalid ${failure.field} collection.`;
+    }
+    case "invalid-service-entry": {
+      return `The Docker service selection at position ${failure.index + 1} is invalid.`;
+    }
+    case "service-name-conflict": {
+      return `The Docker service name "${failure.serviceName}" appears more than once in the requested batch.`;
+    }
+    case "service-not-found": {
+      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
+    }
+    case "service-dependency-conflict": {
+      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
+    }
+    default: {
+      return "The Docker service selection could not be applied.";
+    }
+  }
+}
+
 export const remove = new Command()
   .name("remove")
   .description("Remove services from Docker Compose")
@@ -188,42 +227,3 @@ export const remove = new Command()
 
     logger.break();
   });
-
-async function parseOptions(options: RemoveOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  return new Ok({
-    cwd: options.cwd,
-  });
-}
-
-function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
-  switch (failure.kind) {
-    case "empty-service-batch": {
-      return "No Docker services were selected.";
-    }
-    case "no-services": {
-      return "No services found in the compose file.";
-    }
-    case "invalid-document": {
-      return `The Docker Compose document has an invalid ${failure.field} collection.`;
-    }
-    case "invalid-service-entry": {
-      return `The Docker service selection at position ${failure.index + 1} is invalid.`;
-    }
-    case "service-name-conflict": {
-      return `The Docker service name "${failure.serviceName}" appears more than once in the requested batch.`;
-    }
-    case "service-not-found": {
-      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
-    }
-    case "service-dependency-conflict": {
-      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
-    }
-    default: {
-      return "The Docker service selection could not be applied.";
-    }
-  }
-}

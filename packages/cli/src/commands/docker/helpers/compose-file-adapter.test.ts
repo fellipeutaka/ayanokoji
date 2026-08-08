@@ -28,6 +28,53 @@ import type {
   ComposeFileSystem,
 } from "./compose-file-adapter";
 
+async function createTempDirectory(): Promise<string> {
+  return await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-adapter-"));
+}
+
+async function removeTempDirectory(cwd: string): Promise<void> {
+  await rm(cwd, { force: true, recursive: true });
+}
+
+function createFileSystem(
+  overrides: Partial<ComposeFileSystem> = {}
+): ComposeFileSystem {
+  return {
+    chmod,
+    link,
+    readFile: async (filePath) => await readFile(filePath, "utf-8"),
+    rename,
+    stat: lstat,
+    unlink,
+    writeFile: async (filePath, data, options) => {
+      await writeFile(filePath, data, options);
+    },
+    ...overrides,
+  };
+}
+
+async function readComposeFailure(source: string): Promise<{
+  contents: string;
+  error: ComposeFileFailure | undefined;
+}> {
+  const cwd = await createTempDirectory();
+  const composePath = path.join(cwd, "compose.yaml");
+
+  try {
+    await writeFile(composePath, source);
+
+    const result = await readComposeDocument(cwd, "compose.yaml");
+    const error = result.isErr() ? result.error : undefined;
+
+    return {
+      contents: await readFile(composePath, "utf-8"),
+      error,
+    };
+  } finally {
+    await removeTempDirectory(cwd);
+  }
+}
+
 test("discovers every supported Compose candidate without selecting one", async () => {
   const cwd = await createTempDirectory();
 
@@ -707,50 +754,3 @@ test("reports replacement failures without leaving a temporary file", async () =
     await removeTempDirectory(cwd);
   }
 });
-
-async function readComposeFailure(source: string): Promise<{
-  contents: string;
-  error: ComposeFileFailure | undefined;
-}> {
-  const cwd = await createTempDirectory();
-  const composePath = path.join(cwd, "compose.yaml");
-
-  try {
-    await writeFile(composePath, source);
-
-    const result = await readComposeDocument(cwd, "compose.yaml");
-    const error = result.isErr() ? result.error : undefined;
-
-    return {
-      contents: await readFile(composePath, "utf-8"),
-      error,
-    };
-  } finally {
-    await removeTempDirectory(cwd);
-  }
-}
-
-async function createTempDirectory(): Promise<string> {
-  return await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-adapter-"));
-}
-
-function createFileSystem(
-  overrides: Partial<ComposeFileSystem> = {}
-): ComposeFileSystem {
-  return {
-    chmod,
-    link,
-    readFile: async (filePath) => await readFile(filePath, "utf-8"),
-    rename,
-    stat: lstat,
-    unlink,
-    writeFile: async (filePath, data, options) => {
-      await writeFile(filePath, data, options);
-    },
-    ...overrides,
-  };
-}
-
-async function removeTempDirectory(cwd: string): Promise<void> {
-  await rm(cwd, { force: true, recursive: true });
-}
