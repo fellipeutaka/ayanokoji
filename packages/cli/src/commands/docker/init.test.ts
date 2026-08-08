@@ -5,17 +5,17 @@ import path from "node:path";
 import { expect, test, vi } from "vitest";
 
 const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
-  const confirmResults = [true, true];
+  const mockConfirmResults = [true, true];
   // Keep the synchronous handleError contract so mocked command failures stop
   // execution just like the process-exiting production implementation.
   // oxlint-disable-next-line promise/prefer-await-to-callbacks
-  const handleErrorMock = vi.fn((error: string): never => {
+  const mockHandleError = vi.fn((error: string): never => {
     throw new Error(error);
   });
-  const promptMocks = {
+  const mockPromptMocks = {
     // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
     // oxlint-disable-next-line require-await
-    enhancedConfirm: vi.fn(async () => confirmResults.shift() ?? true),
+    enhancedConfirm: vi.fn(async () => mockConfirmResults.shift() ?? true),
     // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
     // oxlint-disable-next-line require-await
     enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgresql"]),
@@ -32,7 +32,11 @@ const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
     ),
   };
 
-  return { confirmResults, handleErrorMock, promptMocks };
+  return {
+    confirmResults: mockConfirmResults,
+    handleErrorMock: mockHandleError,
+    promptMocks: mockPromptMocks,
+  };
 });
 
 vi.mock(import("~/utils/handle-error"), () => ({

@@ -116,25 +116,25 @@ export type ComposeFileFailure =
     };
 
 const nodeFileSystem: ComposeFileSystem = {
-  chmod: async (path, mode) => {
-    await chmodOnDisk(path, mode);
+  chmod: async (filePath, mode) => {
+    await chmodOnDisk(filePath, mode);
   },
   link: async (existingPath, newPath) => {
     await linkOnDisk(existingPath, newPath);
   },
-  readFile: async (path) => {
-    const contents = await readFileFromDisk(path);
+  readFile: async (filePath) => {
+    const contents = await readFileFromDisk(filePath);
     return contents.toString("utf-8");
   },
   rename: async (oldPath, newPath) => {
     await renameOnDisk(oldPath, newPath);
   },
-  stat: async (path) => await statOnDisk(path),
-  unlink: async (path) => {
-    await unlinkOnDisk(path);
+  stat: async (filePath) => await statOnDisk(filePath),
+  unlink: async (filePath) => {
+    await unlinkOnDisk(filePath);
   },
-  writeFile: async (path, data, options) => {
-    await writeFileToDisk(path, data, options);
+  writeFile: async (filePath, data, options) => {
+    await writeFileToDisk(filePath, data, options);
   },
 };
 
@@ -483,7 +483,7 @@ function createFileRevision(
 }
 
 async function verifyRevision(
-  path: string,
+  filePath: string,
   fileName: ComposeFileName,
   revision: ComposeFileRevision,
   fileSystem: ComposeFileReader,
@@ -493,7 +493,7 @@ async function verifyRevision(
 
   if (!stats) {
     try {
-      stats = await fileSystem.stat(path);
+      stats = await fileSystem.stat(filePath);
     } catch {
       return { fileName, kind: "stale-document" };
     }
@@ -509,7 +509,7 @@ async function verifyRevision(
 
   let source: string;
   try {
-    source = await fileSystem.readFile(path);
+    source = await fileSystem.readFile(filePath);
   } catch {
     return { fileName, kind: "read-failure" };
   }
@@ -543,7 +543,7 @@ function sameRevision(
 }
 
 async function getExistingTargetFailure(
-  path: string,
+  filePath: string,
   fileName: ComposeFileName,
   fileSystem: ComposeFileReader
 ): Promise<
@@ -553,7 +553,7 @@ async function getExistingTargetFailure(
   >
 > {
   try {
-    const stats = await fileSystem.stat(path);
+    const stats = await fileSystem.stat(filePath);
     return isSymbolicLink(stats)
       ? { fileName, kind: "symlinked-document" }
       : { fileName, kind: "creation-conflict" };
@@ -563,11 +563,11 @@ async function getExistingTargetFailure(
 }
 
 async function removeTemporaryFile(
-  path: string,
+  filePath: string,
   fileSystem: ComposeFileSystem
 ): Promise<void> {
   try {
-    await fileSystem.unlink(path);
+    await fileSystem.unlink(filePath);
   } catch {
     // Preserve the original file even when temporary-file cleanup fails.
   }

@@ -740,12 +740,12 @@ function createFileSystem(
   return {
     chmod,
     link,
-    readFile: async (path) => await readFile(path, "utf-8"),
+    readFile: async (filePath) => await readFile(filePath, "utf-8"),
     rename,
     stat: lstat,
     unlink,
-    writeFile: async (path, data, options) => {
-      await writeFile(path, data, options);
+    writeFile: async (filePath, data, options) => {
+      await writeFile(filePath, data, options);
     },
     ...overrides,
   };
