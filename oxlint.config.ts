@@ -59,8 +59,7 @@ export default defineConfig({
     "unicorn/no-array-reduce": "error",
     "unicorn/no-object-as-default-parameter": "error",
     "max-classes-per-file": "error",
-    // Deferred: 2 errors
-    "typescript/parameter-properties": "off",
+    "typescript/parameter-properties": "error",
     // Deferred: 4 errors
     "class-methods-use-this": "off",
   },
