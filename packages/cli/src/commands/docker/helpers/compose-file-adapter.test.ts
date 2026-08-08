@@ -452,7 +452,8 @@ test("preserves an existing Compose file's permission mode bits", async () => {
     );
 
     expect(writeResult.isOk()).toBeTruthy();
-    expect((await lstat(composePath)).mode % 0o1_0000).toBe(0o640);
+    const composeStats = await lstat(composePath);
+    expect(composeStats.mode % 0o1_0000).toBe(0o640);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -465,14 +466,16 @@ test("uses normal filesystem defaults when creating a new Compose file", async (
 
   try {
     await writeFile(expectedPath, "");
-    const expectedMode = (await lstat(expectedPath)).mode % 0o1000;
+    const expectedStats = await lstat(expectedPath);
+    const expectedMode = expectedStats.mode % 0o1000;
 
     const result = await writeComposeDocument(cwd, "compose.yaml", {
       services: {},
     });
 
     expect(result.isOk()).toBeTruthy();
-    expect((await lstat(composePath)).mode % 0o1000).toBe(expectedMode);
+    const composeStats = await lstat(composePath);
+    expect(composeStats.mode % 0o1000).toBe(expectedMode);
   } finally {
     await removeTempDirectory(cwd);
   }
@@ -501,7 +504,8 @@ test("rejects a symlinked Compose path without replacing the link", async () => 
       fileName: "compose.yaml",
       kind: "symlinked-document",
     });
-    expect((await lstat(composePath)).isSymbolicLink()).toBeTruthy();
+    const composeStats = await lstat(composePath);
+    expect(composeStats.isSymbolicLink()).toBeTruthy();
     expect(await readFile(targetPath, "utf-8")).toBe(source);
   } finally {
     await removeTempDirectory(cwd);
@@ -541,8 +545,9 @@ test("rejects a stale revision without overwriting newer Compose content", async
       kind: "stale-document",
     });
     expect(await readFile(composePath, "utf-8")).toBe(newerSource);
+    const directoryEntries = await readdir(cwd);
     expect(
-      (await readdir(cwd)).filter((name) => name.startsWith(".compose.yaml."))
+      directoryEntries.filter((name) => name.startsWith(".compose.yaml."))
     ).toStrictEqual([]);
   } finally {
     await removeTempDirectory(cwd);
@@ -694,8 +699,9 @@ test("reports replacement failures without leaving a temporary file", async () =
 
     expect(writeResult.isErr()).toBeTruthy();
     expect(await readFile(composePath, "utf-8")).toBe(source);
+    const directoryEntries = await readdir(cwd);
     expect(
-      (await readdir(cwd)).filter((name) => name.startsWith(".compose.yaml."))
+      directoryEntries.filter((name) => name.startsWith(".compose.yaml."))
     ).toStrictEqual([]);
   } finally {
     await removeTempDirectory(cwd);
