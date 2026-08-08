@@ -10,15 +10,21 @@ const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
     throw new Error(error);
   });
   const promptMocks = {
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // oxlint-disable-next-line require-await
     enhancedConfirm: vi.fn(async () => confirmResults.shift() ?? true),
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // oxlint-disable-next-line require-await
     enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgresql"]),
-    enhancedSelect: vi
-      .fn()
-      .mockImplementation(
-        async ({ initialValue }: { initialValue?: string }) =>
-          initialValue ?? "latest"
-      ),
+    enhancedSelect: vi.fn().mockImplementation(
+      // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+      // oxlint-disable-next-line require-await
+      async ({ initialValue }: { initialValue?: string }) =>
+        initialValue ?? "latest"
+    ),
     enhancedText: vi.fn(
+      // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+      // oxlint-disable-next-line require-await
       async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
     ),
   };
