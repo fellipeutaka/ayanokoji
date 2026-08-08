@@ -13,7 +13,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import { expect, test } from "vitest";
 
@@ -32,8 +32,8 @@ test("discovers every supported Compose candidate without selecting one", async 
   const cwd = await createTempDirectory();
 
   try {
-    await writeFile(join(cwd, "compose.yaml"), "services: {}\n");
-    await writeFile(join(cwd, "docker-compose.yml"), "services: {}\n");
+    await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
+    await writeFile(path.join(cwd, "docker-compose.yml"), "services: {}\n");
 
     const result = await discoverComposeFiles(cwd);
 
@@ -69,8 +69,8 @@ test("recognizes only the supported Compose filenames", async () => {
   const cwd = await createTempDirectory();
 
   try {
-    await writeFile(join(cwd, "compose.json"), "{}\n");
-    await writeFile(join(cwd, "custom-compose.yaml"), "services: {}\n");
+    await writeFile(path.join(cwd, "compose.json"), "{}\n");
+    await writeFile(path.join(cwd, "custom-compose.yaml"), "services: {}\n");
 
     const result = await discoverComposeFiles(cwd);
 
@@ -95,7 +95,7 @@ test("does not treat a directory with a supported name as a Compose candidate", 
   const cwd = await createTempDirectory();
 
   try {
-    await mkdir(join(cwd, "compose.yaml"));
+    await mkdir(path.join(cwd, "compose.yaml"));
 
     const result = await discoverComposeFiles(cwd);
 
@@ -114,8 +114,11 @@ test("reports a recognized symlink during Compose discovery", async () => {
   const cwd = await createTempDirectory();
 
   try {
-    await writeFile(join(cwd, "user-compose.yaml"), "services: {}\n");
-    await symlink(join(cwd, "user-compose.yaml"), join(cwd, "compose.yaml"));
+    await writeFile(path.join(cwd, "user-compose.yaml"), "services: {}\n");
+    await symlink(
+      path.join(cwd, "user-compose.yaml"),
+      path.join(cwd, "compose.yaml")
+    );
 
     const result = await discoverComposeFiles(cwd);
 
@@ -173,7 +176,7 @@ volumes:
 `;
 
   try {
-    await writeFile(join(cwd, "compose.yaml"), source);
+    await writeFile(path.join(cwd, "compose.yaml"), source);
 
     const result = await readComposeDocument(cwd, "compose.yaml");
 
@@ -207,7 +210,7 @@ test("allows a Compose document to omit services for initialization", async () =
 
   try {
     await writeFile(
-      join(cwd, "compose.yaml"),
+      path.join(cwd, "compose.yaml"),
       "name: example\nnetworks:\n  internal:\n    driver: bridge\n"
     );
 
@@ -361,7 +364,7 @@ test("reports a non-missing read failure as structured data", async () => {
 
 test("replaces an existing Compose document through the write seam", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
 
   try {
     await writeFile(composePath, "services:\n  app:\n    image: old/app\n");
@@ -390,7 +393,7 @@ test("replaces an existing Compose document through the write seam", async () =>
 
 test("preserves an existing Compose file's permission mode bits", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
 
   try {
     await writeFile(composePath, "services:\n  app:\n    image: old/app\n");
@@ -418,8 +421,8 @@ test("preserves an existing Compose file's permission mode bits", async () => {
 
 test("uses normal filesystem defaults when creating a new Compose file", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
-  const expectedPath = join(cwd, "expected-mode.txt");
+  const composePath = path.join(cwd, "compose.yaml");
+  const expectedPath = path.join(cwd, "expected-mode.txt");
 
   try {
     await writeFile(expectedPath, "");
@@ -438,8 +441,8 @@ test("uses normal filesystem defaults when creating a new Compose file", async (
 
 test("rejects a symlinked Compose path without replacing the link", async () => {
   const cwd = await createTempDirectory();
-  const targetPath = join(cwd, "user-compose.yaml");
-  const composePath = join(cwd, "compose.yaml");
+  const targetPath = path.join(cwd, "user-compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
   const source = "services:\n  app:\n    image: user/app\n";
 
   try {
@@ -468,7 +471,7 @@ test("rejects a symlinked Compose path without replacing the link", async () => 
 
 test("rejects a stale revision without overwriting newer Compose content", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
   const newerSource = "services:\n  app:\n    image: newer/app\n";
 
   try {
@@ -509,7 +512,7 @@ test("rejects a stale revision without overwriting newer Compose content", async
 
 test("reports serialization failures without touching an existing file", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
   const source = "services:\n  app:\n    image: old/app\n";
 
   try {
@@ -549,7 +552,7 @@ test("reports serialization failures without touching an existing file", async (
 
 test("reports deterministic write failures without replacing the original", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
   const source = "services:\n  app:\n    image: old/app\n";
 
   try {
@@ -589,7 +592,7 @@ test("reports deterministic write failures without replacing the original", asyn
 
 test("creates a new Compose file exclusively when another process wins the race", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
   const competitorSource = "services:\n  competitor:\n    image: other/app\n";
 
   try {
@@ -625,7 +628,7 @@ test("creates a new Compose file exclusively when another process wins the race"
 
 test("reports replacement failures without leaving a temporary file", async () => {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
   const source = "services:\n  app:\n    image: old/app\n";
 
   try {
@@ -663,7 +666,7 @@ async function readComposeFailure(source: string): Promise<{
   error: ComposeFileFailure | undefined;
 }> {
   const cwd = await createTempDirectory();
-  const composePath = join(cwd, "compose.yaml");
+  const composePath = path.join(cwd, "compose.yaml");
 
   try {
     await writeFile(composePath, source);
@@ -681,7 +684,7 @@ async function readComposeFailure(source: string): Promise<{
 }
 
 async function createTempDirectory(): Promise<string> {
-  return await mkdtemp(join(tmpdir(), "ayanokoji-compose-adapter-"));
+  return await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-adapter-"));
 }
 
 function createFileSystem(

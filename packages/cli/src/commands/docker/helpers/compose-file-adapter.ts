@@ -8,7 +8,7 @@ import {
   unlink as unlinkOnDisk,
   writeFile as writeFileToDisk,
 } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 
 import { parseAllDocuments, stringify } from "yaml";
 
@@ -149,7 +149,7 @@ export async function discoverComposeFiles(
 
   for (const fileName of COMPOSE_FILE_NAMES) {
     try {
-      const stats = await fileSystem.stat(join(cwd, fileName));
+      const stats = await fileSystem.stat(path.join(cwd, fileName));
       if (isSymbolicLink(stats)) {
         return new Err({ fileName, kind: "symlinked-document" });
       }
@@ -177,11 +177,11 @@ export async function readComposeDocument(
   | Ok<ComposeDocumentSnapshot, ComposeFileFailure>
   | Err<ComposeDocumentSnapshot, ComposeFileFailure>
 > {
-  const path = join(cwd, fileName);
+  const documentPath = path.join(cwd, fileName);
   let initialStats: ComposeFileStats;
 
   try {
-    initialStats = await fileSystem.stat(path);
+    initialStats = await fileSystem.stat(documentPath);
   } catch (error) {
     if (isMissingFileError(error)) {
       return new Err({ fileName, kind: "missing-document" });
@@ -201,7 +201,7 @@ export async function readComposeDocument(
   let source: string;
 
   try {
-    source = await fileSystem.readFile(path);
+    source = await fileSystem.readFile(documentPath);
   } catch (error) {
     if (isMissingFileError(error)) {
       return new Err({ fileName, kind: "missing-document" });
@@ -212,7 +212,7 @@ export async function readComposeDocument(
 
   let finalStats: ComposeFileStats;
   try {
-    finalStats = await fileSystem.stat(path);
+    finalStats = await fileSystem.stat(documentPath);
   } catch {
     return new Err({ fileName, kind: "stale-document" });
   }
@@ -306,12 +306,12 @@ export async function writeComposeDocument(
   revision?: ComposeFileRevision,
   fileSystem: ComposeFileSystem = nodeFileSystem
 ): Promise<Ok<null, ComposeFileFailure> | Err<null, ComposeFileFailure>> {
-  const path = join(cwd, fileName);
+  const documentPath = path.join(cwd, fileName);
   const expectedRevision = revision;
   let targetStats: ComposeFileStats | undefined;
 
   try {
-    targetStats = await fileSystem.stat(path);
+    targetStats = await fileSystem.stat(documentPath);
   } catch (error) {
     if (!isMissingFileError(error)) {
       return new Err({ fileName, kind: "write-failure" });
@@ -328,7 +328,7 @@ export async function writeComposeDocument(
     }
 
     const revisionFailure = await verifyRevision(
-      path,
+      documentPath,
       fileName,
       expectedRevision,
       fileSystem,
@@ -348,7 +348,7 @@ export async function writeComposeDocument(
     return new Err({ fileName, kind: "serialization-failure" });
   }
 
-  const temporaryPath = join(cwd, `.${fileName}.${randomUUID()}.tmp`);
+  const temporaryPath = path.join(cwd, `.${fileName}.${randomUUID()}.tmp`);
   let temporaryFileExists = false;
 
   try {
@@ -367,7 +367,7 @@ export async function writeComposeDocument(
       }
 
       const revisionFailure = await verifyRevision(
-        path,
+        documentPath,
         fileName,
         expectedRevision,
         fileSystem
@@ -376,15 +376,15 @@ export async function writeComposeDocument(
         return new Err(revisionFailure);
       }
 
-      await fileSystem.rename(temporaryPath, path);
+      await fileSystem.rename(temporaryPath, documentPath);
       temporaryFileExists = false;
     } else {
       try {
-        await fileSystem.link(temporaryPath, path);
+        await fileSystem.link(temporaryPath, documentPath);
       } catch (error) {
         if (isExistingFileError(error)) {
           const failure = await getExistingTargetFailure(
-            path,
+            documentPath,
             fileName,
             fileSystem
           );

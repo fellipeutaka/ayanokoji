@@ -7,7 +7,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import { expect, test, vi } from "vitest";
 import { parse } from "yaml";
@@ -45,8 +45,8 @@ vi.mock(import("~/utils/handle-error"), () => ({
 vi.mock(import("~/utils/prompts"), () => promptMocks);
 
 test("remove command writes the pure removal result", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
-  const composePath = join(cwd, "compose.yaml");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-remove-"));
+  const composePath = path.join(cwd, "compose.yaml");
 
   await writeFile(
     composePath,
@@ -100,7 +100,7 @@ networks:
 });
 
 test("remove reports a missing Compose document without creating one", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-remove-"));
 
   try {
     const { remove } = await import("./remove");
@@ -115,8 +115,8 @@ test("remove reports a missing Compose document without creating one", async () 
 });
 
 test("remove reports no services without writing a valid document", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
-  const composePath = join(cwd, "compose.yaml");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-remove-"));
+  const composePath = path.join(cwd, "compose.yaml");
   const source = "name: example\nnetworks:\n  internal: {}\n";
   await writeFile(composePath, source);
 
@@ -133,9 +133,9 @@ test("remove reports no services without writing a valid document", async () => 
 });
 
 test("remove prompts for a candidate when multiple Compose files exist", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
-  const firstPath = join(cwd, "compose.yaml");
-  const secondPath = join(cwd, "docker-compose.yml");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-remove-"));
+  const firstPath = path.join(cwd, "compose.yaml");
+  const secondPath = path.join(cwd, "docker-compose.yml");
   const source = `services:
   postgres:
     image: postgres:17
@@ -157,9 +157,9 @@ test("remove prompts for a candidate when multiple Compose files exist", async (
 });
 
 test("remove reports an environment failure after the Compose file is written", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
-  const composePath = join(cwd, "compose.yaml");
-  const envPath = join(cwd, "env-directory");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-remove-"));
+  const composePath = path.join(cwd, "compose.yaml");
+  const envPath = path.join(cwd, "env-directory");
   await writeFile(
     composePath,
     `services:
@@ -194,9 +194,9 @@ test("remove reports an environment failure after the Compose file is written", 
 });
 
 test("remove synchronizes environment cleanup after a successful Compose write", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "ayanokoji-compose-remove-"));
-  const composePath = join(cwd, "compose.yaml");
-  const envPath = join(cwd, ".env");
+  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-compose-remove-"));
+  const composePath = path.join(cwd, "compose.yaml");
+  const envPath = path.join(cwd, ".env");
   await writeFile(
     composePath,
     `services:
