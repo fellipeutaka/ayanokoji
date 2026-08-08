@@ -19,7 +19,7 @@ export function createPrismaSchema(props?: CreatePrismaSchemaProps) {
     previewFeatures = defaultPreviewFeatures,
     output = defaultOutput,
     withModel = false,
-  } = props || {};
+  } = props ?? {};
 
   const aboutAccelerate = `\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n`;
