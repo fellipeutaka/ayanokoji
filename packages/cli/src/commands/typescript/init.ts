@@ -9,6 +9,14 @@ export interface InitOptions {
   cwd: string;
 }
 
+async function parseOptions(options: InitOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  return new Ok(options);
+}
+
 export const init = new Command()
   .name("init")
   .description("Init TypeScript")
@@ -39,11 +47,3 @@ export const init = new Command()
     logger.info("https://www.typescriptlang.org/docs");
     logger.break();
   });
-
-async function parseOptions(options: InitOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  return new Ok(options);
-}
