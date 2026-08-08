@@ -28,7 +28,7 @@ export async function getPackageManager(
     return packageManager ?? "npm";
   }
 
-  const userAgent = process.env.npm_config_user_agent || "";
+  const userAgent = process.env.npm_config_user_agent ?? "";
 
   if (userAgent.startsWith("yarn")) {
     return "yarn";

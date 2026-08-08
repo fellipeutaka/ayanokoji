@@ -13,7 +13,7 @@ function isIconName(icon: string): icon is keyof typeof Icons {
 export const source = loader({
   baseUrl: "/docs",
   icon(icon) {
-    if (!icon) {
+    if (icon === undefined || icon === "") {
       return;
     }
 
