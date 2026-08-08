@@ -6,6 +6,9 @@ import { expect, test, vi } from "vitest";
 
 const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
   const confirmResults = [true, true];
+  // Keep the synchronous handleError contract so mocked command failures stop
+  // execution just like the process-exiting production implementation.
+  // oxlint-disable-next-line promise/prefer-await-to-callbacks
   const handleErrorMock = vi.fn((error: string): never => {
     throw new Error(error);
   });
