@@ -1,7 +1,7 @@
 // Source: https://github.com/motdotla/dotenv/blob/master/lib/main.js
 
 const LINE =
-  /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/gmu;
+  /(?:^|^)\s*(?:export\s+)?(?<key>[\w.-]+)(?:\s*=\s*?|:\s+?)(?<value>\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/gmu;
 
 export function parseEnv(env: string) {
   const obj: Record<string, string> = {};
@@ -11,15 +11,18 @@ export function parseEnv(env: string) {
   let match = LINE.exec(lines);
 
   while (match) {
-    const [, key] = match;
+    const { key, value: matchedValue } = match.groups ?? {};
 
-    let value = match[2] || "";
+    let value = matchedValue || "";
 
     value = value.trim();
 
     const [maybeQuote] = value;
 
-    value = value.replaceAll(/^(['"`])([\s\S]*)\1$/gmu, "$2");
+    value = value.replaceAll(
+      /^(?<quote>['"`])(?<value>[\s\S]*)\k<quote>$/gmu,
+      "$<value>"
+    );
 
     if (maybeQuote === '"') {
       value = value.replaceAll("\\n", "\n");
