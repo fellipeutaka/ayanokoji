@@ -73,7 +73,7 @@ networks:
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    const document = parse((await readFile(composePath, "utf-8")).toString());
+    const document = parse(await readFile(composePath, "utf-8"));
     expect(document).toStrictEqual({
       name: "example",
       networks: {
@@ -126,7 +126,7 @@ test("remove reports no services without writing a valid document", async () => 
     await expect(
       remove.parseAsync(["node", "ayanokoji", "--cwd", cwd])
     ).rejects.toThrow("No services found in the compose file.");
-    expect((await readFile(composePath, "utf-8")).toString()).toBe(source);
+    expect(await readFile(composePath, "utf-8")).toBe(source);
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
@@ -149,8 +149,8 @@ test("remove prompts for a candidate when multiple Compose files exist", async (
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    expect((await readFile(secondPath, "utf-8")).toString()).not.toBe(source);
-    expect((await readFile(firstPath, "utf-8")).toString()).toBe(source);
+    expect(await readFile(secondPath, "utf-8")).not.toBe(source);
+    expect(await readFile(firstPath, "utf-8")).toBe(source);
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
@@ -185,9 +185,7 @@ test("remove reports an environment failure after the Compose file is written", 
       "Docker Compose file was written successfully, but environment synchronization failed"
     );
 
-    expect((await readFile(composePath, "utf-8")).toString()).not.toContain(
-      "postgres:"
-    );
+    expect(await readFile(composePath, "utf-8")).not.toContain("postgres:");
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
@@ -211,10 +209,8 @@ test("remove synchronizes environment cleanup after a successful Compose write",
     const { remove } = await import("./remove");
     await remove.parseAsync(["node", "ayanokoji", "--cwd", cwd]);
 
-    expect((await readFile(composePath, "utf-8")).toString()).not.toContain(
-      "postgres:"
-    );
-    expect((await readFile(envPath, "utf-8")).toString()).toBe("\n");
+    expect(await readFile(composePath, "utf-8")).not.toContain("postgres:");
+    expect(await readFile(envPath, "utf-8")).toBe("\n");
   } finally {
     confirmState.value = false;
     await rm(cwd, { force: true, recursive: true });

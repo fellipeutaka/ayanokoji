@@ -55,9 +55,9 @@ test("init reports an environment failure after the Compose file is written", as
       "Docker Compose file was written successfully, but environment synchronization failed"
     );
 
-    expect(
-      (await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toString()
-    ).toContain("postgres:");
+    expect(await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toContain(
+      "postgres:"
+    );
     expect(handleErrorMock).toHaveBeenCalledOnce();
   } finally {
     await rm(cwd, { force: true, recursive: true });
@@ -80,12 +80,12 @@ test("init synchronizes the environment after a successful Compose write", async
       envPath,
     ]);
 
-    expect((await readFile(envPath, "utf-8")).toString()).toContain(
+    expect(await readFile(envPath, "utf-8")).toContain(
       "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
     );
-    expect(
-      (await readFile(path.join(cwd, ".gitignore"), "utf-8")).toString()
-    ).toBe(".env\n");
+    expect(await readFile(path.join(cwd, ".gitignore"), "utf-8")).toBe(
+      ".env\n"
+    );
   } finally {
     await rm(cwd, { force: true, recursive: true });
   }
