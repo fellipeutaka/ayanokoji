@@ -38,7 +38,7 @@ export async function writeEnv({ envPath, url }: WriteEnvProps) {
     return new Err("Could not read the .env file.");
   }
 
-  // TODO: Replace parseEnv with built-in Node.js function when it's stable
+  // Deferred: Replace with node:util.parseEnv after verifying colon-separated .env syntax compatibility.
   const envKeys = Object.keys(parseEnv(envFileResult.value));
 
   if (envKeys.includes("DATABASE_URL")) {
