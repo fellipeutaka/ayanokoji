@@ -15,6 +15,9 @@ import { parse } from "yaml";
 const { confirmState, enhancedSelectMock, handleErrorMock, promptMocks } =
   vi.hoisted(() => {
     const confirmState = { value: false };
+    // Keep the synchronous handleError contract so mocked command failures stop
+    // execution just like the process-exiting production implementation.
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks
     const handleErrorMock = vi.fn((error: string): never => {
       throw new Error(error);
     });
