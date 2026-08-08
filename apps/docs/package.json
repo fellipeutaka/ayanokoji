@@ -1,11 +1,12 @@
 {
   "name": "docs",
-  "type": "module",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
+    "test": "node --experimental-strip-types --test src/**/*.test.ts",
     "postinstall": "fumadocs-mdx",
     "type-check": "next typegen && fumadocs-mdx && oxlint . --type-aware --type-check",
     "lint": "oxlint .",
@@ -30,7 +31,6 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "postcss": "^8.5.25",
-    "tailwindcss": "^4.3.3",
-    "typescript": "7.0.2"
+    "tailwindcss": "^4.3.3"
   }
 }

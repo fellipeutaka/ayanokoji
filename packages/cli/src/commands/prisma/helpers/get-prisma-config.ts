@@ -1,4 +1,5 @@
 import { enhancedConfirm, enhancedSelect } from "~/utils/prompts";
+
 import { PRISMA_DATABASES } from "../databases";
 import type { ParsedInitOptions } from "../init";
 
@@ -13,21 +14,21 @@ export async function getPrismaConfig(options: ParsedInitOptions) {
   const withModel =
     options.withModel ??
     (await enhancedConfirm({
-      message: "Would you like to create a schema example?",
       initialValue: true,
+      message: "Would you like to create a schema example?",
     }));
 
   const addScripts =
     options.withScripts ??
     (await enhancedConfirm({
-      message: "Would you like to add some useful scripts to package.json?",
       initialValue: true,
+      message: "Would you like to add some useful scripts to package.json?",
     }));
 
   return {
+    addScripts,
     database,
     withModel,
-    addScripts,
   };
 }
 

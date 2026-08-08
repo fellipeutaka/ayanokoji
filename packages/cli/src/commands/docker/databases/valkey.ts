@@ -1,55 +1,50 @@
-import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
-import { getPortSchema } from "../schemas/port";
+
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
+import { validatePort } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
+  defaultPort: 6379,
   namespace: "valkey",
   repository: "valkey",
-  defaultPort: 6379,
 };
 
 const fallbackVersions = new Set(["latest", "8.0", "7.2"] as const);
 
 async function createComposeService(): Promise<CreateComposeServiceResult> {
   const serviceName = await enhancedText({
-    message: "What is the service name?",
     defaultValue: "valkey",
+    message: "What is the service name?",
   });
 
   const version = await enhancedSelect({
-    message: "What Valkey version would you like to use?",
-    options: Array.from(fallbackVersions).map((value) => ({
-      value,
-      label: value,
-    })),
     initialValue: "latest",
+    message: "What Valkey version would you like to use?",
+    options: [...fallbackVersions].map((value) => ({
+      label: value,
+      value,
+    })),
   });
 
   const password = await enhancedText({
-    message: "What is the Valkey password?",
     defaultValue: "docker",
+    message: "What is the Valkey password?",
   });
 
   const port = await enhancedText({
-    message: "What is the Valkey port?",
     defaultValue: String(imageConfig.defaultPort),
+    message: "What is the Valkey port?",
     validate(value) {
-      const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, imageConfig.defaultPort);
     },
   });
 
   const useVolume = await enhancedConfirm({
-    message: "Do you want to persist data with a volume?",
     initialValue: true,
+    message: "Do you want to persist data with a volume?",
   });
 
   return {
-    name: serviceName,
     config: {
       image: `${imageConfig.namespace}/${imageConfig.repository}:${version}`,
       command: ["valkey-server", "--requirepass", password],
@@ -58,18 +53,19 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
         volumes: [`${serviceName}_data:/data`],
       }),
       healthcheck: {
-        test: ["CMD-SHELL", `valkey-cli -a ${password} ping | grep PONG`],
         interval: "10s",
-        timeout: "5s",
         retries: 5,
+        test: ["CMD-SHELL", `valkey-cli -a ${password} ping | grep PONG`],
+        timeout: "5s",
       },
     },
     connectionConfig: {
-      type: "valkey" as const,
-      password,
       host: "localhost",
+      password,
       port,
+      type: "valkey" as const,
     },
+    name: serviceName,
   };
 }
 

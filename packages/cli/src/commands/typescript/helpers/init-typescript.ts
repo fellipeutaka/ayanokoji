@@ -3,6 +3,7 @@ import { getPackageJson } from "~/utils/get-package-json";
 import { getPackageManager } from "~/utils/get-package-manager";
 import { installDeps } from "~/utils/install-deps";
 import { Err, Ok } from "~/utils/result";
+
 import type { InitOptions } from "../init";
 import { createTypecheckScript } from "./create-typecheck-script";
 import { getTsconfigFile } from "./get-tsconfig-file";
@@ -32,8 +33,8 @@ export async function initTypeScript(options: InitOptions) {
     const packageManager = await getPackageManager(options.cwd);
     await installDeps({
       cwd: options.cwd,
-      packageManager,
       devDependencies: config.depsToInstall,
+      packageManager,
     });
 
     s.stop("Dependencies installed");
@@ -53,9 +54,9 @@ export async function initTypeScript(options: InitOptions) {
   const { enhancedConfirm } = await import("~/utils/prompts");
 
   const addScripts = await enhancedConfirm({
+    initialValue: true,
     message:
       "Would you like to add a useful script to type-check your codebase in your package.json?",
-    initialValue: true,
   });
 
   if (addScripts) {

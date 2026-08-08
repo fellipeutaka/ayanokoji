@@ -1,5 +1,6 @@
 import { access, writeFile } from "~/utils/fs";
 import { Err, Ok } from "~/utils/result";
+
 import type { InitOptions } from "../init";
 import { gitIgnoreFile } from "./git-ignore-file";
 

@@ -1,9 +1,11 @@
 import { Command } from "commander";
+
 import { formatZodErrors } from "~/utils/format-zod-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+
 import type { PrismaDatabase } from "./databases";
 import { prismaDatabaseSchema } from "./schemas/database";
 
@@ -17,6 +19,25 @@ interface InitOptions {
 export type ParsedInitOptions = Omit<InitOptions, "database"> & {
   database?: PrismaDatabase;
 };
+
+async function parseOptions(options: InitOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  const result = prismaDatabaseSchema.safeParse(options.database);
+
+  if (!result.success) {
+    return new Err(formatZodErrors(result.error));
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+    database: result.data,
+    withModel: options.withModel,
+    withScripts: options.withScripts,
+  });
+}
 
 export const init = new Command()
   .name("init")
@@ -51,22 +72,3 @@ export const init = new Command()
     logger.info("https://www.prisma.io/docs");
     logger.break();
   });
-
-async function parseOptions(options: InitOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  const result = prismaDatabaseSchema.safeParse(options.database);
-
-  if (!result.success) {
-    return new Err(formatZodErrors(result.error));
-  }
-
-  return new Ok({
-    cwd: options.cwd,
-    database: result.data as PrismaDatabase | undefined,
-    withModel: options.withModel,
-    withScripts: options.withScripts,
-  });
-}

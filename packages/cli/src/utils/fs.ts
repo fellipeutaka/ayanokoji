@@ -1,5 +1,12 @@
 import fs from "node:fs/promises";
+
 import { Err, Ok } from "./result";
+
+type ReadFilePath = Parameters<typeof fs.readFile>[0];
+type ReadFileOptions = Parameters<typeof fs.readFile>[1];
+type ReadFileEncoding = Extract<NonNullable<ReadFileOptions>, string>;
+type ReadFileData = Awaited<ReturnType<typeof fs.readFile>>;
+type ReadFileResult<Content> = Ok<Content, string> | Err<Content, string>;
 
 export async function writeFile(
   file: Parameters<typeof fs.writeFile>[0],
@@ -15,16 +22,24 @@ export async function writeFile(
   }
 }
 
-export async function readFile<File extends string | Buffer>(
-  path: Parameters<typeof fs.readFile>[0],
-  options?: Parameters<typeof fs.readFile>[1]
-) {
+export function readFile(
+  path: ReadFilePath,
+  options: ReadFileEncoding
+): Promise<ReadFileResult<string>>;
+export function readFile(
+  path: ReadFilePath,
+  options?: ReadFileOptions
+): Promise<ReadFileResult<ReadFileData>>;
+export async function readFile(
+  path: ReadFilePath,
+  options?: ReadFileOptions
+): Promise<ReadFileResult<ReadFileData>> {
   try {
     const file = await fs.readFile(path, options);
 
-    return new Ok(file as File);
+    return new Ok<ReadFileData, string>(file);
   } catch {
-    return new Err("Failed to read file.");
+    return new Err<ReadFileData, string>("Failed to read file.");
   }
 }
 

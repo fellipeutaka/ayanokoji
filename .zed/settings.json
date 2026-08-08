@@ -1,14 +1,21 @@
 {
   "formatter": "language_server",
   "format_on_save": "on",
-  "language_servers": ["...", "!eslint"],
+  "language_servers": ["...", "!eslint", "!biome"],
   "lsp": {
     "oxlint": {
       "initialization_options": {
         "fixKind": "safe_fix",
         "run": "onType",
         "typeAware": true,
-        "unusedDisableDirectives": "deny"
+        "unusedDisableDirectives": "deny",
+        "settings": {
+          "disableNestedConfig": false,
+          "fixKind": "safe_fix",
+          "run": "onType",
+          "typeAware": true,
+          "unusedDisableDirectives": "deny"
+        }
       }
     },
     "oxfmt": {
@@ -47,6 +54,12 @@
       }
     },
     "TypeScript": {
+      "language_servers": [
+        "tsgo",
+        "!vtsls",
+        "!typescript-language-server",
+        "..."
+      ],
       "formatter": {
         "language_server": {
           "name": "oxfmt"
@@ -58,6 +71,12 @@
       }
     },
     "TSX": {
+      "language_servers": [
+        "tsgo",
+        "!vtsls",
+        "!typescript-language-server",
+        "..."
+      ],
       "formatter": {
         "language_server": {
           "name": "oxfmt"

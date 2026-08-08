@@ -1,32 +1,35 @@
 // Source: https://github.com/motdotla/dotenv/blob/master/lib/main.js
 
 const LINE =
-  /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/gm;
+  /(?:^|^)\s*(?:export\s+)?(?<key>[\w.-]+)(?:\s*=\s*?|:\s+?)(?<value>\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/gmu;
 
 export function parseEnv(env: string) {
   const obj: Record<string, string> = {};
 
-  const lines = env.replace(/\r\n?/gm, "\n");
+  const lines = env.replaceAll(/\r\n?/gmu, "\n");
 
   let match = LINE.exec(lines);
 
   while (match) {
-    const key = match[1];
+    const { key, value: matchedValue } = match.groups ?? {};
 
-    let value = match[2] || "";
+    let value = matchedValue ?? "";
 
     value = value.trim();
 
-    const maybeQuote = value[0];
+    const [maybeQuote] = value;
 
-    value = value.replace(/^(['"`])([\s\S]*)\1$/gm, "$2");
+    value = value.replaceAll(
+      /^(?<quote>['"`])(?<value>[\s\S]*)\k<quote>$/gmu,
+      "$<value>"
+    );
 
     if (maybeQuote === '"') {
-      value = value.replace(/\\n/g, "\n");
-      value = value.replace(/\\r/g, "\r");
+      value = value.replaceAll("\\n", "\n");
+      value = value.replaceAll("\\r", "\r");
     }
 
-    if (key) {
+    if (key !== undefined && key !== "") {
       obj[key] = value;
     }
 

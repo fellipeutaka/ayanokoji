@@ -1,9 +1,11 @@
 import { spinner } from "@clack/prompts";
+
 import { access, rm } from "~/utils/fs";
 import { getPackageJson } from "~/utils/get-package-json";
 import { getPackageManager } from "~/utils/get-package-manager";
 import { removeDeps } from "~/utils/remove-deps";
 import { Err, Ok } from "~/utils/result";
+
 import type { RemoveOptions } from "../remove";
 
 export async function removeBiome(options: RemoveOptions) {
@@ -33,8 +35,8 @@ export async function removeBiome(options: RemoveOptions) {
 
     await removeDeps({
       cwd: options.cwd,
-      packageManager,
       dependencies: ["@biomejs/biome"],
+      packageManager,
     });
 
     depsSpinner.stop("Dependencies removed");

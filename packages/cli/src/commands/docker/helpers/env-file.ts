@@ -54,7 +54,7 @@ export async function readEnvFile(
     return new Ok(null);
   }
 
-  const result = await readFile<string>(path, "utf-8");
+  const result = await readFile(path, "utf-8");
   if (result.isErr()) {
     return new Err({ kind: "read-failure", path });
   }
@@ -98,7 +98,7 @@ export async function addToGitignore(
       : new Ok(null);
   }
 
-  const result = await readFile<string>(gitignorePath, "utf-8");
+  const result = await readFile(gitignorePath, "utf-8");
   if (result.isErr()) {
     return new Err({ kind: "read-failure", path: gitignorePath });
   }

@@ -1,4 +1,5 @@
 import { Command } from "commander";
+
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
@@ -6,6 +7,14 @@ import { Err, Ok } from "~/utils/result";
 
 export interface InitOptions {
   cwd: string;
+}
+
+async function parseOptions(options: InitOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  return new Ok(options);
 }
 
 export const init = new Command()
@@ -38,11 +47,3 @@ export const init = new Command()
     logger.info("https://git-scm.com/docs/gitignore");
     logger.break();
   });
-
-async function parseOptions(options: InitOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  return new Ok(options);
-}

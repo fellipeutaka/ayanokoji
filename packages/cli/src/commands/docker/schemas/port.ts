@@ -1,5 +1,7 @@
 import * as z from "zod/mini";
 
+import { formatZodErrors } from "~/utils/format-zod-errors";
+
 const stringToNumber = z.pipe(z.string(), z.transform(Number));
 
 export const getPortSchema = (defaultPort: number) =>
@@ -17,3 +19,12 @@ export const getPortSchema = (defaultPort: number) =>
     ),
     defaultPort
   );
+
+export function validatePort(
+  value: string | undefined,
+  defaultPort: number
+): string | undefined {
+  const result = getPortSchema(defaultPort).safeParse(value);
+
+  return result.success ? undefined : formatZodErrors(result.error);
+}

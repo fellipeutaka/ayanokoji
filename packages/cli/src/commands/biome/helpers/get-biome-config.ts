@@ -1,30 +1,31 @@
 import { enhancedConfirm } from "~/utils/prompts";
+
 import { getFormatterConfig } from "./get-formatter-config";
 
 export async function getBiomeConfig() {
   const organizeImports = await enhancedConfirm({
-    message: "Would you like to organize imports?",
     initialValue: true,
+    message: "Would you like to organize imports?",
   });
 
   const { formatter, indentStyle } = await getFormatterConfig();
 
   const linter = await enhancedConfirm({
-    message: "Would you like to lint the code?",
     initialValue: true,
+    message: "Would you like to lint the code?",
   });
 
   const installDeps = await enhancedConfirm({
-    message: "Would you like to install dependencies?",
     initialValue: true,
+    message: "Would you like to install dependencies?",
   });
 
   return {
-    organizeImports,
     formatter,
     indentStyle,
-    linter,
     installDeps,
+    linter,
+    organizeImports,
   };
 }
 

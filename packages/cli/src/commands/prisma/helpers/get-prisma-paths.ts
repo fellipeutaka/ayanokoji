@@ -6,8 +6,8 @@ export function getPrismaPaths(cwd: string) {
   const env = path.join(cwd, ".env");
 
   return {
+    env,
     folder,
     schema,
-    env,
   };
 }

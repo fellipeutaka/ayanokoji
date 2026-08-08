@@ -1,4 +1,5 @@
 import type { PackageJson } from "type-fest";
+
 import { writeFile } from "~/utils/fs";
 
 const script = {
@@ -15,23 +16,20 @@ export async function createTypecheckScript({
   packageJson,
 }: CreateDrizzleScriptsProps) {
   const scriptsToAdd = Object.entries(script)
-    .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
+    .filter(([scriptName]) => (packageJson.scripts?.[scriptName] ?? "") === "")
     .map(([scriptName, scriptCommand]) => ({
-      scriptName,
       scriptCommand,
+      scriptName,
     }));
 
   if (scriptsToAdd.length === 0) {
     return;
   }
 
-  const newScripts = scriptsToAdd.reduce(
-    (acc, { scriptName, scriptCommand }) => {
-      acc[scriptName] = scriptCommand;
-      return acc;
-    },
-    packageJson.scripts ?? {}
-  );
+  const newScripts = packageJson.scripts ?? {};
+  for (const { scriptName, scriptCommand } of scriptsToAdd) {
+    newScripts[scriptName] = scriptCommand;
+  }
 
   packageJson.scripts = newScripts;
 

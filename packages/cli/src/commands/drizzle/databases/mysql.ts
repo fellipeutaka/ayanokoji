@@ -14,10 +14,6 @@ export const user = mysqlTable("users", {
 
 const DRIZZLE_MYSQL_ADAPTERS = [
   {
-    label: "PlanetScale",
-    value: "planetscale",
-    dependencies: ["@planetscale/database"],
-    devDependencies: null,
     client: `import { Client } from "@planetscale/database";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
@@ -27,6 +23,9 @@ const client = new Client({
 
 export const db = drizzle(client);
 `,
+    dependencies: ["@planetscale/database"],
+    devDependencies: null,
+    label: "PlanetScale",
     migrate: `import { Client } from "@planetscale/database";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { migrate } from "drizzle-orm/planetscale-serverless/migrator";
@@ -57,12 +56,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "planetscale",
   },
   {
-    label: "mysql2",
-    value: "mysql2",
-    dependencies: ["mysql2"],
-    devDependencies: null,
     client: `import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 
@@ -72,6 +68,9 @@ const pool = mysql.createPool({
 
 export const db = drizzle(pool);
 `,
+    dependencies: ["mysql2"],
+    devDependencies: null,
+    label: "mysql2",
     migrate: `import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import mysql from "mysql2/promise";
@@ -103,12 +102,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "mysql2",
   },
   {
-    label: "TiDB Serverless",
-    value: "tidb-serverless",
-    dependencies: ["@tidbcloud/serverless"],
-    devDependencies: null,
     client: `import { connect } from "@tidbcloud/serverless";
 import { drizzle } from "drizzle-orm/tidb-serverless";
 
@@ -116,6 +112,9 @@ const client = connect({ url: process.env.DATABASE_URL! });
 
 export const db = drizzle(client);
 `,
+    dependencies: ["@tidbcloud/serverless"],
+    devDependencies: null,
+    label: "TiDB Serverless",
     migrate: `import { connect } from "@tidbcloud/serverless";
 import { drizzle } from "drizzle-orm/tidb-serverless";
 import { migrate } from "drizzle-orm/tidb-serverless/migrator";
@@ -143,11 +142,12 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "tidb-serverless",
   },
 ] as const satisfies DrizzleAdapter[];
 
 export const data = {
   adapters: DRIZZLE_MYSQL_ADAPTERS,
-  schema: DRIZZLE_MYSQL_SCHEMA,
   defaultUrl: DRIZZLE_MYSQL_DEFAULT_URL,
+  schema: DRIZZLE_MYSQL_SCHEMA,
 };

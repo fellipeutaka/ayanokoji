@@ -1,13 +1,12 @@
 import {
-  type ConfirmOptions,
   cancel,
   confirm,
   isCancel,
   multiselect,
   select,
-  type TextOptions,
   text,
 } from "@clack/prompts";
+import type { ConfirmOptions, TextOptions } from "@clack/prompts";
 
 export async function enhancedConfirm(
   opts: ConfirmOptions,

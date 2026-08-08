@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+
 import { description, name, version } from "../package.json";
 import { biome } from "./commands/biome";
 import { docker } from "./commands/docker";

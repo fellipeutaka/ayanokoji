@@ -19,7 +19,7 @@ export function createPrismaSchema(props?: CreatePrismaSchemaProps) {
     previewFeatures = defaultPreviewFeatures,
     output = defaultOutput,
     withModel = false,
-  } = props || {};
+  } = props ?? {};
 
   const aboutAccelerate = `\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n`;
@@ -35,7 +35,7 @@ ${
   previewFeatures.length > 0
     ? `  previewFeatures = [${previewFeatures.map((feature) => `"${feature}"`).join(", ")}]\n`
     : ""
-}${output !== defaultOutput ? `  output = "${output}"\n` : ""}}
+}${output === defaultOutput ? "" : `  output = "${output}"\n`}}
 
 datasource db {
   provider = "${database}"
@@ -49,7 +49,7 @@ datasource db {
   name  String?`;
 
     switch (database) {
-      case "mongodb":
+      case "mongodb": {
         schema += `
 model User {
   id    String  @id @default(auto()) @map("_id") @db.ObjectId
@@ -57,7 +57,8 @@ model User {
 }
 `;
         break;
-      case "cockroachdb":
+      }
+      case "cockroachdb": {
         schema += `
 model User {
   id    BigInt  @id @default(sequence())
@@ -65,13 +66,23 @@ model User {
 }
 `;
         break;
-      default:
+      }
+      case "postgresql":
+      case "mysql":
+      case "sqlite":
+      case "sqlserver": {
         schema += `
 model User {
   id    Int     @id @default(autoincrement())
   ${defaultAttributes}
 }
 `;
+        break;
+      }
+      default: {
+        const _exhaustive: never = database;
+        return _exhaustive;
+      }
     }
   }
 

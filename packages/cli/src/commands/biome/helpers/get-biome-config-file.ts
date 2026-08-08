@@ -9,18 +9,18 @@ export function getBiomeConfigFile(config: BiomeConfig) {
       },
     }),
     vcs: {
-      enabled: true,
       clientKind: "git",
+      enabled: true,
     },
     ...(config.formatter && {
+      formatter: {
+        enabled: true,
+        indentStyle: config.indentStyle,
+      },
       javascript: {
         formatter: {
           trailingCommas: "es5",
         },
-      },
-      formatter: {
-        enabled: true,
-        indentStyle: config.indentStyle,
       },
     }),
     ...(config.linter && {

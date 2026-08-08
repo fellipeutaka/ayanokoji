@@ -3,6 +3,7 @@ import { getPackageJson } from "~/utils/get-package-json";
 import { getPackageManager } from "~/utils/get-package-manager";
 import { installDeps } from "~/utils/install-deps";
 import { Err, Ok } from "~/utils/result";
+
 import type { InitOptions } from "../init";
 import { getBiomeConfig } from "./get-biome-config";
 import { getBiomeConfigFile } from "./get-biome-config-file";
@@ -27,8 +28,8 @@ export async function initBiome(options: InitOptions) {
     const packageManager = await getPackageManager(options.cwd);
     await installDeps({
       cwd: options.cwd,
-      packageManager,
       devDependencies: ["@biomejs/biome"],
+      packageManager,
     });
 
     s.stop("Dependencies installed");

@@ -1,19 +1,20 @@
 import spawn from "nano-spawn";
+
 import type { PackageManager } from "./get-package-manager";
 import { isDefined } from "./is-defined";
 
 interface RemoveDepsProps {
   packageManager: PackageManager;
   cwd: string;
-  dependencies: Array<string | null>;
+  dependencies: (string | null)[];
 }
 
 const removeCommand = {
-  npm: "uninstall",
-  yarn: "remove",
-  pnpm: "remove",
   bun: "remove",
   deno: "uninstall",
+  npm: "uninstall",
+  pnpm: "remove",
+  yarn: "remove",
 } as const satisfies Record<PackageManager, string>;
 
 export async function removeDeps({

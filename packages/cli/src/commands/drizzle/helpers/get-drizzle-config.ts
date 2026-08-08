@@ -1,4 +1,5 @@
 import { enhancedConfirm, enhancedSelect } from "~/utils/prompts";
+
 import { DRIZZLE_DATABASES } from "../databases";
 import type { ParsedInitOptions } from "../init";
 
@@ -17,32 +18,32 @@ export async function getDrizzleConfig(options: ParsedInitOptions) {
 
   const adapter = await enhancedSelect({
     message: "What adapter would you like to use?",
-    options: data.adapters.map((adapter) => ({
-      label: adapter.label,
-      value: adapter,
+    options: data.adapters.map((adapterOption) => ({
+      label: adapterOption.label,
+      value: adapterOption,
     })),
   });
 
   const withModel =
     options.withModel ??
     (await enhancedConfirm({
-      message: "Would you like to create a schema example?",
       initialValue: true,
+      message: "Would you like to create a schema example?",
     }));
 
   const addScripts =
     options.withScripts ??
     (await enhancedConfirm({
-      message: "Would you like to add some useful scripts to package.json?",
       initialValue: true,
+      message: "Would you like to add some useful scripts to package.json?",
     }));
 
   return {
-    database,
-    data,
     adapter,
-    withModel,
     addScripts,
+    data,
+    database,
+    withModel,
   };
 }
 

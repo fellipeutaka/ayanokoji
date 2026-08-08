@@ -45,9 +45,7 @@ The generated `tsconfig.json` includes carefully selected options:
 - [`resolveJsonModule: true`](https://www.typescriptlang.org/tsconfig/#resolveJsonModule) - Enables importing JSON files
 - [`moduleDetection: "force"`](https://www.typescriptlang.org/tsconfig/#moduleDetection) - Treats each file as a module
 - [`verbatimModuleSyntax: true`](https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax) - Ensures explicit imports/exports
-- [`erasableSyntaxOnly: true`](https://www.typescriptlang.org/tsconfig/#erasableSyntaxOnly) - Limits TypeScript syntax
-  to features that can be easily erased to JavaScript. Disallows `enums`, `namespaces` with runtime code, `parameter properties`
-  in classes, and non-ECMAScript `import/export` assignments.
+- [`erasableSyntaxOnly: true`](https://www.typescriptlang.org/tsconfig/#erasableSyntaxOnly) - Limits TypeScript syntax to features that can be easily erased to JavaScript. Disallows `enums`, `namespaces` with runtime code, `parameter properties` in classes, and non-ECMAScript `import/export` assignments.
   ```ts
   // ❌ error: An `import ... = require(...)` alias
   import foo = require("foo");
@@ -60,7 +58,10 @@ The generated `tsconfig.json` includes carefully selected options:
   import Bar = container.Bar;
   class Point {
     // ❌ error: Parameter properties
-    constructor(public x: number, public y: number) {}
+    constructor(
+      public x: number,
+      public y: number
+    ) {}
   }
   // ❌ error: An `export =` assignment.
   export = Point;
@@ -96,11 +97,6 @@ When using other build tools:
 
 ### Library Options (Optional)
 
-- [`composite: true`](https://www.typescriptlang.org/tsconfig/#composite) - Tells TypeScript to emit `.tsbuildinfo` files.
-  This tells TypeScript that your project is part of a monorepo,
-  and also helps it to cache builds to run faster.
-- [`declaration: true`](https://www.typescriptlang.org/tsconfig/#declaration) - Tells TypeScript to emit `.d.ts` files.
-  This is needed so that libraries can get autocomplete on the `.js` files you're creating.
-- [`declarationMap: true`](https://www.typescriptlang.org/tsconfig/#declarationMap) - Generates source maps for `.d.ts` files.
-  These are needed so that when consumers of your libraries are debugging, they can jump to the original
-  source code using go-to-definition.
+- [`composite: true`](https://www.typescriptlang.org/tsconfig/#composite) - Tells TypeScript to emit `.tsbuildinfo` files. This tells TypeScript that your project is part of a monorepo, and also helps it to cache builds to run faster.
+- [`declaration: true`](https://www.typescriptlang.org/tsconfig/#declaration) - Tells TypeScript to emit `.d.ts` files. This is needed so that libraries can get autocomplete on the `.js` files you're creating.
+- [`declarationMap: true`](https://www.typescriptlang.org/tsconfig/#declarationMap) - Generates source maps for `.d.ts` files. These are needed so that when consumers of your libraries are debugging, they can jump to the original source code using go-to-definition.

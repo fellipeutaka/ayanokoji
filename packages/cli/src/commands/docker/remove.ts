@@ -1,4 +1,5 @@
 import { Command } from "commander";
+
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
@@ -8,18 +9,21 @@ import {
   enhancedSelect,
 } from "~/utils/prompts";
 import { Err, Ok } from "~/utils/result";
+
 import {
-  type ComposeDocument,
-  type ComposeMutationFailure,
   getRemovableServiceNames,
   removeServices,
 } from "./helpers/compose-document";
+import type {
+  ComposeDocument,
+  ComposeMutationFailure,
+} from "./helpers/compose-document";
 import {
-  type ComposeFileName,
   discoverComposeFiles,
   readComposeDocument,
   writeComposeDocument,
 } from "./helpers/compose-file-adapter";
+import type { ComposeFileName } from "./helpers/compose-file-adapter";
 import { readEnvFile, writeEnvFile } from "./helpers/env-file";
 import { formatComposeFileFailure } from "./helpers/format-compose-file-failure";
 import { formatEnvironmentSyncFailure } from "./helpers/format-environment-failure";
@@ -28,6 +32,45 @@ import { getEnvVarKeysForService } from "./helpers/remove-service";
 interface RemoveOptions {
   cwd: string;
   envPath?: string;
+}
+
+async function parseOptions(options: RemoveOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+  });
+}
+
+function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
+  switch (failure.kind) {
+    case "empty-service-batch": {
+      return "No Docker services were selected.";
+    }
+    case "no-services": {
+      return "No services found in the compose file.";
+    }
+    case "invalid-document": {
+      return `The Docker Compose document has an invalid ${failure.field} collection.`;
+    }
+    case "invalid-service-entry": {
+      return `The Docker service selection at position ${failure.index + 1} is invalid.`;
+    }
+    case "service-name-conflict": {
+      return `The Docker service name "${failure.serviceName}" appears more than once in the requested batch.`;
+    }
+    case "service-not-found": {
+      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
+    }
+    case "service-dependency-conflict": {
+      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
+    }
+    default: {
+      return "The Docker service selection could not be applied.";
+    }
+  }
 }
 
 export const remove = new Command()
@@ -54,12 +97,12 @@ export const remove = new Command()
     }
 
     const candidates = discoveryResult.value;
-    const firstCandidate = candidates[0];
+    const [firstCandidate] = candidates;
     if (!firstCandidate) {
       handleError(
         formatComposeFileFailure({
-          kind: "missing-document",
           fileName: "compose.yaml",
+          kind: "missing-document",
         })
       );
       return;
@@ -69,12 +112,12 @@ export const remove = new Command()
       candidates.length === 1
         ? firstCandidate
         : await enhancedSelect({
+            initialValue: firstCandidate,
             message: "Which Docker Compose file would you like to use?",
             options: candidates.map((value) => ({
-              value,
               label: value,
+              value,
             })),
-            initialValue: firstCandidate,
           });
 
     const fileResult = await readComposeDocument(options.cwd, existingFile);
@@ -158,19 +201,21 @@ export const remove = new Command()
         }
 
         const removeEnvVars = await enhancedConfirm({
-          message: "Remove these environment variables from .env?",
           initialValue: true,
+          message: "Remove these environment variables from .env?",
         });
 
         if (removeEnvVars) {
-          const newEnvVars = { ...existingEnvVars };
-          for (const key of envVarsToRemove) {
-            delete newEnvVars[key];
-          }
+          const envVarsToRemoveSet = new Set(envVarsToRemove);
+          const newEnvVars = Object.fromEntries(
+            Object.entries(existingEnvVars).filter(
+              ([key]) => !envVarsToRemoveSet.has(key)
+            )
+          );
 
-          const writeResult = await writeEnvFile(envPath, newEnvVars);
-          if (writeResult.isErr()) {
-            handleError(formatEnvironmentSyncFailure(writeResult.error));
+          const envWriteResult = await writeEnvFile(envPath, newEnvVars);
+          if (envWriteResult.isErr()) {
+            handleError(formatEnvironmentSyncFailure(envWriteResult.error));
           }
 
           logger.success(
@@ -182,34 +227,3 @@ export const remove = new Command()
 
     logger.break();
   });
-
-async function parseOptions(options: RemoveOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  return new Ok({
-    cwd: options.cwd,
-  });
-}
-
-function formatComposeMutationFailure(failure: ComposeMutationFailure): string {
-  switch (failure.kind) {
-    case "empty-service-batch":
-      return "No Docker services were selected.";
-    case "no-services":
-      return "No services found in the compose file.";
-    case "invalid-document":
-      return `The Docker Compose document has an invalid ${failure.field} collection.`;
-    case "invalid-service-entry":
-      return `The Docker service selection at position ${failure.index + 1} is invalid.`;
-    case "service-name-conflict":
-      return `The Docker service name "${failure.serviceName}" appears more than once in the requested batch.`;
-    case "service-not-found":
-      return `The Docker service "${failure.serviceName}" was not found in the Compose document.`;
-    case "service-dependency-conflict":
-      return `Cannot remove "${failure.dependencyName}" because the remaining service "${failure.serviceName}" depends on it.`;
-    default:
-      return "The Docker service selection could not be applied.";
-  }
-}

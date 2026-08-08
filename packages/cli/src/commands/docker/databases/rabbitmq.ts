@@ -1,11 +1,11 @@
-import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
-import { getPortSchema } from "../schemas/port";
+
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
+import { validatePort } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
-  repository: "rabbitmq",
   defaultPort: 5672,
+  repository: "rabbitmq",
 };
 
 const fallbackVersions = new Set([
@@ -16,84 +16,76 @@ const fallbackVersions = new Set([
 
 async function createComposeService(): Promise<CreateComposeServiceResult> {
   const serviceName = await enhancedText({
-    message: "What is the service name?",
     defaultValue: "rabbitmq",
+    message: "What is the service name?",
   });
 
   const version = await enhancedSelect({
-    message: "What RabbitMQ version would you like to use?",
-    options: Array.from(fallbackVersions).map((value) => ({
-      value,
-      label: value,
-    })),
     initialValue: "4-management",
+    message: "What RabbitMQ version would you like to use?",
+    options: [...fallbackVersions].map((value) => ({
+      label: value,
+      value,
+    })),
   });
 
   const user = await enhancedText({
-    message: "What is the RabbitMQ user?",
     defaultValue: "guest",
+    message: "What is the RabbitMQ user?",
   });
 
   const password = await enhancedText({
-    message: "What is the RabbitMQ password?",
     defaultValue: "guest",
+    message: "What is the RabbitMQ password?",
   });
 
   const amqpPort = await enhancedText({
-    message: "What is the AMQP port?",
     defaultValue: String(imageConfig.defaultPort),
+    message: "What is the AMQP port?",
     validate(value) {
-      const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, imageConfig.defaultPort);
     },
   });
 
   const managementPort = await enhancedText({
-    message: "What is the Management UI port?",
     defaultValue: "15672",
+    message: "What is the Management UI port?",
     validate(value) {
-      const result = getPortSchema(15_672).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, 15_672);
     },
   });
 
   const useVolume = await enhancedConfirm({
-    message: "Do you want to persist data with a volume?",
     initialValue: true,
+    message: "Do you want to persist data with a volume?",
   });
 
   return {
-    name: serviceName,
     config: {
       image: `${imageConfig.repository}:${version}`,
       environment: {
-        RABBITMQ_DEFAULT_USER: user,
         RABBITMQ_DEFAULT_PASS: password,
+        RABBITMQ_DEFAULT_USER: user,
       },
       ports: [`${amqpPort}:5672`, `${managementPort}:15672`],
       ...(useVolume && {
         volumes: [`${serviceName}_data:/var/lib/rabbitmq`],
       }),
       healthcheck: {
-        test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"],
         interval: "10s",
-        timeout: "5s",
         retries: 5,
+        test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"],
+        timeout: "5s",
       },
     },
     connectionConfig: {
+      host: "localhost",
+      password,
+      port: amqpPort,
       type: "rabbitmq" as const,
       user,
-      password,
-      host: "localhost",
-      port: amqpPort,
     },
+    name: serviceName,
   };
 }
 

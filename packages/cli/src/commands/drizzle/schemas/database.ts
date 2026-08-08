@@ -1,8 +1,7 @@
 import * as z from "zod/mini";
-import { DRIZZLE_DATABASES } from "../databases";
+
+import { DRIZZLE_DATABASE_VALUES } from "../databases";
 
 export const drizzleDatabaseSchema = z.optional(
-  z.enum(
-    DRIZZLE_DATABASES.map((database) => database.value) as [string, ...string[]]
-  )
+  z.enum(DRIZZLE_DATABASE_VALUES)
 );

@@ -1,67 +1,69 @@
 import path from "node:path";
+
 import type { PackageJson } from "type-fest";
+
 import { writeFile } from "~/utils/fs";
 import type { PackageManager } from "~/utils/get-package-manager";
 
 const scripts = {
-  npm: {
-    tsx: "tsx --env-file=.env",
-    drizzle: "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
-    "db:generate": "npm run drizzle generate",
-    "db:migrate": "npm run tsx <DATABASE_PATH>/migrate.ts",
-    "db:seed": "npm run tsx <DATABASE_PATH>/seed.ts",
-    "db:pull": "npm run drizzle introspect",
-    "db:push": "npm run drizzle push",
-    "db:studio": "npm run drizzle studio",
-    "db:check": "npm run drizzle check",
-    "db:metadata": "npm run drizzle up",
-  },
-  yarn: {
-    tsx: "tsx --env-file=.env",
-    drizzle: "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
-    "db:generate": "yarn drizzle generate",
-    "db:migrate": "yarn tsx <DATABASE_PATH>/migrate.ts",
-    "db:seed": "yarn tsx <DATABASE_PATH>/seed.ts",
-    "db:pull": "yarn drizzle introspect",
-    "db:push": "yarn drizzle push",
-    "db:studio": "yarn drizzle studio",
-    "db:check": "yarn drizzle check",
-    "db:metadata": "yarn drizzle up",
-  },
-  pnpm: {
-    tsx: "tsx --env-file=.env",
-    drizzle: "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
-    "db:generate": "pnpm run drizzle generate",
-    "db:migrate": "pnpm run tsx <DATABASE_PATH>/migrate.ts",
-    "db:seed": "pnpm run tsx <DATABASE_PATH>/seed.ts",
-    "db:pull": "pnpm run drizzle introspect",
-    "db:push": "pnpm run drizzle push",
-    "db:studio": "pnpm run drizzle studio",
-    "db:check": "pnpm run drizzle check",
-    "db:metadata": "pnpm run drizzle up",
-  },
   bun: {
-    drizzle: "bun run ./node_modules/drizzle-kit/bin.cjs",
+    "db:check": "bun run drizzle check",
     "db:generate": "bun run drizzle generate",
+    "db:metadata": "bun run drizzle up",
     "db:migrate": "bun run <DATABASE_PATH>/migrate.ts",
-    "db:seed": "bun run <DATABASE_PATH>/seed.ts",
     "db:pull": "bun run drizzle introspect",
     "db:push": "bun run drizzle push",
+    "db:seed": "bun run <DATABASE_PATH>/seed.ts",
     "db:studio": "bun run drizzle studio",
-    "db:check": "bun run drizzle check",
-    "db:metadata": "bun run drizzle up",
+    drizzle: "bun run ./node_modules/drizzle-kit/bin.cjs",
   },
   deno: {
-    tsx: "tsx --env-file=.env",
-    drizzle: "deno --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
+    "db:check": "deno run drizzle check",
     "db:generate": "deno run drizzle generate",
+    "db:metadata": "deno run drizzle up",
     "db:migrate": "deno run tsx <DATABASE_PATH>/migrate.ts",
-    "db:seed": "deno run tsx <DATABASE_PATH>/seed.ts",
     "db:pull": "deno run drizzle introspect",
     "db:push": "deno run drizzle push",
+    "db:seed": "deno run tsx <DATABASE_PATH>/seed.ts",
     "db:studio": "deno run drizzle studio",
-    "db:check": "deno run drizzle check",
-    "db:metadata": "deno run drizzle up",
+    drizzle: "deno --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
+    tsx: "tsx --env-file=.env",
+  },
+  npm: {
+    "db:check": "npm run drizzle check",
+    "db:generate": "npm run drizzle generate",
+    "db:metadata": "npm run drizzle up",
+    "db:migrate": "npm run tsx <DATABASE_PATH>/migrate.ts",
+    "db:pull": "npm run drizzle introspect",
+    "db:push": "npm run drizzle push",
+    "db:seed": "npm run tsx <DATABASE_PATH>/seed.ts",
+    "db:studio": "npm run drizzle studio",
+    drizzle: "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
+    tsx: "tsx --env-file=.env",
+  },
+  pnpm: {
+    "db:check": "pnpm run drizzle check",
+    "db:generate": "pnpm run drizzle generate",
+    "db:metadata": "pnpm run drizzle up",
+    "db:migrate": "pnpm run tsx <DATABASE_PATH>/migrate.ts",
+    "db:pull": "pnpm run drizzle introspect",
+    "db:push": "pnpm run drizzle push",
+    "db:seed": "pnpm run tsx <DATABASE_PATH>/seed.ts",
+    "db:studio": "pnpm run drizzle studio",
+    drizzle: "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
+    tsx: "tsx --env-file=.env",
+  },
+  yarn: {
+    "db:check": "yarn drizzle check",
+    "db:generate": "yarn drizzle generate",
+    "db:metadata": "yarn drizzle up",
+    "db:migrate": "yarn tsx <DATABASE_PATH>/migrate.ts",
+    "db:pull": "yarn drizzle introspect",
+    "db:push": "yarn drizzle push",
+    "db:seed": "yarn tsx <DATABASE_PATH>/seed.ts",
+    "db:studio": "yarn drizzle studio",
+    drizzle: "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs",
+    tsx: "tsx --env-file=.env",
   },
 } as const satisfies Record<
   PackageManager,
@@ -82,26 +84,23 @@ export async function createDrizzleScripts({
   packageManager,
 }: CreateDrizzleScriptsProps) {
   const scriptsToAdd = Object.entries(scripts[packageManager])
-    .filter(([scriptName]) => !packageJson.scripts?.[scriptName])
+    .filter(([scriptName]) => (packageJson.scripts?.[scriptName] ?? "") === "")
     .map(([scriptName, scriptCommand]) => ({
-      scriptName,
       scriptCommand: scriptCommand.replace(
         "<DATABASE_PATH>",
-        path.relative(cwd, folder).replace(/\\/g, "/")
+        path.relative(cwd, folder).replaceAll("\\", "/")
       ),
+      scriptName,
     }));
 
   if (scriptsToAdd.length === 0) {
     return;
   }
 
-  const newScripts = scriptsToAdd.reduce(
-    (acc, { scriptName, scriptCommand }) => {
-      acc[scriptName] = scriptCommand;
-      return acc;
-    },
-    packageJson.scripts ?? {}
-  );
+  const newScripts = packageJson.scripts ?? {};
+  for (const { scriptName, scriptCommand } of scriptsToAdd) {
+    newScripts[scriptName] = scriptCommand;
+  }
 
   packageJson.scripts = newScripts;
 

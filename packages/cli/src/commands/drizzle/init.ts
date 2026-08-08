@@ -1,9 +1,11 @@
 import { Command } from "commander";
+
 import { formatZodErrors } from "~/utils/format-zod-errors";
 import { access } from "~/utils/fs";
 import { handleError } from "~/utils/handle-error";
 import { logger } from "~/utils/logger";
 import { Err, Ok } from "~/utils/result";
+
 import type { DrizzleDatabase } from "./databases";
 import { getAdapterDocs } from "./helpers/get-adapter-docs";
 import { drizzleDatabaseSchema } from "./schemas/database";
@@ -18,6 +20,25 @@ interface InitOptions {
 export type ParsedInitOptions = Omit<InitOptions, "database"> & {
   database?: DrizzleDatabase;
 };
+
+async function parseOptions(options: InitOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  const result = drizzleDatabaseSchema.safeParse(options.database);
+
+  if (!result.success) {
+    return new Err(formatZodErrors(result.error));
+  }
+
+  return new Ok({
+    cwd: options.cwd,
+    database: result.data,
+    withModel: options.withModel,
+    withScripts: options.withScripts,
+  });
+}
 
 export const init = new Command()
   .name("init")
@@ -60,22 +81,3 @@ export const init = new Command()
     logger.info(adapterDocs);
     logger.break();
   });
-
-async function parseOptions(options: InitOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  const result = drizzleDatabaseSchema.safeParse(options.database);
-
-  if (!result.success) {
-    return new Err(formatZodErrors(result.error));
-  }
-
-  return new Ok({
-    cwd: options.cwd,
-    database: result.data as DrizzleDatabase | undefined,
-    withModel: options.withModel,
-    withScripts: options.withScripts,
-  });
-}

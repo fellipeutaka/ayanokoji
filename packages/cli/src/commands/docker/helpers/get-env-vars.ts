@@ -1,7 +1,5 @@
-import {
-  type ConnectionConfig,
-  generateConnectionString,
-} from "./generate-connection-string";
+import { generateConnectionString } from "./generate-connection-string";
+import type { ConnectionConfig } from "./generate-connection-string";
 
 export function getEnvVars(config: ConnectionConfig): Record<string, string> {
   const prefix = config.type.toUpperCase();
@@ -14,21 +12,24 @@ export function getEnvVars(config: ConnectionConfig): Record<string, string> {
     case "mongodb":
     case "redis":
     case "valkey":
-    case "rabbitmq":
+    case "rabbitmq": {
       return { [`${prefix}_URL`]: url };
+    }
 
-    case "minio":
+    case "minio": {
       return {
         [`${prefix}_URL`]: url,
         [`${prefix}_ACCESS_KEY`]: config.user,
         [`${prefix}_SECRET_KEY`]: config.password,
       };
+    }
 
-    case "mailpit":
+    case "mailpit": {
       return {
         [`${prefix}_URL`]: url,
         [`${prefix}_UI_URL`]: `http://${config.host}:${config.uiPort}`,
       };
+    }
 
     default: {
       const _exhaustive: never = config;

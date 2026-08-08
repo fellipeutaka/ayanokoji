@@ -14,10 +14,6 @@ export const user = pgTable("users", {
 
 const DRIZZLE_POSTGRES_ADAPTERS = [
   {
-    label: "Neon",
-    value: "neon-postgres",
-    dependencies: ["@neondatabase/serverless"],
-    devDependencies: null,
     client: `import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 
@@ -25,6 +21,9 @@ const sql = neon(process.env.DATABASE_URL!);
 
 export const db = drizzle(sql);
 `,
+    dependencies: ["@neondatabase/serverless"],
+    devDependencies: null,
+    label: "Neon",
     migrate: `import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { migrate } from "drizzle-orm/neon-http/migrator";
@@ -51,12 +50,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "neon-postgres",
   },
   {
-    label: "Xata",
-    value: "xata",
-    dependencies: ["@xata.io/client"],
-    devDependencies: null,
     client: `import { drizzle } from "drizzle-orm/xata-http";
 import { getXataClient } from "./xata"; // Generated client
 
@@ -64,6 +60,9 @@ const xata = getXataClient();
 
 export const db = drizzle(xata);
 `,
+    dependencies: ["@xata.io/client"],
+    devDependencies: null,
+    label: "Xata",
     migrate: `import { drizzle } from "drizzle-orm/xata-http";
 import { migrate } from "drizzle-orm/xata-http/migrator";
 import { getXataClient } from "./xata"; // Generated client
@@ -90,12 +89,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "xata",
   },
   {
-    label: "Pglite",
-    value: "pglite",
-    dependencies: ["@electric-sql/pglite"],
-    devDependencies: null,
     client: `import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 
@@ -103,6 +99,9 @@ const client = new PGlite();
 
 export const db = drizzle(client);
 `,
+    dependencies: ["@electric-sql/pglite"],
+    devDependencies: null,
+    label: "Pglite",
     migrate: `import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
@@ -129,12 +128,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "pglite",
   },
   {
-    label: "Postgres.JS",
-    value: "postgresjs",
-    dependencies: ["postgres"],
-    devDependencies: null,
     client: `import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
@@ -142,6 +138,9 @@ const client = postgres(process.env.DATABASE_URL!);
 
 export const db = drizzle(client);
 `,
+    dependencies: ["postgres"],
+    devDependencies: null,
+    label: "Postgres.JS",
     migrate: `import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
@@ -168,12 +167,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "postgresjs",
   },
   {
-    label: "node-postgres",
-    value: "node-postgres",
-    dependencies: ["pg"],
-    devDependencies: ["@types/pg"],
     client: `import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
@@ -183,6 +179,9 @@ const pool = new Pool({
 
 export const db = drizzle(pool);
 `,
+    dependencies: ["pg"],
+    devDependencies: ["@types/pg"],
+    label: "node-postgres",
     migrate: `import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
@@ -212,17 +211,17 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "node-postgres",
   },
   {
-    label: "Vercel Postgres",
-    value: "vercel-postgres",
-    dependencies: ["@vercel/postgres"],
-    devDependencies: null,
     client: `import { sql } from "@vercel/postgres";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 
 export const db = drizzle(sql);
 `,
+    dependencies: ["@vercel/postgres"],
+    devDependencies: null,
+    label: "Vercel Postgres",
     migrate: `import { sql } from "@vercel/postgres";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { migrate } from "drizzle-orm/vercel-postgres/migrator";
@@ -248,12 +247,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "vercel-postgres",
   },
   {
-    label: "Supabase",
-    value: "supabase",
-    dependencies: ["postgres"],
-    devDependencies: null,
     client: `import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
@@ -262,6 +258,9 @@ const client = postgres(process.env.DATABASE_URL!, { prepare: false });
 
 export const db = drizzle(client);
 `,
+    dependencies: ["postgres"],
+    devDependencies: null,
+    label: "Supabase",
     migrate: `import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
@@ -288,12 +287,9 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "supabase",
   },
   {
-    label: "AWS Data API",
-    value: "aws-data-api",
-    dependencies: ["@aws-sdk/client-rds-data @aws-sdk/credential-providers"],
-    devDependencies: null,
     client: `import { RDSDataClient } from "@aws-sdk/client-rds-data";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { drizzle } from "drizzle-orm/aws-data-api/pg";
@@ -309,6 +305,9 @@ export const db = drizzle(rdsClient, {
   resourceArn: process.env["RESOURCE_ARN"]!,
 });
 `,
+    dependencies: ["@aws-sdk/client-rds-data @aws-sdk/credential-providers"],
+    devDependencies: null,
+    label: "AWS Data API",
     migrate: `import { RDSDataClient } from "@aws-sdk/client-rds-data";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { drizzle } from "drizzle-orm/aws-data-api/pg";
@@ -345,11 +344,12 @@ main().catch((err) => {
   process.exit(1);
 });
 `,
+    value: "aws-data-api",
   },
 ] as const satisfies DrizzleAdapter[];
 
 export const data = {
   adapters: DRIZZLE_POSTGRES_ADAPTERS,
-  schema: DRIZZLE_POSTGRES_SCHEMA,
   defaultUrl: DRIZZLE_POSTGRES_DEFAULT_URL,
+  schema: DRIZZLE_POSTGRES_SCHEMA,
 };

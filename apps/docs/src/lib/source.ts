@@ -1,21 +1,18 @@
+import { loader } from "fumadocs-core/source";
+import type { InferPageType } from "fumadocs-core/source";
 import { docs } from "fumadocs-mdx:collections/server";
-import { type InferPageType, loader } from "fumadocs-core/source";
-import { createElement } from "react";
+
 import { Icons } from "@/components/ui/icons";
+
+import { resolveIcon } from "./resolve-icon";
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: "/docs",
-  source: docs.toFumadocsSource(),
   icon(icon) {
-    if (!icon) {
-      return;
-    }
-
-    if (icon in Icons) {
-      return createElement(Icons[icon as keyof typeof Icons]);
-    }
+    return resolveIcon(icon, Icons);
   },
+  source: docs.toFumadocsSource(),
 });
 
 export type SourcePage = InferPageType<typeof source>;

@@ -1,14 +1,14 @@
 const PREFERRED_PACKAGE_MANAGER = "pnpm";
 
 const WRONG_PACKAGE_MANAGERS = {
-  npm: PREFERRED_PACKAGE_MANAGER,
-  npx: "pnpm dlx",
-  yarn: PREFERRED_PACKAGE_MANAGER,
-  pnpx: "pnpm dlx",
-  deno: PREFERRED_PACKAGE_MANAGER,
-  vlt: PREFERRED_PACKAGE_MANAGER,
   bun: PREFERRED_PACKAGE_MANAGER,
   bunx: "pnpm dlx",
+  deno: PREFERRED_PACKAGE_MANAGER,
+  npm: PREFERRED_PACKAGE_MANAGER,
+  npx: "pnpm dlx",
+  pnpx: "pnpm dlx",
+  vlt: PREFERRED_PACKAGE_MANAGER,
+  yarn: PREFERRED_PACKAGE_MANAGER,
 };
 
 const DANGEROUS_GIT = [
@@ -46,7 +46,7 @@ const SENSITIVE_PATH = /(^|[\\/])\.env(?:$|\.)|\.pem$|credentials/i;
 const SENSITIVE_COMMAND = /(^|[\s/])\.env(?:$|\.)|\.pem([\s]|$)|credentials/i;
 
 function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function matchesBinary(command, binary) {

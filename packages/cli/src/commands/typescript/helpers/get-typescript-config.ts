@@ -2,54 +2,54 @@ import { enhancedConfirm, enhancedMultiselect } from "~/utils/prompts";
 
 export async function getTypeScriptConfig() {
   const strictness = await enhancedConfirm({
-    message: "Do you want strictness?",
     initialValue: true,
+    message: "Do you want strictness?",
   });
 
   const usingTsc = await enhancedConfirm({
-    message: "Are you transpiling with TypeScript (tsc)?",
     initialValue: false,
+    message: "Are you transpiling with TypeScript (tsc)?",
   });
 
   const runsInTheDOM = await enhancedConfirm({
-    message: "Does your code run in the DOM?",
     initialValue: false,
+    message: "Does your code run in the DOM?",
   });
 
   const isLibrary = await enhancedConfirm({
-    message: "Are you building a library?",
     initialValue: false,
+    message: "Are you building a library?",
   });
 
   let isInMonorepo = false;
 
   if (isLibrary) {
     isInMonorepo = await enhancedConfirm({
-      message: "Is this project in a monorepo?",
       initialValue: false,
+      message: "Is this project in a monorepo?",
     });
   }
   const depsToInstall = await enhancedMultiselect({
+    initialValues: ["typescript"],
     message: "Which dependencies would you like to install?",
     options: [
-      { value: "typescript", label: "TypeScript" },
-      { value: "@types/node", label: "Node (@types/node)" },
-      { value: "@types/bun", label: "Bun (@types/bun)" },
+      { label: "TypeScript", value: "typescript" },
+      { label: "Node (@types/node)", value: "@types/node" },
+      { label: "Bun (@types/bun)", value: "@types/bun" },
       {
-        value: "@cloudflare/workers-types",
         label: "Cloudflare Workers (@cloudflare/workers-types)",
+        value: "@cloudflare/workers-types",
       },
     ],
-    initialValues: ["typescript"],
   });
 
   return {
+    depsToInstall,
+    isInMonorepo,
+    isLibrary,
+    runsInTheDOM,
     strictness,
     usingTsc,
-    runsInTheDOM,
-    isLibrary,
-    isInMonorepo,
-    depsToInstall,
   };
 }
 
