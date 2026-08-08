@@ -2,33 +2,42 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+
+import type { handleError } from "~/utils/handle-error";
+import type { enhancedConfirm, enhancedText } from "~/utils/prompts";
 
 const { confirmResults, handleErrorMock, promptMocks } = vi.hoisted(() => {
   const mockConfirmResults = [true, true];
   // Keep the synchronous handleError contract so mocked command failures stop
   // execution just like the process-exiting production implementation.
-  // oxlint-disable-next-line promise/prefer-await-to-callbacks
-  const mockHandleError = vi.fn((error: string): never => {
-    throw new Error(error);
-  });
+  const mockHandleError = vi.fn<typeof handleError>(
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks
+    (error: string): never => {
+      throw new Error(error);
+    }
+  );
   const mockPromptMocks = {
     // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
-    // oxlint-disable-next-line require-await
-    enhancedConfirm: vi.fn(async () => mockConfirmResults.shift() ?? true),
-    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
-    // oxlint-disable-next-line require-await
-    enhancedMultiselect: vi.fn().mockImplementation(async () => ["postgresql"]),
-    enhancedSelect: vi.fn().mockImplementation(
-      // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    enhancedConfirm: vi.fn<typeof enhancedConfirm>().mockImplementation(
       // oxlint-disable-next-line require-await
-      async ({ initialValue }: { initialValue?: string }) =>
-        initialValue ?? "latest"
+      async () => mockConfirmResults.shift() ?? true
     ),
-    enhancedText: vi.fn(
+    // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
+    // Vitest's Mock type cannot preserve the generic multiselect signature required by the module factory.
+    enhancedMultiselect: vi
+      // oxlint-disable-next-line typescript/no-explicit-any
+      .fn<(...args: any[]) => Promise<any>>()
+      .mockResolvedValue(["postgresql"]),
+    // Vitest's Mock type cannot preserve the generic select signature required by the module factory.
+    enhancedSelect: vi
+      // oxlint-disable-next-line typescript/no-explicit-any
+      .fn<(...args: any[]) => Promise<any>>()
+      .mockResolvedValue("latest"),
+    enhancedText: vi.fn<typeof enhancedText>(
       // Preserve the prompt helper's Promise-returning contract in this Vitest mock.
       // oxlint-disable-next-line require-await
-      async ({ defaultValue }: { defaultValue?: string }) => defaultValue ?? ""
+      async ({ defaultValue }) => defaultValue ?? ""
     ),
   };
 
@@ -51,146 +60,141 @@ async function createComposeFixture(): Promise<string> {
   return cwd;
 }
 
-test("init reports an environment failure after the Compose file is written", async () => {
-  const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
-  const envPath = path.join(cwd, "env-directory");
-  await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
-  await mkdir(envPath);
-  confirmResults.splice(0, confirmResults.length, true, true);
+describe("init command", () => {
+  test("init reports an environment failure after the Compose file is written", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "ayanokoji-docker-init-"));
+    const envPath = path.join(cwd, "env-directory");
+    await writeFile(path.join(cwd, "compose.yaml"), "services: {}\n");
+    await mkdir(envPath);
+    confirmResults.splice(0, confirmResults.length, true, true);
 
-  try {
-    const { init } = await import("./init");
+    try {
+      const { init } = await import("./init");
 
-    await expect(
-      init.parseAsync([
+      await expect(
+        init.parseAsync([
+          "node",
+          "ayanokoji",
+          "--cwd",
+          cwd,
+          "--env-path",
+          envPath,
+        ])
+      ).rejects.toThrow(
+        "Docker Compose file was written successfully, but environment synchronization failed"
+      );
+
+      await expect(
+        readFile(path.join(cwd, "compose.yaml"), "utf-8")
+      ).resolves.toContain("postgres:");
+      expect(handleErrorMock).toHaveBeenCalledOnce();
+    } finally {
+      await rm(cwd, { force: true, recursive: true });
+    }
+  });
+
+  test("init synchronizes the environment after a successful Compose write", async () => {
+    const cwd = await createComposeFixture();
+    const envPath = path.join(cwd, ".env.local");
+    confirmResults.splice(0, confirmResults.length, true, true);
+
+    try {
+      const { init } = await import("./init");
+      await init.parseAsync([
         "node",
         "ayanokoji",
         "--cwd",
         cwd,
         "--env-path",
         envPath,
-      ])
-    ).rejects.toThrow(
-      "Docker Compose file was written successfully, but environment synchronization failed"
-    );
+      ]);
 
-    expect(await readFile(path.join(cwd, "compose.yaml"), "utf-8")).toContain(
-      "postgres:"
-    );
-    expect(handleErrorMock).toHaveBeenCalledOnce();
-  } finally {
-    await rm(cwd, { force: true, recursive: true });
-  }
-});
+      await expect(readFile(envPath, "utf-8")).resolves.toContain(
+        "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
+      );
+      await expect(
+        readFile(path.join(cwd, ".gitignore"), "utf-8")
+      ).resolves.toBe(".env\n");
+    } finally {
+      await rm(cwd, { force: true, recursive: true });
+    }
+  });
 
-test("init synchronizes the environment after a successful Compose write", async () => {
-  const cwd = await createComposeFixture();
-  const envPath = path.join(cwd, ".env.local");
-  confirmResults.splice(0, confirmResults.length, true, true);
+  test("init skips existing environment variables when requested", async () => {
+    const cwd = await createComposeFixture();
+    const envPath = path.join(cwd, ".env.local");
+    const existingEnv = "POSTGRESQL_URL=existing\n";
+    await writeFile(envPath, existingEnv);
+    confirmResults.splice(0, confirmResults.length, true, true);
 
-  try {
-    const { init } = await import("./init");
-    await init.parseAsync([
-      "node",
-      "ayanokoji",
-      "--cwd",
-      cwd,
-      "--env-path",
-      envPath,
-    ]);
+    try {
+      const { init } = await import("./init");
+      await init.parseAsync([
+        "node",
+        "ayanokoji",
+        "--cwd",
+        cwd,
+        "--env-path",
+        envPath,
+        "--skip-conflicts",
+      ]);
 
-    expect(await readFile(envPath, "utf-8")).toContain(
-      "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
-    );
-    expect(await readFile(path.join(cwd, ".gitignore"), "utf-8")).toBe(
-      ".env\n"
-    );
-  } finally {
-    await rm(cwd, { force: true, recursive: true });
-  }
-});
+      await expect(readFile(envPath, "utf-8")).resolves.toBe(existingEnv);
+    } finally {
+      await rm(cwd, { force: true, recursive: true });
+    }
+  });
 
-test("init skips existing environment variables when requested", async () => {
-  const cwd = await createComposeFixture();
-  const envPath = path.join(cwd, ".env.local");
-  const existingEnv = "POSTGRESQL_URL=existing\n";
-  await writeFile(envPath, existingEnv);
-  confirmResults.splice(0, confirmResults.length, true, true);
+  test("init overrides an existing environment variable when selected", async () => {
+    const cwd = await createComposeFixture();
+    const envPath = path.join(cwd, ".env.local");
+    await writeFile(envPath, "POSTGRESQL_URL=existing\n");
+    confirmResults.splice(0, confirmResults.length, true, true);
+    promptMocks.enhancedSelect
+      .mockResolvedValueOnce("latest")
+      .mockResolvedValueOnce("override");
 
-  try {
-    const { init } = await import("./init");
-    await init.parseAsync([
-      "node",
-      "ayanokoji",
-      "--cwd",
-      cwd,
-      "--env-path",
-      envPath,
-      "--skip-conflicts",
-    ]);
+    try {
+      const { init } = await import("./init");
+      await init.parseAsync([
+        "node",
+        "ayanokoji",
+        "--cwd",
+        cwd,
+        "--env-path",
+        envPath,
+      ]);
 
-    expect(await readFile(envPath, "utf-8")).toBe(existingEnv);
-  } finally {
-    await rm(cwd, { force: true, recursive: true });
-  }
-});
+      await expect(readFile(envPath, "utf-8")).resolves.toContain(
+        "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
+      );
+    } finally {
+      await rm(cwd, { force: true, recursive: true });
+    }
+  });
 
-test("init overrides an existing environment variable when selected", async () => {
-  const cwd = await createComposeFixture();
-  const envPath = path.join(cwd, ".env.local");
-  await writeFile(envPath, "POSTGRESQL_URL=existing\n");
-  confirmResults.splice(0, confirmResults.length, true, true);
-  promptMocks.enhancedSelect
-    .mockImplementationOnce(
-      // Preserve the database version default before the conflict prompt.
-      // oxlint-disable-next-line require-await
-      async ({ initialValue }: { initialValue?: string }) =>
-        initialValue ?? "latest"
-    )
-    .mockImplementationOnce(
-      // Preserve the async prompt helper contract in this test double.
-      // oxlint-disable-next-line require-await
-      async () => "override"
-    );
+  test("init succeeds without environment changes when synchronization is declined", async () => {
+    const cwd = await createComposeFixture();
+    const envPath = path.join(cwd, ".env.local");
+    confirmResults.splice(0, confirmResults.length, true, false);
 
-  try {
-    const { init } = await import("./init");
-    await init.parseAsync([
-      "node",
-      "ayanokoji",
-      "--cwd",
-      cwd,
-      "--env-path",
-      envPath,
-    ]);
+    try {
+      const { init } = await import("./init");
+      await init.parseAsync([
+        "node",
+        "ayanokoji",
+        "--cwd",
+        cwd,
+        "--env-path",
+        envPath,
+      ]);
 
-    expect(await readFile(envPath, "utf-8")).toContain(
-      "POSTGRESQL_URL=postgresql://docker:docker@localhost:5432/docker"
-    );
-  } finally {
-    await rm(cwd, { force: true, recursive: true });
-  }
-});
-
-test("init succeeds without environment changes when synchronization is declined", async () => {
-  const cwd = await createComposeFixture();
-  const envPath = path.join(cwd, ".env.local");
-  confirmResults.splice(0, confirmResults.length, true, false);
-
-  try {
-    const { init } = await import("./init");
-    await init.parseAsync([
-      "node",
-      "ayanokoji",
-      "--cwd",
-      cwd,
-      "--env-path",
-      envPath,
-    ]);
-
-    await expect(readFile(envPath)).rejects.toThrow();
-    await expect(readFile(path.join(cwd, ".gitignore"))).rejects.toThrow();
-  } finally {
-    await rm(cwd, { force: true, recursive: true });
-  }
+      await expect(readFile(envPath)).rejects.toThrow("ENOENT");
+      await expect(readFile(path.join(cwd, ".gitignore"))).rejects.toThrow(
+        "ENOENT"
+      );
+    } finally {
+      await rm(cwd, { force: true, recursive: true });
+    }
+  });
 });

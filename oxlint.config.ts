@@ -2,15 +2,23 @@ import { defineConfig } from "oxlint";
 import core from "ultracite/oxlint/core";
 import next from "ultracite/oxlint/next";
 import react from "ultracite/oxlint/react";
-// import vitest from "ultracite/oxlint/vitest";
+import vitest from "ultracite/oxlint/vitest";
 
 export default defineConfig({
-  extends: [
-    core,
-    react,
-    next,
-    // Deferred: 77 errors
-    // vitest,
+  extends: [core, react, next, vitest],
+  overrides: [
+    {
+      // The docs package intentionally runs these tests with Node's built-in test runner.
+      files: [
+        "apps/docs/src/lib/github.test.ts",
+        "apps/docs/src/lib/resolve-icon.test.ts",
+      ],
+      plugins: ["vitest"],
+      rules: {
+        "vitest/no-import-node-test": "off",
+        "vitest/prefer-importing-vitest-globals": "off",
+      },
+    },
   ],
   ignorePatterns: [
     ...(core.ignorePatterns ?? []),
