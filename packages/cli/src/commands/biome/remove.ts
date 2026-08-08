@@ -9,6 +9,14 @@ export interface RemoveOptions {
   cwd: string;
 }
 
+async function parseOptions(options: RemoveOptions) {
+  if (!(await access(options.cwd))) {
+    return new Err(`The directory ${options.cwd} does not exist.`);
+  }
+
+  return new Ok(options);
+}
+
 export const remove = new Command()
   .name("remove")
   .description("Remove Biome")
@@ -35,11 +43,3 @@ export const remove = new Command()
     logger.info("Biome has been removed from your project.");
     logger.break();
   });
-
-async function parseOptions(options: RemoveOptions) {
-  if (!(await access(options.cwd))) {
-    return new Err(`The directory ${options.cwd} does not exist.`);
-  }
-
-  return new Ok(options);
-}

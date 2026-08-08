@@ -19,16 +19,6 @@ export default defineConfig({
     "**/.opencode/**",
     "**/.turbo/**",
   ],
-  overrides: [
-    {
-      // Keep the migration scoped while the remaining CLI baseline is deferred.
-      files: ["packages/cli/src/commands/docker/**/*.ts"],
-      rules: {
-        "no-use-before-define": "error",
-      },
-    },
-  ],
-
   rules: {
     "sort-keys": "off",
 
@@ -43,7 +33,7 @@ export default defineConfig({
     complexity: "error",
     "no-warning-comments": "error",
     "no-await-in-loop": "error",
-    "no-use-before-define": "off",
+    "no-use-before-define": "error",
     "typescript/no-dynamic-delete": "error",
     "prefer-destructuring": "error",
     "require-unicode-regexp": "error",
