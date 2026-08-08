@@ -37,8 +37,7 @@ export default defineConfig({
     "no-await-in-loop": "error",
     // Deferred: 118 errors
     "no-use-before-define": "off",
-    // Deferred: 3 errors
-    "typescript/no-dynamic-delete": "off",
+    "typescript/no-dynamic-delete": "error",
     "prefer-destructuring": "error",
     "require-unicode-regexp": "error",
     // Deferred: 9 errors

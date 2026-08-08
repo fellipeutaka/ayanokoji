@@ -167,10 +167,12 @@ export const remove = new Command()
         });
 
         if (removeEnvVars) {
-          const newEnvVars = { ...existingEnvVars };
-          for (const key of envVarsToRemove) {
-            delete newEnvVars[key];
-          }
+          const envVarsToRemoveSet = new Set(envVarsToRemove);
+          const newEnvVars = Object.fromEntries(
+            Object.entries(existingEnvVars).filter(
+              ([key]) => !envVarsToRemoveSet.has(key)
+            )
+          );
 
           const writeResult = await writeEnvFile(envPath, newEnvVars);
           if (writeResult.isErr()) {
