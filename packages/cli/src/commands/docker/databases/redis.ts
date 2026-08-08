@@ -1,8 +1,7 @@
-import { formatZodErrors } from "~/utils/format-zod-errors";
 import { enhancedConfirm, enhancedSelect, enhancedText } from "~/utils/prompts";
 
 import type { CreateComposeServiceResult, DatabaseImageConfig } from ".";
-import { getPortSchema } from "../schemas/port";
+import { validatePort } from "../schemas/port";
 
 const imageConfig: DatabaseImageConfig = {
   defaultPort: 6379,
@@ -35,11 +34,7 @@ async function createComposeService(): Promise<CreateComposeServiceResult> {
     defaultValue: String(imageConfig.defaultPort),
     message: "What is the Redis port?",
     validate(value) {
-      const result = getPortSchema(imageConfig.defaultPort).safeParse(value);
-
-      if (!result.success) {
-        return formatZodErrors(result.error);
-      }
+      return validatePort(value, imageConfig.defaultPort);
     },
   });
 

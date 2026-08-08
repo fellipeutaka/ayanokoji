@@ -1,25 +1,16 @@
 import { loader } from "fumadocs-core/source";
 import type { InferPageType } from "fumadocs-core/source";
 import { docs } from "fumadocs-mdx:collections/server";
-import { createElement } from "react";
 
 import { Icons } from "@/components/ui/icons";
 
-function isIconName(icon: string): icon is keyof typeof Icons {
-  return Object.hasOwn(Icons, icon);
-}
+import { resolveIcon } from "./resolve-icon";
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: "/docs",
   icon(icon) {
-    if (icon === undefined || icon === "") {
-      return;
-    }
-
-    if (isIconName(icon)) {
-      return createElement(Icons[icon]);
-    }
+    return resolveIcon(icon, Icons);
   },
   source: docs.toFumadocsSource(),
 });
